@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { renderMarkdown } from "~/utils/markdown";
 import { useChatStore } from "~/stores/chat";
+import { imageDataUrl } from "#shared/lib/images";
 import ThinkingBlock from "./ThinkingBlock.vue";
 import ToolCallCard from "./ToolCallCard.vue";
-import type { AgentMessage, AssistantContentBlock, ImageContent } from "#shared/lib/types";
+import type { AgentMessage, AssistantContentBlock } from "#shared/lib/types";
 
 // 单条消息渲染 按 role 分发 content 块
 // assistant 是文档 块顺序即真实发生顺序 思考完就动手的过程感是演示价值
@@ -21,13 +22,6 @@ function userText(m: AgentMessage): string {
   return typeof m.content === "string"
     ? m.content
     : m.content.filter((b) => b.type === "text").map((b) => b.text).join("\n");
-}
-
-function imageDataUrl(block: ImageContent): string {
-  if (block.source.type === "url") return block.source.url ?? "";
-  return block.source.media_type
-    ? `data:${block.source.media_type};base64,${block.source.data ?? ""}`
-    : "";
 }
 
 // 模板里 v-else-if 不会窄化联合类型 用 computed 收窄后安全取字段

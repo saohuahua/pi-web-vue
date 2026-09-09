@@ -11,6 +11,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
+    "test": "vitest run",
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
@@ -37,6 +38,7 @@
     "@types/markdown-it": "^14.2.0",
     "@types/node": "^26.5.0",
     "typescript": "^5.9.3",
+    "vitest": "^5.0.0",
     "vue-tsc": "^3.3.11"
   }
 }

@@ -2,6 +2,7 @@
 import { ansiToHtml } from "~/utils/ansi";
 import { toolPreview } from "~/utils/tool-preview";
 import { useChatStore } from "~/stores/chat";
+import { imageDataUrl } from "#shared/lib/images";
 import type { ImageContent, ToolCallContent, ToolResultMessage } from "#shared/lib/types";
 
 // 工具调用卡片 调用与结果在同一卡片内展示完整生命周期
@@ -57,13 +58,6 @@ const resultLineCount = computed(() => {
   if (resultText.value === null) return 0;
   return resultText.value.split("\n").filter((line) => line.trim() !== "").length;
 });
-
-function imageDataUrl(block: ImageContent): string {
-  if (block.source.type === "url") return block.source.url ?? "";
-  return block.source.media_type
-    ? `data:${block.source.media_type};base64,${block.source.data ?? ""}`
-    : "";
-}
 
 const statusText = computed(() => {
   if (isError.value) return "出错";
