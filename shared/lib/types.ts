@@ -163,6 +163,25 @@ export interface SessionInfo {
   firstMessage: string;
 }
 
+// 会话使用量的文件累计
+// compaction 只追加摘要 entry 被汇总的历史仍留在文件里 因此累计值单调增长
+// 与运行态的 context usage 是两项独立指标 前端不得相加
+export interface SessionStatsInfo {
+  userMessages: number;
+  assistantMessages: number;
+  toolCalls: number;
+  toolResults: number;
+  totalMessages: number;
+  tokens: {
+    input: number;
+    output: number;
+    cacheRead: number;
+    cacheWrite: number;
+    total: number;
+  };
+  cost: number;
+}
+
 export interface SessionContext {
   messages: AgentMessage[];
   /** 与 messages 平行 第 i 条消息对应文件里的 entryIds[i] 分支操作需要 entryId 而非消息下标 */
@@ -171,4 +190,6 @@ export interface SessionContext {
   hasMore: boolean;
   thinkingLevel: string;
   model: { provider: string; modelId: string } | null;
+  /** 按完整 entry 列表累计 含未激活分支与被压缩历史 */
+  stats: SessionStatsInfo;
 }
