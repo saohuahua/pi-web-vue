@@ -133,7 +133,7 @@
 
 验收：新增纯函数测试覆盖非法 base64、图片数量/尺寸、会话统计汇总、路径越界；`rpc-manager` 测试覆盖三种命令和错误分支。
 
-进度：`[ ]`
+进度：`[x]` 2026-09-09 完成。实施偏差：`get_slash_commands` 按 pi-web 实际命名实现为 `get_commands` 且含 source 字段；工具定义按 pi-web 拆成独立 `get_tools` 命令而不是塞进 `get_state`；路径安全落在 `server/utils/path-security.ts`（realpath 依赖 node fs 不进 shared）。均通过真实 SDK 冒烟（get_state/get_commands/get_tools/set_thinking_level/set_model 错误分支/非法图片拒绝/详情 stats）。
 
 ### SA-2：项目、Git worktree 与会话工作区
 
@@ -323,7 +323,7 @@ SA-3 SA-4 SA-6 SA-7 -> SA-8 UI 收口与全链路验收
 
 - [x] 完成现状与旧项目能力盘点
 - [x] 完成 Step A+ 范围和非目标定义
-- [ ] SA-1 底层契约、命令与安全边界
+- [x] SA-1 底层契约、命令与安全边界
 - [ ] SA-2 项目、Git worktree 与会话工作区
 - [ ] SA-3 文件树与安全文件查看
 - [ ] SA-4 会话管理、自动标题与项目内搜索
