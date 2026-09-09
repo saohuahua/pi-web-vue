@@ -290,6 +290,14 @@ export const useChatStore = defineStore("chat", () => {
     }
   }
 
+  // 条件关闭 只有 store 仍指向这个会话时才执行
+  // 路由组件销毁重建的时序里 新实例的 openSession 可能先于旧实例的 unmount
+  // 旧实例卸载时不能把新实例刚打开的会话清掉 否则历史加载被竞态丢弃
+  function closeIfCurrent(id: string | null | undefined) {
+    if (id && sessionId.value !== id) return;
+    close();
+  }
+
   async function openSession(id: string) {
     // 打开新会话前先关旧连接 否则旧事件还会流进新会话的视图
     close();
@@ -315,7 +323,12 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   async function sendPrompt(text: string) {
-    if (!sessionId.value || isRunning.value) return;
+    // sessionId 丢失说明会话状态异常 静默吞掉用户输入比报错更糟
+    if (!sessionId.value) {
+      addNotice("error", "会话未就绪 请刷新页面重试");
+      return;
+    }
+    if (isRunning.value) return;
     const trimmed = text.trim();
     if (!trimmed) return;
     // 先等 SSE 握手完成再发 prompt 短回复的事件才不会丢
@@ -371,6 +384,6 @@ export const useChatStore = defineStore("chat", () => {
     sessionId, messages, entryIds, stream, isRunning, isCompacting,
     model, thinkingLevel, notices, activeTools, retryInfo, queuedMessages,
     toolResultsByCallId,
-    openSession, newSession, sendPrompt, stop, close, reload, dismissNotice,
+    openSession, newSession, sendPrompt, stop, close, closeIfCurrent, reload, dismissNotice,
   };
 });

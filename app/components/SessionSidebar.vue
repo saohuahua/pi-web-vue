@@ -1,13 +1,16 @@
 <script setup lang="ts">
+import { useChatStore } from "~/stores/chat";
 import { useSessionsStore } from "~/stores/sessions";
 import NewSessionForm from "./NewSessionForm.vue";
 
+const emit = defineEmits<{ navigate: [] }>();
+
 const router = useRouter();
 const route = useRoute();
+const chat = useChatStore();
 const sessionsStore = useSessionsStore();
 
 const showForm = ref(false);
-const formWrapEl = ref<HTMLElement | null>(null);
 
 // 相对时间 列表刷新时重新计算
 function relativeTime(iso: string): string {
@@ -29,7 +32,19 @@ function projectLabel(cwd: string): string {
 }
 
 function openSession(id: string) {
+  // 通知外层收起窄屏抽屉 桌面宽下无副作用
+  emit("navigate");
+  if (route.params.id === id) {
+    // 已在这个会话 重复路由跳转无效 直接重新拉取
+    void chat.openSession(id);
+    return;
+  }
   router.push(`/session/${id}`);
+}
+
+function onCreated() {
+  showForm.value = false;
+  emit("navigate");
 }
 
 let pollTimer: number | null = null;
@@ -62,8 +77,8 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- 内联展开的 cwd 表单 -->
-    <div v-if="showForm" ref="formWrapEl" class="sidebar-form">
-      <NewSessionForm @created="showForm = false" />
+    <div v-if="showForm" class="sidebar-form">
+      <NewSessionForm @created="onCreated" />
     </div>
 
     <nav class="sidebar-list" aria-label="会话列表">

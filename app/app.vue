@@ -8,7 +8,7 @@ const sidebarOpen = ref(false);
 
 <template>
   <div class="layout" :class="{ 'sidebar-open': sidebarOpen }">
-    <SessionSidebar />
+    <SessionSidebar @navigate="sidebarOpen = false" />
     <main class="main">
       <NuxtPage />
     </main>
