@@ -5,6 +5,21 @@ export default defineNuxtConfig({
   ssr: false,
   // 显式绑 IPv4 loopback 否则 Windows 上 localhost 只解析到 ::1 curl 127.0.0.1 连不上
   devServer: { host: "127.0.0.1", port: 3000 },
+  app: {
+    head: {
+      title: "π agent",
+      htmlAttrs: { lang: "zh-CN" },
+      // Plex 双字族 本地离线时回退系统字体
+      link: [
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap",
+        },
+      ],
+    },
+  },
   modules: ["@pinia/nuxt"],
   css: ["~/assets/css/main.css"],
   nitro: {
