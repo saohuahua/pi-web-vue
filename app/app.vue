@@ -1,11 +1,3 @@
-<script setup lang="ts">
-import SessionSidebar from "./components/SessionSidebar.vue";
-
-// 两栏布局壳 左 280px 固定 右侧自适应
-// 窄屏下侧栏变抽屉 由浮动按钮开关
-const sidebarOpen = ref(false);
-</script>
-
 <template>
   <div class="layout" :class="{ 'sidebar-open': sidebarOpen }">
     <SessionSidebar @navigate="sidebarOpen = false" />
@@ -26,3 +18,11 @@ const sidebarOpen = ref(false);
     ></div>
   </div>
 </template>
+
+<script setup lang="ts">
+import SessionSidebar from "~/components/SessionSidebar.vue";
+
+// 两栏布局壳 左 280px 固定 右侧自适应
+// 窄屏下侧栏变抽屉 由浮动按钮开关
+const sidebarOpen = ref(false);
+</script>

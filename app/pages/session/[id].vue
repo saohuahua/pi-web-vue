@@ -1,3 +1,7 @@
+<template>
+  <ChatPanel />
+</template>
+
 <script setup lang="ts">
 import { useChatStore } from "~/stores/chat";
 import ChatPanel from "~/components/ChatPanel.vue";
@@ -24,7 +28,3 @@ watch(
 // 新实例已切到别的会话时什么都不做 防止竞态清掉新会话
 onBeforeUnmount(() => chat.closeIfCurrent(mySessionId));
 </script>
-
-<template>
-  <ChatPanel />
-</template>

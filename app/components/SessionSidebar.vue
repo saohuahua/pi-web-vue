@@ -1,7 +1,53 @@
+<template>
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <span class="brand-mark" aria-hidden="true">π</span>
+      <span class="brand-name">agent</span>
+      <button
+        class="sidebar-new"
+        type="button"
+        :aria-expanded="showForm"
+        @click="showForm = !showForm"
+      >新会话</button>
+    </div>
+
+    <!-- 内联展开的 cwd 表单 -->
+    <div v-if="showForm" class="sidebar-form">
+      <NewSessionForm @created="onCreated" />
+    </div>
+
+    <nav class="sidebar-list" aria-label="会话列表">
+      <p v-if="!sessionsStore.sessions.length && !sessionsStore.loading" class="sidebar-empty">
+        还没有会话
+      </p>
+      <button
+        v-for="session in sessionsStore.sessions"
+        :key="session.id"
+        class="session-row"
+        :class="{ active: route.params.id === session.id }"
+        type="button"
+        @click="openSession(session.id)"
+      >
+        <span class="session-preview">{{ session.name ?? session.firstMessage }}</span>
+        <span class="session-meta">
+          <span class="session-project">{{ projectLabel(session.cwd) }}</span>
+          <span class="session-time">{{ relativeTime(session.modified) }}</span>
+          <!-- 运行中小圆点 铜绿呼吸 -->
+          <span
+            v-if="sessionsStore.runningIds.has(session.id)"
+            class="session-running"
+            title="运行中"
+          ></span>
+        </span>
+      </button>
+    </nav>
+  </aside>
+</template>
+
 <script setup lang="ts">
 import { useChatStore } from "~/stores/chat";
 import { useSessionsStore } from "~/stores/sessions";
-import NewSessionForm from "./NewSessionForm.vue";
+import NewSessionForm from "~/components/NewSessionForm.vue";
 
 const emit = defineEmits<{ navigate: [] }>();
 
@@ -62,49 +108,3 @@ onBeforeUnmount(() => {
   if (pollTimer !== null) window.clearInterval(pollTimer);
 });
 </script>
-
-<template>
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <span class="brand-mark" aria-hidden="true">π</span>
-      <span class="brand-name">agent</span>
-      <button
-        class="sidebar-new"
-        type="button"
-        :aria-expanded="showForm"
-        @click="showForm = !showForm"
-      >新会话</button>
-    </div>
-
-    <!-- 内联展开的 cwd 表单 -->
-    <div v-if="showForm" class="sidebar-form">
-      <NewSessionForm @created="onCreated" />
-    </div>
-
-    <nav class="sidebar-list" aria-label="会话列表">
-      <p v-if="!sessionsStore.sessions.length && !sessionsStore.loading" class="sidebar-empty">
-        还没有会话
-      </p>
-      <button
-        v-for="session in sessionsStore.sessions"
-        :key="session.id"
-        class="session-row"
-        :class="{ active: route.params.id === session.id }"
-        type="button"
-        @click="openSession(session.id)"
-      >
-        <span class="session-preview">{{ session.name ?? session.firstMessage }}</span>
-        <span class="session-meta">
-          <span class="session-project">{{ projectLabel(session.cwd) }}</span>
-          <span class="session-time">{{ relativeTime(session.modified) }}</span>
-          <!-- 运行中小圆点 铜绿呼吸 -->
-          <span
-            v-if="sessionsStore.runningIds.has(session.id)"
-            class="session-running"
-            title="运行中"
-          ></span>
-        </span>
-      </button>
-    </nav>
-  </aside>
-</template>

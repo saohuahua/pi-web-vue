@@ -1,3 +1,14 @@
+<template>
+  <details class="fold thinking">
+    <summary>
+      <span class="fold-mark" aria-hidden="true"></span>
+      <span class="thinking-header">{{ headerText }}</span>
+      <span v-if="streaming" class="thinking-live" aria-hidden="true"></span>
+    </summary>
+    <pre class="thinking-body">{{ block.thinking }}</pre>
+  </details>
+</template>
+
 <script setup lang="ts">
 import type { ThinkingContent } from "#shared/lib/types";
 
@@ -20,14 +31,3 @@ const headerText = computed(() => {
   return "思考过程";
 });
 </script>
-
-<template>
-  <details class="fold thinking">
-    <summary>
-      <span class="fold-mark" aria-hidden="true"></span>
-      <span class="thinking-header">{{ headerText }}</span>
-      <span v-if="streaming" class="thinking-live" aria-hidden="true"></span>
-    </summary>
-    <pre class="thinking-body">{{ block.thinking }}</pre>
-  </details>
-</template>

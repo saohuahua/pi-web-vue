@@ -1,3 +1,36 @@
+<template>
+  <footer class="composer">
+    <div class="composer-box">
+      <textarea
+        ref="textareaEl"
+        v-model="draft"
+        class="composer-input"
+        rows="1"
+        placeholder="给 π agent 发消息…"
+        @keydown="onKeydown"
+        @input="autosize"
+      ></textarea>
+      <!-- 运行中发送变停止 输入保持可用但不提交 -->
+      <button
+        v-if="chat.isRunning"
+        class="composer-btn stop"
+        type="button"
+        aria-label="停止"
+        @click="chat.stop()"
+      >停止</button>
+      <button
+        v-else
+        class="composer-btn send"
+        type="button"
+        :disabled="!draft.trim()"
+        aria-label="发送"
+        @click="submit"
+      >发送</button>
+    </div>
+    <p class="composer-hint">Enter 发送 · Shift + Enter 换行 · agent 在本机执行命令</p>
+  </footer>
+</template>
+
 <script setup lang="ts">
 import { useChatStore } from "~/stores/chat";
 
@@ -31,36 +64,3 @@ function onKeydown(e: KeyboardEvent) {
   }
 }
 </script>
-
-<template>
-  <footer class="composer">
-    <div class="composer-box">
-      <textarea
-        ref="textareaEl"
-        v-model="draft"
-        class="composer-input"
-        rows="1"
-        placeholder="给 π agent 发消息…"
-        @keydown="onKeydown"
-        @input="autosize"
-      ></textarea>
-      <!-- 运行中发送变停止 输入保持可用但不提交 -->
-      <button
-        v-if="chat.isRunning"
-        class="composer-btn stop"
-        type="button"
-        aria-label="停止"
-        @click="chat.stop()"
-      >停止</button>
-      <button
-        v-else
-        class="composer-btn send"
-        type="button"
-        :disabled="!draft.trim()"
-        aria-label="发送"
-        @click="submit"
-      >发送</button>
-    </div>
-    <p class="composer-hint">Enter 发送 · Shift + Enter 换行 · agent 在本机执行命令</p>
-  </footer>
-</template>

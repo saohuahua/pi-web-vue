@@ -1,25 +1,3 @@
-<script setup lang="ts">
-import { useAutoScroll } from "~/composables/useAutoScroll";
-import { useChatStore } from "~/stores/chat";
-import ChatComposer from "./ChatComposer.vue";
-import MessageItem from "./MessageItem.vue";
-import PiIndicator from "./PiIndicator.vue";
-
-const chat = useChatStore();
-const scrollEl = ref<HTMLElement | null>(null);
-
-// 依赖含流式消息内容长度 流式每增长一帧评估一次跟随
-const { onScroll } = useAutoScroll(scrollEl, () => [
-  chat.messages.length,
-  chat.stream.streamingMessage?.content.length ?? 0,
-]);
-
-// 排队消息总数 composer 上方提示
-const queuedCount = computed(
-  () => chat.queuedMessages.steering.length + chat.queuedMessages.followUp.length,
-);
-</script>
-
 <template>
   <div class="chat-panel">
     <!-- 状态栏 模型与运行态 -->
@@ -101,3 +79,25 @@ const queuedCount = computed(
     <ChatComposer />
   </div>
 </template>
+
+<script setup lang="ts">
+import { useAutoScroll } from "~/composables/useAutoScroll";
+import { useChatStore } from "~/stores/chat";
+import ChatComposer from "~/components/ChatComposer.vue";
+import MessageItem from "~/components/MessageItem.vue";
+import PiIndicator from "~/components/PiIndicator.vue";
+
+const chat = useChatStore();
+const scrollEl = ref<HTMLElement | null>(null);
+
+// 依赖含流式消息内容长度 流式每增长一帧评估一次跟随
+const { onScroll } = useAutoScroll(scrollEl, () => [
+  chat.messages.length,
+  chat.stream.streamingMessage?.content.length ?? 0,
+]);
+
+// 排队消息总数 composer 上方提示
+const queuedCount = computed(
+  () => chat.queuedMessages.steering.length + chat.queuedMessages.followUp.length,
+);
+</script>

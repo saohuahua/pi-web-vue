@@ -1,3 +1,35 @@
+<template>
+  <details class="tool-card" :class="{ 'is-error': isError, 'is-running': isRunningTool }">
+    <summary>
+      <span class="fold-mark" aria-hidden="true"></span>
+      <span class="tool-name">{{ block.toolName || "tool" }}</span>
+      <span class="tool-preview">{{ isRunningTool && !preview ? "参数流入中" : preview }}</span>
+      <span class="tool-status">{{ statusText }}</span>
+      <span v-if="durationSeconds !== undefined && durationSeconds > 0" class="tool-duration">{{ durationSeconds }}s</span>
+    </summary>
+    <!-- 参数区 流式时显示 rawInput 原文 -->
+    <pre v-if="argsText" class="tool-args">{{ argsText }}</pre>
+    <!-- 结果区 配对的 toolResult 就在下半区 -->
+    <div v-if="result" class="tool-result-zone">
+      <div class="tool-result-head">
+        <span>结果</span>
+        <span v-if="resultLineCount > 0" class="tool-result-meta">{{ resultLineCount }} 行</span>
+      </div>
+      <!-- shell 输出 ANSI 转彩色 HTML 其余纯文本插值 -->
+      <pre v-if="resultAnsiHtml" class="tool-output" v-html="resultAnsiHtml"></pre>
+      <pre v-else-if="resultText" class="tool-output">{{ resultText }}</pre>
+      <p v-else class="tool-result-empty">无文本输出</p>
+      <img
+        v-for="(img, i) in resultImages"
+        :key="i"
+        class="tool-result-image"
+        :src="imageDataUrl(img)"
+        alt="工具结果图片"
+      >
+    </div>
+  </details>
+</template>
+
 <script setup lang="ts">
 import { ansiToHtml } from "~/utils/ansi";
 import { toolPreview } from "~/utils/tool-preview";
@@ -65,35 +97,3 @@ const statusText = computed(() => {
   return "完成";
 });
 </script>
-
-<template>
-  <details class="tool-card" :class="{ 'is-error': isError, 'is-running': isRunningTool }">
-    <summary>
-      <span class="fold-mark" aria-hidden="true"></span>
-      <span class="tool-name">{{ block.toolName || "tool" }}</span>
-      <span class="tool-preview">{{ isRunningTool && !preview ? "参数流入中" : preview }}</span>
-      <span class="tool-status">{{ statusText }}</span>
-      <span v-if="durationSeconds !== undefined && durationSeconds > 0" class="tool-duration">{{ durationSeconds }}s</span>
-    </summary>
-    <!-- 参数区 流式时显示 rawInput 原文 -->
-    <pre v-if="argsText" class="tool-args">{{ argsText }}</pre>
-    <!-- 结果区 配对的 toolResult 就在下半区 -->
-    <div v-if="result" class="tool-result-zone">
-      <div class="tool-result-head">
-        <span>结果</span>
-        <span v-if="resultLineCount > 0" class="tool-result-meta">{{ resultLineCount }} 行</span>
-      </div>
-      <!-- shell 输出 ANSI 转彩色 HTML 其余纯文本插值 -->
-      <pre v-if="resultAnsiHtml" class="tool-output" v-html="resultAnsiHtml"></pre>
-      <pre v-else-if="resultText" class="tool-output">{{ resultText }}</pre>
-      <p v-else class="tool-result-empty">无文本输出</p>
-      <img
-        v-for="(img, i) in resultImages"
-        :key="i"
-        class="tool-result-image"
-        :src="imageDataUrl(img)"
-        alt="工具结果图片"
-      >
-    </div>
-  </details>
-</template>

@@ -1,3 +1,10 @@
+<template>
+  <span class="pi-indicator" role="status" aria-label="运行中">
+    <span class="pi-glyph">π</span>
+    <span class="pi-digit">{{ current }}</span>
+  </span>
+</template>
+
 <script setup lang="ts">
 // 运行指示器 循环显示 π 的数字 3 1 4 1 5 9 …
 // agent 思考时用户看到的是 π 在生长 而不是通用转圈
@@ -21,10 +28,3 @@ onBeforeUnmount(() => {
   if (timer !== null) window.clearInterval(timer);
 });
 </script>
-
-<template>
-  <span class="pi-indicator" role="status" aria-label="运行中">
-    <span class="pi-glyph">π</span>
-    <span class="pi-digit">{{ current }}</span>
-  </span>
-</template>

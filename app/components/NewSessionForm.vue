@@ -1,3 +1,22 @@
+<template>
+  <form class="new-session-form" @submit.prevent="submit">
+    <label class="form-label" for="new-session-cwd">工作目录</label>
+    <input
+      id="new-session-cwd"
+      v-model="cwd"
+      class="form-input"
+      type="text"
+      placeholder="D:\project\demo"
+      spellcheck="false"
+      autocomplete="off"
+    >
+    <p v-if="error" class="form-error">{{ error }}</p>
+    <button class="form-submit" type="submit" :disabled="!cwd.trim() || submitting">
+      {{ submitting ? "创建中…" : "开始会话" }}
+    </button>
+  </form>
+</template>
+
 <script setup lang="ts">
 import { useChatStore } from "~/stores/chat";
 
@@ -32,22 +51,3 @@ async function submit() {
   }
 }
 </script>
-
-<template>
-  <form class="new-session-form" @submit.prevent="submit">
-    <label class="form-label" for="new-session-cwd">工作目录</label>
-    <input
-      id="new-session-cwd"
-      v-model="cwd"
-      class="form-input"
-      type="text"
-      placeholder="D:\project\demo"
-      spellcheck="false"
-      autocomplete="off"
-    >
-    <p v-if="error" class="form-error">{{ error }}</p>
-    <button class="form-submit" type="submit" :disabled="!cwd.trim() || submitting">
-      {{ submitting ? "创建中…" : "开始会话" }}
-    </button>
-  </form>
-</template>

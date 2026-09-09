@@ -1,7 +1,3 @@
-<script setup lang="ts">
-import NewSessionForm from "~/components/NewSessionForm.vue";
-</script>
-
 <template>
   <div class="page-home">
     <section class="home-hero">
@@ -18,3 +14,7 @@ import NewSessionForm from "~/components/NewSessionForm.vue";
     </section>
   </div>
 </template>
+
+<script setup lang="ts">
+import NewSessionForm from "~/components/NewSessionForm.vue";
+</script>
