@@ -13,6 +13,11 @@ const { onScroll } = useAutoScroll(scrollEl, () => [
   chat.messages.length,
   chat.stream.streamingMessage?.content.length ?? 0,
 ]);
+
+// 排队消息总数 composer 上方提示
+const queuedCount = computed(
+  () => chat.queuedMessages.steering.length + chat.queuedMessages.followUp.length,
+);
 </script>
 
 <template>
@@ -51,11 +56,13 @@ const { onScroll } = useAutoScroll(scrollEl, () => [
             :key="chat.entryIds[i] || `local-${i}`"
             :message="m"
             :entry-id="chat.entryIds[i] ?? ''"
+            :prev-timestamp="i > 0 ? chat.messages[i - 1]?.timestamp : undefined"
           />
-          <!-- 流式气泡 独立于已定稿列表 两个数据源 -->
+          <!-- 流式气泡 独立于已定稿列表 前一条时间戳取列表末尾 -->
           <MessageItem
             v-if="chat.stream.streamingMessage"
             :message="chat.stream.streamingMessage"
+            :prev-timestamp="chat.messages.at(-1)?.timestamp"
             streaming
           />
         </template>
@@ -67,6 +74,28 @@ const { onScroll } = useAutoScroll(scrollEl, () => [
           <p class="chat-empty-hint">第一条消息会成为会话名 你可以让它读代码 写文件 或跑命令</p>
         </div>
       </div>
+    </div>
+
+    <!-- 运行状态条 此刻正在跑什么 工具卡片由定稿后的历史渲染 -->
+    <div v-if="chat.isRunning && (chat.activeTools.size || chat.retryInfo)" class="run-strip" role="status">
+      <template v-if="chat.retryInfo">
+        <span class="run-retry">
+          自动重试 第 {{ chat.retryInfo.attempt }}/{{ chat.retryInfo.maxAttempts }} 次
+          <span v-if="chat.retryInfo.errorMessage" class="run-retry-msg">{{ chat.retryInfo.errorMessage }}</span>
+        </span>
+      </template>
+      <template v-for="[id, tool] in chat.activeTools" :key="id">
+        <span class="run-tool">
+          <span class="run-tool-dot" aria-hidden="true"></span>
+          正在执行 {{ tool.name }}
+          <span v-if="tool.progress" class="run-tool-progress">{{ tool.progress }}</span>
+        </span>
+      </template>
+    </div>
+
+    <!-- 排队消息提示 -->
+    <div v-if="queuedCount > 0" class="queued-strip">
+      已排队 {{ queuedCount }} 条消息 agent 空闲后继续
     </div>
 
     <ChatComposer />

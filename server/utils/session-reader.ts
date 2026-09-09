@@ -281,6 +281,12 @@ export function sliceActiveBranch(
 function entryToUiMessage(entry: SessionEntry): AgentMessage | null {
   if (entry.type !== "message") return null;
   let message = normalizeToolCalls(entry.message);
+  // 消息自带的 timestamp 是生成开始时刻 entry 的 timestamp 是定稿写入时刻
+  // 思考与工具的时长计算需要定稿时刻 统一覆盖
+  const finalizedAt = Date.parse(entry.timestamp);
+  if (!Number.isNaN(finalizedAt)) {
+    message = { ...message, timestamp: finalizedAt } as AgentMessage;
+  }
   const legacyContent = message.role === "assistant" ? (message as { content: unknown }).content : undefined;
   if (typeof legacyContent === "string") {
     message = { ...message, content: [{ type: "text", text: legacyContent }] } as AgentMessage;

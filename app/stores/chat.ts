@@ -4,7 +4,8 @@ import { AgentEventConnection } from "#shared/lib/agent-event-connection";
 import type { AgentEventLike, ClientAssistantMessageEvent } from "#shared/lib/agent-event-wire";
 import { normalizeToolCalls } from "#shared/lib/normalize";
 import { INITIAL_STREAMING_STATE, streamReducer, type StreamingState } from "#shared/lib/streaming-message";
-import type { AgentMessage, SessionContext } from "#shared/lib/types";
+import type { AgentMessage, SessionContext, ToolResultMessage } from "#shared/lib/types";
+import { getToolExecutionProgress } from "~/utils/tool-progress";
 import { useSessionsStore } from "./sessions";
 
 export interface Notice {
@@ -45,11 +46,17 @@ export const useChatStore = defineStore("chat", () => {
   const model = ref<{ provider: string; id: string } | null>(null);
   const thinkingLevel = ref("off");
   const notices = ref<Notice[]>([]);
+  // 活跃工具执行 tool_execution_start 到 end 之间的实时状态
+  // reactive Map 的 set delete 天然触发视图更新
+  const activeTools = reactive(new Map<string, { name: string; progress: string | null }>());
+  const retryInfo = ref<{ attempt: number; maxAttempts: number; errorMessage?: string } | null>(null);
+  const queuedMessages = ref<{ steering: string[]; followUp: string[] }>({ steering: [], followUp: [] });
 
   // 非响应式内部状态
   let optimisticKey: string | null = null;       // 指向乐观追加的用户消息
   let sdkAgentActive = false;                    // SDK agent 是否升起 prompt_done 据此判断是否落定
   let noticeSeq = 0;
+  let stopFallbackTimer: number | null = null;   // 停止后的兜底定时器
 
   function addNotice(type: Notice["type"], message: string) {
     notices.value.push({ id: (noticeSeq += 1), type, message });
@@ -58,6 +65,16 @@ export const useChatStore = defineStore("chat", () => {
   function dismissNotice(id: number) {
     notices.value = notices.value.filter((n) => n.id !== id);
   }
+
+  // toolCall 块与 toolResult 消息靠 toolCallId 配对
+  // 流式中 result 还没到 卡片显示执行中 到了就升级成完成
+  const toolResultsByCallId = computed(() => {
+    const map = new Map<string, ToolResultMessage>();
+    for (const m of messages.value) {
+      if (m.role === "toolResult") map.set(m.toolCallId, m);
+    }
+    return map;
+  });
 
   // reducer 返回新对象 必须整体覆盖 reactive 目标 直接改属性会丢不可变语义
   function applyStream(action: Parameters<typeof streamReducer>[1]) {
@@ -167,6 +184,13 @@ export const useChatStore = defineStore("chat", () => {
         sdkAgentActive = false;
         isRunning.value = false;
         isCompacting.value = false;
+        // end 事件可能丢失 残留的执行中状态在这里统一清空
+        activeTools.clear();
+        retryInfo.value = null;
+        if (stopFallbackTimer !== null) {
+          window.clearTimeout(stopFallbackTimer);
+          stopFallbackTimer = null;
+        }
         void reload();
         break;
 
@@ -191,8 +215,49 @@ export const useChatStore = defineStore("chat", () => {
         void reload();
         break;
 
+      // 工具执行实时状态 卡片等 message_end 定稿后由历史渲染
+      // 状态条只负责此刻正在跑什么
+      case "tool_execution_start": {
+        const toolCallId = event.toolCallId as string;
+        activeTools.set(toolCallId, { name: String(event.toolName ?? "tool"), progress: null });
+        break;
+      }
+
+      case "tool_execution_update": {
+        const toolCallId = event.toolCallId as string;
+        const existing = activeTools.get(toolCallId);
+        if (existing) {
+          existing.progress = getToolExecutionProgress(event.partialResult);
+        }
+        break;
+      }
+
+      case "tool_execution_end": {
+        const toolCallId = event.toolCallId as string;
+        activeTools.delete(toolCallId);
+        break;
+      }
+
+      case "auto_retry_start":
+        retryInfo.value = {
+          attempt: Number(event.attempt ?? 0),
+          maxAttempts: Number(event.maxAttempts ?? 0),
+          errorMessage: typeof event.errorMessage === "string" ? event.errorMessage : undefined,
+        };
+        break;
+
+      case "auto_retry_end":
+        retryInfo.value = null;
+        break;
+
+      case "queue_update":
+        queuedMessages.value = {
+          steering: [...((event.steering as string[] | undefined) ?? [])],
+          followUp: [...((event.followUp as string[] | undefined) ?? [])],
+        };
+        break;
+
       default:
-        // tool_execution queue_update auto_retry 留给 Step 3
         break;
     }
   }
@@ -214,8 +279,15 @@ export const useChatStore = defineStore("chat", () => {
     Object.assign(stream, INITIAL_STREAMING_STATE);
     isRunning.value = false;
     isCompacting.value = false;
+    activeTools.clear();
+    retryInfo.value = null;
+    queuedMessages.value = { steering: [], followUp: [] };
     optimisticKey = null;
     sdkAgentActive = false;
+    if (stopFallbackTimer !== null) {
+      window.clearTimeout(stopFallbackTimer);
+      stopFallbackTimer = null;
+    }
   }
 
   async function openSession(id: string) {
@@ -282,11 +354,23 @@ export const useChatStore = defineStore("chat", () => {
     if (!sessionId.value) return;
     // abort 失败也要让 UI 可恢复 事件流会带来 agent_end
     await sendAgentCommand(sessionId.value, { type: "abort" }).catch(() => {});
+    // abort 的 POST resolve 与 agent_settled 可能乱序或丢失
+    // 3 秒兜底强制落定并 reload 一次对账 settled 先到则取消
+    if (stopFallbackTimer !== null) window.clearTimeout(stopFallbackTimer);
+    stopFallbackTimer = window.setTimeout(() => {
+      stopFallbackTimer = null;
+      if (sessionId.value && isRunning.value) {
+        isRunning.value = false;
+        activeTools.clear();
+        void reload();
+      }
+    }, 3000);
   }
 
   return {
     sessionId, messages, entryIds, stream, isRunning, isCompacting,
-    model, thinkingLevel, notices,
+    model, thinkingLevel, notices, activeTools, retryInfo, queuedMessages,
+    toolResultsByCallId,
     openSession, newSession, sendPrompt, stop, close, reload, dismissNotice,
   };
 });
