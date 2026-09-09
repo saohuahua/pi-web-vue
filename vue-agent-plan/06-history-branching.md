@@ -1,15 +1,13 @@
-# 06 · Step 4：会话分支（里程碑 B：差异化增强）
+# 06 · Step 4：会话内分支（里程碑 B：差异化增强）
 
-> 目标：会话内分支——编辑历史消息从任意节点重开岔路、分支切换器、重命名。树状分支模型是 agent UI 里最能讲深的设计点，做完项目达到完整差异化形态。
+> 目标：会话内分支——编辑历史消息从任意节点重开岔路、分支切换器。树状分支模型是 agent UI 里最能讲深的设计点，做完项目达到完整差异化形态。
 > 前置：里程碑 A（Steps 0–3）已完成并可演示。**时间紧可整体推迟**——A 已是完整可投递的项目。
 > fork 与删除已移至 [07-optional.md](./07-optional.md) 加分项。
 > 开始前先读：pi-web `hooks/useAgentSession.ts` 行 1474–1492（handleNavigate / handleLeafChange）、`components/MessageView.tsx` 行 360–370 与 515–520（编辑按钮的调用方式）、`components/BranchNavigator.tsx` 行 27–110（分支树压缩与顶层分支提取，了解思路即可）、`AGENTS.md`「Two kinds of branching」节。
 
-## 1. 重命名（小热身）
+## 1. A+ 前置
 
-- `PATCH /api/sessions/:id`：wrapper 存活 → `wrapper.inner.setSessionName(name)`；否则 `SessionManager.open(file).setSessionName(name)`。
-- 显示一致性：详情接口用 `sm.getSessionName()`（权威值）；列表靠 Step 1 的**尾部扫描**（session_info 追加在文件末尾，头部读不到——见 03 的 2.2）。重命名后 `sessionsStore.refresh(true)` 即可看到新名。
-- 前端：会话标题旁铅笔 → 输入框 → PATCH → force 刷新。
+会话重命名、自动标题和项目内搜索已在 [09-step-a-completion.md](./09-step-a-completion.md) 的 SA-4 完成。本步骤不重复实现这些能力，只假定会话列表和当前标题已能在分支切换后保持正确。
 
 ## 2. 编辑历史消息（edit-from-here，会话内分支）
 
@@ -93,7 +91,6 @@ async function handleLeafChange(leafId: string | null) {
 
 1. **编辑重发**：发两条消息，编辑第一条并改写发送 → 消息列表切到新分支，分支指示器显示「分支 (2)」。
 2. **分支切换**：下拉里两个分支来回切换，消息正确变化；在任一分支继续对话互不污染。
-3. 重命名后侧栏与详情标题一致更新。
-4. 回归一眼：里程碑 A 主路径再点一遍（发消息 → 流式 → 停止）确认没被改坏；run 进行中分支切换按钮应为禁用态（这是 navigate 失败的主要防线）。
+3. 回归一眼：里程碑 A 与 A+ 主路径再点一遍（发消息 → 流式 → 停止 → 切换项目与会话）确认没被改坏；run 进行中分支切换按钮应为禁用态（这是 navigate 失败的主要防线）。
 
 通过即达成**里程碑 B：差异化增强**。`npm run typecheck` 顺手跑一下。

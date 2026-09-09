@@ -33,8 +33,15 @@
 | [03-backend-core.md](./03-backend-core.md) | Step 1：后端核心（AgentSession 管理 + API + SSE） | A |
 | [04-frontend-core.md](./04-frontend-core.md) | Step 2：前端核心（聊天 + 流式渲染） | A |
 | [05-agent-display.md](./05-agent-display.md) | Step 3：工具调用 / 思考过程 / 停止 —— 完成即达成**里程碑 A** | A |
-| [06-history-branching.md](./06-history-branching.md) | Step 4：会话分支（编辑重发 / 分支切换 / 重命名） | B（差异化增强） |
+| [09-step-a-completion.md](./09-step-a-completion.md) | Step A+：项目与已有 worktree、文件树、会话管理、模型、图片、压缩、使用量、技能与设置 | A 后 B 前 |
+| [06-history-branching.md](./06-history-branching.md) | Step 4：会话内分支（编辑重发 / 分支切换） | B（差异化增强） |
 | [07-optional.md](./07-optional.md) | Step 5（可选）：fork、删除、单测、终端等加分项 | 加分项 |
+
+## 当前执行基线
+
+原 Step 0–3 已完成最小聊天演示闭环，但当前 Vue 实现尚未达到完整工作区形态。后续先执行 [09-step-a-completion.md](./09-step-a-completion.md) 的 Step A+ 基础工作区完善，再进入 Step B 的会话内分支；终端、fork、删除等仍属于原 07 的后续增强项。
+
+特别注意：截图中左上角的 Git worktree 分支与 Step B 聊天中的会话内分支是两套独立模型，实施时不能合并处理。新开对话执行前应先阅读 09 的“新开对话先读这里”章节。
 
 ## 编码规范（执行任何步骤都适用）
 
@@ -84,7 +91,7 @@
 |---|---|---|
 | **A：首个可演示版本**（创建 → SSE 流式 → 工具/思考可视化 → 停止 → 历史恢复） | Step 0–3 | 约 2–3 周 |
 | 补最小单测（4 组纯函数测试，可选但推荐） | — | 2–3 小时 |
-| **B：差异化增强**（编辑重发 / 分支切换 / 重命名） | Step 4 | 2–3 天 |
+| **B：差异化增强**（编辑重发 / 分支切换） | Step 4 | 2–3 天 |
 | 加分项（fork / 删除 / 终端 / 模型配置…） | Step 5 | 按需 |
 
 ## 进度清单
@@ -94,5 +101,6 @@
 - [x] Step 2 前端核心完成（核心闭环跑通）
 - [x] Step 3 工具/思考可视化完成 → **里程碑 A：首个可演示版本（建议立刻录 2 分钟演示视频存档）**
 - [x] 补最小单测（4 组，见 07；约 2–3 小时）
-- [ ] Step 4 会话分支完成 → **里程碑 B：差异化增强**
+- [ ] Step A+ 基础工作区完善（见 09：项目/worktree、文件、会话管理、运行控制、使用量、设置）
+- [ ] Step 4 会话内分支完成 → **里程碑 B：差异化增强**
 - [ ] （可选）Step 5 加分项（fork / 删除 / 终端 / 模型配置…）
