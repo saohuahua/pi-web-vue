@@ -1,4 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import tailwindcss from "@tailwindcss/vite";
+
 export default defineNuxtConfig({
   // 聊天 SPA 无 SEO 与首屏需求 pi-web 同为纯 CSR
   // 开着 SSR 只会引入 EventSource 与 localStorage 的水合麻烦 零收益
@@ -22,6 +24,10 @@ export default defineNuxtConfig({
   },
   modules: ["@pinia/nuxt"],
   css: ["~/assets/css/main.css"],
+  // Tailwind v4 工具类层 只取 utilities 不取 preflight 项目自有 reset 与设计系统继续生效
+  vite: {
+    plugins: [tailwindcss()],
+  },
   nitro: {
     // pi SDK 是纯 ESM 且内嵌 WASM photon 的重包
     // 必须排除出 Nitro 打包 运行时从 node_modules 原样加载

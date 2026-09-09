@@ -3,31 +3,66 @@
    冷白底 纯白面板 清透水青单强调色
    大圆角 透气的留白 轻字重
    assistant 输出是文档 代码块是深青墨面板
+
+   样式分层 既有组件继续用本文件的语义类
+   新组件优先用 Tailwind 工具类 布局与间距写在模板里
+   token 只在下方 @theme 定义一次 两套写法永远同色
    ============================================================ */
 
-:root {
-  /* 色板 */
-  --paper: #f7f9fa;          /* 页面底色 冷白 */
-  --surface: #ffffff;        /* 面板 侧栏 白 */
-  --surface-2: #f0f5f7;      /* 嵌套面 水青灰 */
-  --ink: #243342;            /* 蓝灰炭 正文 */
-  --ink-soft: #3e5261;       /* 次级文字 */
-  --muted: #6b7c8c;          /* 弱文字 */
-  --line: #e5ebf0;           /* 发丝线 */
-  --line-strong: #cfdbe3;
-  --accent: #0f9d95;         /* 清透水青 运行态 链接 用户标识 */
-  --accent-deep: #0c7f79;    /* 水青深色 用于文字确保对比 */
-  --accent-soft: #e2f5f2;    /* 薄荷浅底 */
-  --amber: #a97e24;          /* 琥珀 思考 提醒 */
-  --amber-soft: #f7efd9;
-  --danger: #d9564f;
-  --danger-soft: #fceceb;
-  --code-bg: #10222a;        /* 深青墨代码面板 */
-  --code-ink: #d5e3e6;
+/* 不引入 preflight 项目已有自己的 reset 引入会重置 markdown 列表等既有样式 */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* static 保证未被工具类引用的变量也输出到 :root 供下方语义别名与既有类解析 */
+@theme static {
+  /* 色板 生成 bg-paper text-ink border-line 等工具类 */
+  --color-paper: #f7f9fa;          /* 页面底色 冷白 */
+  --color-surface: #ffffff;        /* 面板 侧栏 白 */
+  --color-surface-2: #f0f5f7;      /* 嵌套面 水青灰 */
+  --color-ink: #243342;            /* 蓝灰炭 正文 */
+  --color-ink-soft: #3e5261;       /* 次级文字 */
+  --color-muted: #6b7c8c;          /* 弱文字 */
+  --color-line: #e5ebf0;           /* 发丝线 */
+  --color-line-strong: #cfdbe3;
+  --color-accent: #0f9d95;         /* 清透水青 运行态 链接 用户标识 */
+  --color-accent-deep: #0c7f79;    /* 水青深色 用于文字确保对比 */
+  --color-accent-soft: #e2f5f2;    /* 薄荷浅底 */
+  --color-amber: #a97e24;          /* 琥珀 思考 提醒 */
+  --color-amber-soft: #f7efd9;
+  --color-danger: #d9564f;
+  --color-danger-soft: #fceceb;
+  --color-code-bg: #10222a;        /* 深青墨代码面板 */
+  --color-code-ink: #d5e3e6;
 
   /* 字体 IBM Plex Sans 为 UI 正文 Plex Mono 为数据嗓音 */
   --font-sans: "IBM Plex Sans", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", "Cascadia Code", Consolas, monospace;
+
+  --shadow-soft: 0 1px 3px rgba(36, 51, 66, 0.06), 0 4px 14px rgba(36, 51, 66, 0.05);
+}
+
+:root {
+  /* 语义别名 指向 @theme 变量 既有类沿用原名 */
+  --paper: var(--color-paper);
+  --surface: var(--color-surface);
+  --surface-2: var(--color-surface-2);
+  --ink: var(--color-ink);
+  --ink-soft: var(--color-ink-soft);
+  --muted: var(--color-muted);
+  --line: var(--color-line);
+  --line-strong: var(--color-line-strong);
+  --accent: var(--color-accent);
+  --accent-deep: var(--color-accent-deep);
+  --accent-soft: var(--color-accent-soft);
+  --amber: var(--color-amber);
+  --amber-soft: var(--color-amber-soft);
+  --danger: var(--color-danger);
+  --danger-soft: var(--color-danger-soft);
+  --code-bg: var(--color-code-bg);
+  --code-ink: var(--color-code-ink);
+
+  /* 数学衬线 π 的专属嗓音 无对应工具类 用处少不进 theme */
   --font-math: Georgia, "Times New Roman", serif;
 
   /* 尺寸 */
@@ -35,7 +70,6 @@
   --chat-max: 860px;
   --radius: 12px;
   --radius-sm: 8px;
-  --shadow-soft: 0 1px 3px rgba(36, 51, 66, 0.06), 0 4px 14px rgba(36, 51, 66, 0.05);
 }
 
 /* ---------- 基础 ---------- */
