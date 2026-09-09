@@ -1,0 +1,88 @@
+/* 基础 reset 与两栏布局 样式从简 Step 2 再细调 */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#__nuxt {
+  height: 100%;
+}
+
+body {
+  font-family: "Segoe UI", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #1f2328;
+  background: #ffffff;
+}
+
+a {
+  color: inherit;
+}
+
+/* 两栏布局 左侧 sidebar 固定宽度 右侧 main 占满剩余空间 */
+
+.layout {
+  display: flex;
+  height: 100%;
+}
+
+.sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: #f9fafb;
+  border-right: 1px solid #e5e7eb;
+}
+
+.sidebar-header {
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sidebar-title {
+  font-weight: 600;
+}
+
+.sidebar-nav {
+  padding: 12px 8px;
+}
+
+.sidebar-new {
+  display: block;
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+.sidebar-new:hover {
+  background: #eceef1;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+/* 新会话占位页 居中 */
+
+.page-new-session {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #6b7280;
+}
+
+.page-title {
+  font-size: 22px;
+  color: #1f2328;
+}
