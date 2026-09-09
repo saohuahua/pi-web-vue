@@ -7,6 +7,7 @@ import { closeSync, fstatSync, openSync, readSync, readdirSync, statSync } from 
 import { join } from "node:path";
 import { extractTextBlocks } from "#shared/lib/message-text";
 import { normalizeToolCalls } from "#shared/lib/normalize";
+import { computeSessionStats } from "#shared/lib/session-stats";
 import type { AgentMessage, SessionContext, SessionEntry, SessionHeader, SessionInfo } from "#shared/lib/types";
 
 const SESSION_HEADER_MAX_BYTES = 64 * 1024;
@@ -301,6 +302,8 @@ export function buildSessionContext(
     entryIds,
     oldestEntryId: sliced[0]?.id ?? null,
     hasMore: Boolean(sliced[0]?.parentId),
+    // 统计按完整 entries 累计 含未激活分支与被压缩历史 与显示消息是两个口径
+    stats: computeSessionStats(entries),
     ...getSessionSettings(entries, leafId),
   };
 }

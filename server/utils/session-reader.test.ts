@@ -30,4 +30,12 @@ describe("会话上下文", () => {
     expect(context.thinkingLevel).toBe("high");
     expect(context.model).toEqual({ provider: "test", modelId: "model-a" });
   });
+
+  it("统计按完整 entry 列表累计 与显示分支无关", () => {
+    // user-c 分支只显示三条消息 但 user-b 也属于文件累计
+    const context = buildSessionContext(entries, "user-c");
+
+    expect(context.stats.userMessages).toBe(3);
+    expect(context.stats.totalMessages).toBe(4);
+  });
 });

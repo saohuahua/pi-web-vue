@@ -13,6 +13,7 @@ import {
   SettingsManager,
 } from "@earendil-works/pi-coding-agent";
 import type { AgentEventLike } from "#shared/lib/agent-event-wire";
+import { validateAgentImages } from "#shared/lib/image-attachments";
 import { invalidateSessionListCache } from "./session-reader";
 
 interface ContextUsage {
@@ -26,6 +27,11 @@ interface ModelLike {
   provider: string;
 }
 
+interface ToolInfoLike {
+  name: string;
+  description?: string;
+}
+
 // pi SDK AgentSession 的最小结构 参考 pi-web lib/pi-types.ts 的 AgentSessionLike 精简
 // 只声明本项目实际用到的成员
 interface AgentSessionInner {
@@ -34,9 +40,18 @@ interface AgentSessionInner {
   readonly isStreaming: boolean;
   readonly isCompacting: boolean;
   readonly model: ModelLike | undefined;
+  readonly modelRuntime: {
+    getModel(provider: string, modelId: string): ModelLike | undefined;
+    refresh(options?: { allowNetwork?: boolean }): Promise<unknown>;
+  };
   readonly sessionManager: SessionManager;
+  readonly promptTemplates: ReadonlyArray<{ name: string; description?: string }>;
+  readonly resourceLoader: {
+    getSkills(): { skills: ReadonlyArray<{ name: string; description?: string }> };
+  };
   readonly agent: {
     state?: {
+      systemPrompt?: string;
       thinkingLevel?: string;
       streamingMessage?: unknown;
     };
@@ -50,7 +65,13 @@ interface AgentSessionInner {
   abort(): Promise<void>;
   dispose(): void;
   navigateTree(targetId: string, options?: { summarize?: boolean }): Promise<unknown>;
+  setModel(model: ModelLike): Promise<void>;
+  setThinkingLevel(level: string): void;
+  compact(customInstructions?: string): Promise<unknown>;
+  abortCompaction(): void;
   setSessionName(name: string): void;
+  getAllTools(): ToolInfoLike[];
+  getActiveToolNames(): string[];
   getContextUsage(): ContextUsage | undefined;
 }
 
@@ -123,8 +144,12 @@ export class AgentSessionWrapper {
     if (type !== "get_state") this.resetIdleTimer();
 
     switch (type) {
-      case "prompt":
+      case "prompt": {
+        // 图片先过服务端边界校验 前端压缩只是体验优化 不是安全边界
+        const imageError = validateAgentImages(command.images);
+        if (imageError) throw new Error(imageError);
         return this.sendPrompt(command);
+      }
 
       case "abort":
         await this.inner.abort();
@@ -140,10 +165,82 @@ export class AgentSessionWrapper {
           isCompacting: this.inner.isCompacting,
           model: model ? { id: model.id, provider: model.provider } : undefined,
           thinkingLevel: this.inner.agent.state?.thinkingLevel ?? "off",
+          systemPrompt: this.inner.agent.state?.systemPrompt ?? "",
           contextUsage: contextUsage
             ? { percent: contextUsage.percent, contextWindow: contextUsage.contextWindow, tokens: contextUsage.tokens }
             : null,
         };
+      }
+
+      case "set_model": {
+        // 必须验证 provider/modelId 在当前 runtime 可用 未命中先本地刷新一次再找
+        // 不验证直接调 setModel 会得到更含糊的 SDK 错误
+        const provider = command.provider as string;
+        const modelId = command.modelId as string;
+        let model = this.inner.modelRuntime.getModel(provider, modelId);
+        if (!model) {
+          await this.inner.modelRuntime.refresh({ allowNetwork: false });
+          model = this.inner.modelRuntime.getModel(provider, modelId);
+        }
+        if (!model) throw new Error(`Model not found: ${provider}/${modelId}`);
+        await this.inner.setModel(model);
+        invalidateSessionListCache();
+        return { id: model.id, provider: model.provider };
+      }
+
+      case "set_thinking_level": {
+        const level = command.level as string;
+        this.inner.setThinkingLevel(level);
+        // SDK 会把不支持 xhigh 的模型收敛到 high
+        // deepseek 的 reasoningEffortMap 需要 xhigh 原值 强制写回让兼容层正确使用
+        // SDK 的 compat 是多提供商联合类型 这里只关心 deepseek 一种 收窄读取
+        const compat = this.inner.model as { compat?: { thinkingFormat?: string } } | undefined;
+        if (level === "xhigh"
+          && compat?.compat?.thinkingFormat === "deepseek"
+          && this.inner.agent.state) {
+          this.inner.agent.state.thinkingLevel = "xhigh";
+        }
+        invalidateSessionListCache();
+        return null;
+      }
+
+      case "compact":
+        try {
+          return await this.inner.compact(command.customInstructions as string | undefined);
+        } finally {
+          invalidateSessionListCache();
+        }
+
+      case "abort_compaction":
+        // 压缩中止与 agent 停止是两个动作 前端必须分开调用
+        this.inner.abortCompaction();
+        return null;
+
+      case "get_commands": {
+        // 只返回名称 说明与来源 选择后仍作为普通 prompt 提交
+        // pi-web 还有扩展注册命令 本项目不启用扩展 只有模板与技能
+        const commands = [
+          ...this.inner.promptTemplates.map((t) => ({
+            name: t.name,
+            description: t.description ?? "",
+            source: "prompt" as const,
+          })),
+          ...this.inner.resourceLoader.getSkills().skills.map((s) => ({
+            name: `skill:${s.name}`,
+            description: s.description ?? "",
+            source: "skill" as const,
+          })),
+        ];
+        return { commands };
+      }
+
+      case "get_tools": {
+        const active = new Set(this.inner.getActiveToolNames());
+        return this.inner.getAllTools().map((t) => ({
+          name: t.name,
+          description: t.description ?? "",
+          active: active.has(t.name),
+        }));
       }
 
       case "navigate_tree": {

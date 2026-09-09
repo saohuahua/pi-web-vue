@@ -6,13 +6,16 @@
 
 | 本项目文件 | pi-web 来源 | 改动说明 |
 |---|---|---|
-| `shared/lib/types.ts` | `lib/types.ts` | 删除 CustomMessage、ExtensionUiRequest/Response、子代理与 worktree 相关类型 |
+| `shared/lib/types.ts` | `lib/types.ts` | 删除 CustomMessage、ExtensionUiRequest/Response、子代理与 worktree 相关类型 新增 SessionStatsInfo 与 SessionContext.stats |
 | `shared/lib/normalize.ts` | `lib/normalize.ts` | 逻辑原样 注释改写 |
 | `shared/lib/agent-event-wire.ts` | `lib/agent-event-wire.ts` | 删除 pi SDK 类型依赖 手写最小事件结构 |
 | `shared/lib/streaming-message.ts` | `lib/streaming-message.ts` | 原样 |
 | `shared/lib/agent-event-connection.ts` | `lib/agent-event-connection.ts` | 原样 |
 | `shared/lib/agent-client.ts` | `lib/agent-client.ts` | 原样 |
-| `server/utils/session-reader.ts` | `lib/session-reader.ts`（readBoundedLines / readBoundedTailLines / buildSessionContext / sliceActiveBranch / getSessionSettings） | 去掉 defer 选项与图片惰性化 列表改为全量扫描加 30 秒缓存 |
+| `shared/lib/image-attachments.ts` | `lib/image-attachments.ts` | 原样 注释改写 |
+| `shared/lib/session-stats.ts` | `lib/session-stats.ts` | 只保留 computeSessionStats 省略为惰性加载准备的 mergeSessionStats 与 computeMessageStats 未移植 branch_summary 分支 本项目 SessionEntry 无该类型 |
+| `server/utils/path-security.ts` | `lib/path-security.ts` 与 `lib/paths.ts` 的 isWindowsAbsolutePath | 原样 注释改写 |
+| `server/utils/session-reader.ts` | `lib/session-reader.ts`（readBoundedLines / readBoundedTailLines / buildSessionContext / sliceActiveBranch / getSessionSettings） | 去掉 defer 选项与图片惰性化 列表改为全量扫描加 30 秒缓存 buildSessionContext 增加文件累计统计 |
 | `server/utils/event-stream.ts` | `lib/agent-event-stream.ts` | 原样 输入改为标准 AbortSignal |
 | `server/utils/rpc-manager.ts` | `lib/rpc-manager.ts` | 简化重写（约 2118 行 → 约 280 行）去扩展 UI/子代理/工具预设/模型作用域/推送通知 |
 
