@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { sendAgentCommand } from "#shared/lib/agent-client";
 import { AgentEventConnection } from "#shared/lib/agent-event-connection";
 import type { AgentEventLike, ClientAssistantMessageEvent } from "#shared/lib/agent-event-wire";
+import { extractTextBlocks } from "#shared/lib/message-text";
 import { normalizeToolCalls } from "#shared/lib/normalize";
 import { INITIAL_STREAMING_STATE, streamReducer, type StreamingState } from "#shared/lib/streaming-message";
 import type { AgentMessage, SessionContext, ToolResultMessage } from "#shared/lib/types";
@@ -16,15 +17,9 @@ export interface Notice {
 
 // 乐观消息与服务端 message_end 的配对 key
 // timestamp 取整到秒 时钟差一秒也只是走替换分支 不会重复
-function userTextOf(m: AgentMessage): string {
-  if (m.role !== "user") return "";
-  return typeof m.content === "string"
-    ? m.content
-    : m.content.filter((b) => b.type === "text").map((b) => b.text).join(" ");
-}
-
 function userMessageKey(m: AgentMessage): string {
-  return `${m.role}:${userTextOf(m)}:${Math.floor((m.timestamp ?? 0) / 1000)}`;
+  const text = m.role === "user" ? extractTextBlocks(m.content).join(" ") : "";
+  return `${m.role}:${text}:${Math.floor((m.timestamp ?? 0) / 1000)}`;
 }
 
 /**
@@ -322,22 +317,23 @@ export const useChatStore = defineStore("chat", () => {
     await navigateTo(`/session/${body.sessionId}`);
   }
 
-  async function sendPrompt(text: string) {
+  // 返回是否已提交成功 失败时 composer 据此恢复草稿
+  async function sendPrompt(text: string): Promise<boolean> {
     // sessionId 丢失说明会话状态异常 静默吞掉用户输入比报错更糟
     if (!sessionId.value) {
       addNotice("error", "会话未就绪 请刷新页面重试");
-      return;
+      return false;
     }
-    if (isRunning.value) return;
+    if (isRunning.value) return false;
     const trimmed = text.trim();
-    if (!trimmed) return;
+    if (!trimmed) return false;
     // 先等 SSE 握手完成再发 prompt 短回复的事件才不会丢
     // 连接超时直接提示并中止 此时还没有乐观消息要撤
     try {
       await connection.ensureConnected(sessionId.value);
     } catch (e) {
       addNotice("error", e instanceof Error ? e.message : String(e));
-      return;
+      return false;
     }
 
     // 乐观追加用户消息 message_end 到达时去重
@@ -360,7 +356,9 @@ export const useChatStore = defineStore("chat", () => {
       optimisticKey = null;
       isRunning.value = false;
       addNotice("error", e instanceof Error ? e.message : String(e));
+      return false;
     }
+    return true;
   }
 
   async function stop() {

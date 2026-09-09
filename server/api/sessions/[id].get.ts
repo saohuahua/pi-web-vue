@@ -2,18 +2,13 @@ import { statSync } from "node:fs";
 import { SessionManager } from "@earendil-works/pi-coding-agent";
 import { getRpcSession } from "../../utils/rpc-manager";
 import { buildSessionContext, readSessionHeader, resolveSessionPath } from "../../utils/session-reader";
+import { extractTextBlocks } from "#shared/lib/message-text";
 import type { AgentMessage, SessionEntry, SessionInfo } from "#shared/lib/types";
 
 function firstUserMessageText(messages: AgentMessage[]): string {
   for (const message of messages) {
     if (message.role !== "user") continue;
-    const content = message.content;
-    if (typeof content === "string") return content.slice(0, 80);
-    const text = content
-      .filter((block): block is { type: "text"; text: string } => block.type === "text")
-      .map((block) => block.text)
-      .join(" ");
-    return text.slice(0, 80);
+    return extractTextBlocks(message.content).join(" ").slice(0, 80);
   }
   return "";
 }

@@ -59,6 +59,7 @@
 import { renderMarkdown } from "~/utils/markdown";
 import { useChatStore } from "~/stores/chat";
 import { imageDataUrl } from "#shared/lib/images";
+import { extractTextBlocks } from "#shared/lib/message-text";
 import ThinkingBlock from "~/components/ThinkingBlock.vue";
 import ToolCallCard from "~/components/ToolCallCard.vue";
 import type { AgentMessage } from "#shared/lib/types";
@@ -74,11 +75,10 @@ const props = defineProps<{
 
 const chat = useChatStore();
 
+// 气泡展示保留块间换行 与去重 key 的空格拼接区分
 function userText(m: AgentMessage): string {
   if (m.role !== "user") return "";
-  return typeof m.content === "string"
-    ? m.content
-    : m.content.filter((b) => b.type === "text").map((b) => b.text).join("\n");
+  return extractTextBlocks(m.content).join("\n");
 }
 
 // 模板里 v-else-if 不会窄化联合类型 用 computed 收窄后安全取字段

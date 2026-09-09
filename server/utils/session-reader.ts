@@ -5,6 +5,7 @@
 import { getAgentDir } from "@earendil-works/pi-coding-agent";
 import { closeSync, fstatSync, openSync, readSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { extractTextBlocks } from "#shared/lib/message-text";
 import { normalizeToolCalls } from "#shared/lib/normalize";
 import type { AgentMessage, SessionContext, SessionEntry, SessionHeader, SessionInfo } from "#shared/lib/types";
 
@@ -90,22 +91,6 @@ export function readSessionHeader(filePath: string): SessionHeader | null {
   }
 }
 
-function extractTextContent(message: { content: unknown }): string {
-  const content = message.content;
-  if (typeof content === "string") return content;
-  if (!Array.isArray(content)) return "";
-  return content
-    .filter(
-      (block): block is { type: string; text: string } =>
-        !!block
-        && typeof block === "object"
-        && (block as { type?: unknown }).type === "text"
-        && typeof (block as { text?: unknown }).text === "string",
-    )
-    .map((block) => block.text)
-    .join(" ");
-}
-
 // 列表页的会话名取文件尾部最近一条带 name 的 session_info
 // 权威值以详情接口的 sm.getSessionName 为准 这里列表展示够用
 function readSessionNameFromTail(filePath: string): string | undefined {
@@ -137,7 +122,7 @@ function scanSessionFile(filePath: string): SessionInfo | null {
       try {
         const entry = JSON.parse(line) as { type?: string; message?: { role?: string; content?: unknown } };
         if (entry.type !== "message" || entry.message?.role !== "user") continue;
-        const text = extractTextContent(entry.message as { content: unknown });
+        const text = extractTextBlocks(entry.message.content).join(" ");
         if (text) firstMessage = text.slice(0, SESSION_LIST_FIRST_MESSAGE_CHARS);
       } catch {
         continue;

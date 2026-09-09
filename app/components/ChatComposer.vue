@@ -52,7 +52,13 @@ async function submit() {
   draft.value = "";
   await nextTick();
   autosize();
-  await chat.sendPrompt(text);
+  // 提交失败回填草稿 用户输入不能无声消失
+  // 用户已另起输入时保留现在的内容
+  if (!(await chat.sendPrompt(text)) && !draft.value) {
+    draft.value = text;
+    await nextTick();
+    autosize();
+  }
 }
 
 function onKeydown(e: KeyboardEvent) {
