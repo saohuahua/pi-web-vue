@@ -276,6 +276,49 @@ a {
   50% { opacity: 0.3; }
 }
 
+/* ---------- 项目分组 未选项目时的折叠分组 ---------- */
+
+.project-group {
+  margin-bottom: 4px;
+}
+
+.project-group-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  border-radius: var(--radius-sm);
+}
+
+.project-group-head::-webkit-details-marker {
+  display: none;
+}
+
+/* 展开三角 用伪元素避免额外节点 */
+.project-group-head::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 4px solid var(--muted);
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+  transition: transform 0.15s ease;
+}
+
+.project-group[open] > .project-group-head::before {
+  transform: rotate(90deg);
+}
+
+.project-group-count {
+  margin-left: auto;
+}
+
 /* ---------- 新会话表单 ---------- */
 
 .new-session-form {

@@ -1,4 +1,4 @@
-import { statSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { SessionManager } from "@earendil-works/pi-coding-agent";
 import { getRpcSession } from "../../utils/rpc-manager";
 import { projectIdentityKey } from "../../utils/project-identity";
@@ -34,7 +34,10 @@ export default defineEventHandler(async (event) => {
       sessionManager = SessionManager.open(filePath);
     }
 
-    const header = readSessionHeader(filePath);
+    // 新建空会话在首条消息前 SDK 不落盘文件 header 与 mtime 都拿不到
+    // wrapper 存活说明会话真实存在 用 sessionManager 的内存状态补全
+    const fileExists = filePath !== "" && existsSync(filePath);
+    const header = fileExists ? readSessionHeader(filePath) : null;
     const entries = sessionManager.getEntries() as unknown as SessionEntry[];
     const leafId = sessionManager.getLeafId();
     const context = buildSessionContext(entries, leafId);
@@ -48,8 +51,8 @@ export default defineEventHandler(async (event) => {
       id,
       cwd: sessionCwd,
       ...(name !== undefined ? { name } : {}),
-      created: header?.timestamp ?? "",
-      modified: statSync(filePath).mtime.toISOString(),
+      created: header?.timestamp ?? new Date().toISOString(),
+      modified: fileExists ? statSync(filePath).mtime.toISOString() : new Date().toISOString(),
       messageCount: entries.filter((entry) => entry.type === "message").length,
       firstMessage: firstUserMessageText(context.messages),
       projectKey: projectIdentityKey(project.projectRoot),

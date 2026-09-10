@@ -5,9 +5,10 @@ import type { AgentEventLike, ClientAssistantMessageEvent } from "#shared/lib/ag
 import { extractTextBlocks } from "#shared/lib/message-text";
 import { normalizeToolCalls } from "#shared/lib/normalize";
 import { INITIAL_STREAMING_STATE, streamReducer, type StreamingState } from "#shared/lib/streaming-message";
-import type { AgentMessage, SessionContext, ToolResultMessage } from "#shared/lib/types";
+import type { AgentMessage, SessionContext, SessionInfo, ToolResultMessage } from "#shared/lib/types";
 import { getToolExecutionProgress } from "~/utils/tool-progress";
 import { useSessionsStore } from "./sessions";
+import { useWorkspaceStore } from "./workspace";
 
 export interface Notice {
   id: number;
@@ -29,6 +30,7 @@ function userMessageKey(m: AgentMessage): string {
  */
 export const useChatStore = defineStore("chat", () => {
   const sessionsStore = useSessionsStore();
+  const workspaceStore = useWorkspaceStore();
 
   const sessionId = ref<string | null>(null);
   const messages = ref<AgentMessage[]>([]);      // 已定稿消息
@@ -77,14 +79,15 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   // 权威数据重载 entryIds 只能从文件来 增量事件里没有
-  async function reload() {
+  // 返回会话信息 openSession 用它同步工作区 事件触发的 reload 忽略返回值
+  async function reload(): Promise<SessionInfo | null> {
     const id = sessionId.value;
-    if (!id) return;
+    if (!id) return null;
     const res = await fetch(`/api/sessions/${encodeURIComponent(id)}`).catch(() => null);
-    if (!res || !res.ok) return;
-    const body = await res.json() as { context?: SessionContext };
+    if (!res || !res.ok) return null;
+    const body = await res.json() as { context?: SessionContext; info?: SessionInfo };
     // 请求期间会话已切换 丢弃过期响应
-    if (sessionId.value !== id) return;
+    if (sessionId.value !== id) return null;
     messages.value = body.context?.messages ?? [];
     entryIds.value = body.context?.entryIds ?? [];
     // SessionContext 里叫 modelId 展示层统一成 id
@@ -94,6 +97,7 @@ export const useChatStore = defineStore("chat", () => {
     thinkingLevel.value = body.context?.thinkingLevel ?? "off";
     // 侧栏时间戳与首条消息预览跟着变
     void sessionsStore.refresh();
+    return body.info ?? null;
   }
 
   // SSE 事件分发 语义对照 pi-web handleAgentEvent 的精简版
@@ -297,7 +301,9 @@ export const useChatStore = defineStore("chat", () => {
     // 打开新会话前先关旧连接 否则旧事件还会流进新会话的视图
     close();
     sessionId.value = id;
-    await reload();
+    const info = await reload();
+    // 工作区跟随会话的项目与 worktree 打开别的项目时选择器同步过去
+    if (info?.cwd) void workspaceStore.syncFromSessionCwd(info.cwd);
     connection.maintain(id);
   }
 
