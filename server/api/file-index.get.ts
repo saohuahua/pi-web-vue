@@ -13,7 +13,9 @@ const GIT_HARD_CAP = 200_000;
 const WALK_HARD_CAP = 50_000;
 const MAX_WALK_DEPTH = 8;
 const MAX_QUERY_LENGTH = 500;
-// 客户端拿到的结果上限 @ 补全与文件搜索都够用
+// 空查询返回给客户端自建索引的上限 @ 补全与文件搜索都够用
+const MAX_CLIENT_FILES = 5000;
+// 带查询时返回的结果上限
 const MAX_RESULTS = 100;
 const CACHE_TTL_MS = 10_000;
 const CACHE_MAX_ENTRIES = 20;
@@ -111,13 +113,17 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // 空查询返回全量让前端自建索引 有查询时按包含匹配浅路径优先
+    // 空查询返回全量给前端自建索引 截到客户端上限
+    // 有查询时按包含匹配 服务端截断
     let files = cached.files;
     let truncated = false;
     if (q) {
       const matched = files.filter((f) => f.toLowerCase().includes(q));
       files = matched.slice(0, MAX_RESULTS);
       truncated = matched.length > MAX_RESULTS;
+    } else if (files.length > MAX_CLIENT_FILES) {
+      files = files.slice(0, MAX_CLIENT_FILES);
+      truncated = true;
     }
     const body: FileIndexResponse = { files, truncated };
     return body;

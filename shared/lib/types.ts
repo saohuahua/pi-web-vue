@@ -221,6 +221,41 @@ export interface FileIndexResponse {
   truncated: boolean;
 }
 
+// ---------- 模型选择 ----------
+
+export interface ModelListEntry {
+  id: string;
+  name: string;
+  provider: string;
+  /** 模型能力标签 text 或 image */
+  input: string[];
+}
+
+export interface ModelsResponse {
+  modelList: ModelListEntry[];
+  defaultModel: { provider: string; modelId: string } | null;
+  /** provider:id 到该模型支持的思考等级 思考等级由模型能力决定 不能写死 */
+  thinkingLevels: Record<string, string[]>;
+  modelError?: string;
+}
+
+// ---------- 输入附件 ----------
+
+// previewUrl 只在浏览器使用 发送时只传 data 与 mimeType
+export interface AttachedImage {
+  data: string;
+  mimeType: string;
+  previewUrl: string;
+}
+
+// ---------- / 命令面板 ----------
+
+export interface SlashCommandInfo {
+  name: string;
+  description: string;
+  source: "prompt" | "skill";
+}
+
 // 会话使用量的文件累计
 // compaction 只追加摘要 entry 被汇总的历史仍留在文件里 因此累计值单调增长
 // 与运行态的 context usage 是两项独立指标 前端不得相加

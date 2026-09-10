@@ -5,7 +5,7 @@ import type { AgentEventLike, ClientAssistantMessageEvent } from "#shared/lib/ag
 import { extractTextBlocks } from "#shared/lib/message-text";
 import { normalizeToolCalls } from "#shared/lib/normalize";
 import { INITIAL_STREAMING_STATE, streamReducer, type StreamingState } from "#shared/lib/streaming-message";
-import type { AgentMessage, SessionContext, SessionInfo, ToolResultMessage } from "#shared/lib/types";
+import type { AgentMessage, AttachedImage, SessionContext, SessionInfo, ToolResultMessage } from "#shared/lib/types";
 import { getToolExecutionProgress } from "~/utils/tool-progress";
 import { useSessionsStore } from "./sessions";
 import { useWorkspaceStore } from "./workspace";
@@ -36,6 +36,7 @@ export const useChatStore = defineStore("chat", () => {
   const messages = ref<AgentMessage[]>([]);      // 已定稿消息
   const entryIds = ref<string[]>([]);            // 与 messages 平行 分支操作要 entryId
   const draft = ref("");                         // 输入框草稿 文件树 @ 引用从外部写入
+  const attachedImages = ref<AttachedImage[]>([]); // 待发送图片 previewUrl 仅浏览器使用
   // reactive 包装的 reducer 状态 每次整体 Object.assign 写回
   // AgentEventConnection 不能进 reactive EventSource 被代理会出诡异问题 所以放闭包
   const stream = reactive<StreamingState>({ ...INITIAL_STREAMING_STATE });
@@ -43,6 +44,10 @@ export const useChatStore = defineStore("chat", () => {
   const isCompacting = ref(false);
   const model = ref<{ provider: string; id: string } | null>(null);
   const thinkingLevel = ref("off");
+  const contextUsage = ref<{ percent: number | null; contextWindow: number; tokens: number | null } | null>(null);
+  const systemPrompt = ref("");
+  const toolDefinitions = ref<Array<{ name: string; description: string; active: boolean }>>([]);
+  const slashCommands = ref<Array<{ name: string; description: string; source: string }>>([]);
   const notices = ref<Notice[]>([]);
   // 活跃工具执行 tool_execution_start 到 end 之间的实时状态
   // reactive Map 的 set delete 天然触发视图更新
@@ -55,6 +60,7 @@ export const useChatStore = defineStore("chat", () => {
   let sdkAgentActive = false;                    // SDK agent 是否升起 prompt_done 据此判断是否落定
   let noticeSeq = 0;
   let stopFallbackTimer: number | null = null;   // 停止后的兜底定时器
+  let runtimeInfoLoadedFor: string | null = null; // 命令与工具信息已拉取的会话
 
   function addNotice(type: Notice["type"], message: string) {
     notices.value.push({ id: (noticeSeq += 1), type, message });
@@ -192,6 +198,8 @@ export const useChatStore = defineStore("chat", () => {
           stopFallbackTimer = null;
         }
         void reload();
+        // 运行结束 context usage 与统计都变了
+        void refreshRuntimeState();
         break;
 
       case "prompt_error":
@@ -213,6 +221,7 @@ export const useChatStore = defineStore("chat", () => {
       case "auto_compaction_end":
         isCompacting.value = false;
         void reload();
+        void refreshRuntimeState();
         break;
 
       // 工具执行实时状态 卡片等 message_end 定稿后由历史渲染
@@ -276,14 +285,20 @@ export const useChatStore = defineStore("chat", () => {
     sessionId.value = null;
     messages.value = [];
     entryIds.value = [];
+    attachedImages.value = [];
     Object.assign(stream, INITIAL_STREAMING_STATE);
     isRunning.value = false;
     isCompacting.value = false;
+    contextUsage.value = null;
+    systemPrompt.value = "";
+    toolDefinitions.value = [];
+    slashCommands.value = [];
     activeTools.clear();
     retryInfo.value = null;
     queuedMessages.value = { steering: [], followUp: [] };
     optimisticKey = null;
     sdkAgentActive = false;
+    runtimeInfoLoadedFor = null;
     if (stopFallbackTimer !== null) {
       window.clearTimeout(stopFallbackTimer);
       stopFallbackTimer = null;
@@ -298,6 +313,101 @@ export const useChatStore = defineStore("chat", () => {
     close();
   }
 
+  // 运行态查询 模型 思考等级 context usage 系统提示词
+  // 权威来源是 get_state 文件推导的值只在 reload 时做初始展示
+  async function refreshRuntimeState() {
+    const id = sessionId.value;
+    if (!id) return;
+    try {
+      const state = await sendAgentCommand<{
+        model?: { id: string; provider: string };
+        thinkingLevel?: string;
+        isCompacting?: boolean;
+        systemPrompt?: string;
+        contextUsage?: { percent: number | null; contextWindow: number; tokens: number | null } | null;
+      }>(id, { type: "get_state" });
+      if (sessionId.value !== id) return;
+      if (state.model) model.value = { provider: state.model.provider, id: state.model.id };
+      if (typeof state.thinkingLevel === "string") thinkingLevel.value = state.thinkingLevel;
+      if (typeof state.isCompacting === "boolean") isCompacting.value = state.isCompacting;
+      if (typeof state.systemPrompt === "string") systemPrompt.value = state.systemPrompt;
+      contextUsage.value = state.contextUsage ?? null;
+    } catch {
+      // wrapper 未起或刚被回收 忽略 下次事件会再拉
+    }
+  }
+
+  // / 命令面板与工具只读信息 每个会话拉一次
+  async function fetchRuntimeInfo() {
+    const id = sessionId.value;
+    if (!id || runtimeInfoLoadedFor === id) return;
+    try {
+      const [commands, tools] = await Promise.all([
+        sendAgentCommand<{ commands: Array<{ name: string; description: string; source: string }> }>(id, { type: "get_commands" }),
+        sendAgentCommand<Array<{ name: string; description: string; active: boolean }>>(id, { type: "get_tools" }),
+      ]);
+      if (sessionId.value !== id) return;
+      slashCommands.value = commands.commands ?? [];
+      toolDefinitions.value = tools ?? [];
+      runtimeInfoLoadedFor = id;
+    } catch {
+      // 命令面板非关键路径 失败静默
+    }
+  }
+
+  // 模型切换 命令成功才更新 store 失败保留原选择
+  async function setModel(provider: string, modelId: string): Promise<boolean> {
+    const id = sessionId.value;
+    if (!id) return false;
+    try {
+      await sendAgentCommand(id, { type: "set_model", provider, modelId });
+      model.value = { provider, id: modelId };
+      void refreshRuntimeState();
+      return true;
+    } catch (e) {
+      addNotice("error", e instanceof Error ? e.message : String(e));
+      return false;
+    }
+  }
+
+  async function setThinkingLevel(level: string): Promise<boolean> {
+    const id = sessionId.value;
+    if (!id) return false;
+    try {
+      await sendAgentCommand(id, { type: "set_thinking_level", level });
+      thinkingLevel.value = level;
+      return true;
+    } catch (e) {
+      addNotice("error", e instanceof Error ? e.message : String(e));
+      return false;
+    }
+  }
+
+  // 上下文压缩 与 agent 停止是两个动作 结束后刷新运行态与统计
+  async function compact() {
+    const id = sessionId.value;
+    if (!id || isCompacting.value) return;
+    isCompacting.value = true;
+    try {
+      await sendAgentCommand(id, { type: "compact" });
+    } catch (e) {
+      isCompacting.value = false;
+      addNotice("error", e instanceof Error ? e.message : String(e));
+      return;
+    }
+    // 成功路径等 compaction_end 事件驱动 不在这里复位
+  }
+
+  async function abortCompaction() {
+    const id = sessionId.value;
+    if (!id) return;
+    try {
+      await sendAgentCommand(id, { type: "abort_compaction" });
+    } catch (e) {
+      addNotice("error", e instanceof Error ? e.message : String(e));
+    }
+  }
+
   async function openSession(id: string) {
     // 打开新会话前先关旧连接 否则旧事件还会流进新会话的视图
     close();
@@ -306,6 +416,8 @@ export const useChatStore = defineStore("chat", () => {
     // 工作区跟随会话的项目与 worktree 打开别的项目时选择器同步过去
     if (info?.cwd) void workspaceStore.syncFromSessionCwd(info.cwd);
     connection.maintain(id);
+    void refreshRuntimeState();
+    void fetchRuntimeInfo();
   }
 
   // 只创建空会话不带首条消息
@@ -325,6 +437,7 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   // 返回是否已提交成功 失败时 composer 据此恢复草稿
+  // 有图片无文字也允许发送 图片只传 data 与 mimeType previewUrl 留在浏览器
   async function sendPrompt(text: string): Promise<boolean> {
     // sessionId 丢失说明会话状态异常 静默吞掉用户输入比报错更糟
     if (!sessionId.value) {
@@ -333,7 +446,8 @@ export const useChatStore = defineStore("chat", () => {
     }
     if (isRunning.value) return false;
     const trimmed = text.trim();
-    if (!trimmed) return false;
+    const images = attachedImages.value.map(({ data, mimeType }) => ({ type: "image" as const, data, mimeType }));
+    if (!trimmed && images.length === 0) return false;
     // 先等 SSE 握手完成再发 prompt 短回复的事件才不会丢
     // 连接超时直接提示并中止 此时还没有乐观消息要撤
     try {
@@ -352,7 +466,12 @@ export const useChatStore = defineStore("chat", () => {
     applyStream({ type: "start" });
 
     try {
-      await sendAgentCommand(sessionId.value, { type: "prompt", message: trimmed });
+      await sendAgentCommand(sessionId.value, {
+        type: "prompt",
+        ...(trimmed ? { message: trimmed } : { message: "" }),
+        ...(images.length ? { images } : {}),
+      });
+      attachedImages.value = [];
     } catch (e) {
       // 提交失败撤回乐观消息 只撤仍然在末尾的那条
       const last = messages.value[messages.value.length - 1];
@@ -386,9 +505,11 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   return {
-    sessionId, messages, entryIds, draft, stream, isRunning, isCompacting,
-    model, thinkingLevel, notices, activeTools, retryInfo, queuedMessages,
+    sessionId, messages, entryIds, draft, attachedImages, stream, isRunning, isCompacting,
+    model, thinkingLevel, contextUsage, systemPrompt, toolDefinitions, slashCommands,
+    notices, activeTools, retryInfo, queuedMessages,
     toolResultsByCallId,
     openSession, newSession, sendPrompt, stop, close, closeIfCurrent, reload, dismissNotice,
+    setModel, setThinkingLevel, compact, abortCompaction, refreshRuntimeState, fetchRuntimeInfo,
   };
 });
