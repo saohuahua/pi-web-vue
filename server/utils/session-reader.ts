@@ -9,6 +9,8 @@ import { extractTextBlocks } from "#shared/lib/message-text";
 import { normalizeToolCalls } from "#shared/lib/normalize";
 import { computeSessionStats } from "#shared/lib/session-stats";
 import type { AgentMessage, SessionContext, SessionEntry, SessionHeader, SessionInfo } from "#shared/lib/types";
+import { projectIdentityKey } from "./project-identity";
+import { resolveProject } from "./worktree";
 
 const SESSION_HEADER_MAX_BYTES = 64 * 1024;
 const SESSION_LIST_FIRST_MESSAGE_LINES = 40;
@@ -111,7 +113,10 @@ function readSessionNameFromTail(filePath: string): string | undefined {
   return undefined;
 }
 
-function scanSessionFile(filePath: string): SessionInfo | null {
+// 扫描产物尚未带项目身份 项目字段由 listSessions 的 enrich 步骤统一填充
+type ScannedSession = Omit<SessionInfo, "projectKey" | "projectRoot">;
+
+function scanSessionFile(filePath: string): ScannedSession | null {
   try {
     const header = readSessionHeader(filePath);
     if (!header) return null;
@@ -153,13 +158,33 @@ export function invalidateSessionListCache(): void {
   listCache = null;
 }
 
-export function listSessions(force = false): SessionInfo[] {
+// 按唯一 cwd 批量解析项目身份 同一项目的多个会话只触发一次 git 调用
+// resolveProject 自带 TTL 缓存 这里不再额外缓存
+async function enrichProjectIdentity(scanned: ScannedSession[]): Promise<SessionInfo[]> {
+  const byCwd = new Map<string, Awaited<ReturnType<typeof resolveProject>>>();
+  for (const session of scanned) {
+    if (!byCwd.has(session.cwd)) {
+      byCwd.set(session.cwd, await resolveProject(session.cwd));
+    }
+  }
+  return scanned.map((session) => {
+    const project = byCwd.get(session.cwd)!;
+    return {
+      ...session,
+      projectKey: projectIdentityKey(project.projectRoot),
+      projectRoot: project.projectRoot,
+      ...(project.isWorktree ? { worktreePath: session.cwd } : {}),
+    };
+  });
+}
+
+export async function listSessions(force = false): Promise<SessionInfo[]> {
   if (!force && listCache && Date.now() - listCache.ts < SESSION_LIST_CACHE_TTL_MS) {
     return listCache.data;
   }
 
   const sessionsDir = join(getAgentDir(), "sessions");
-  const sessions: SessionInfo[] = [];
+  const scanned: ScannedSession[] = [];
   try {
     // 一层子目录是一个项目 目录名是编码后的 cwd 不用解码 header 里有原始 cwd
     for (const dir of readdirSync(sessionsDir, { withFileTypes: true })) {
@@ -168,13 +193,14 @@ export function listSessions(force = false): SessionInfo[] {
       for (const file of readdirSync(projectDir, { withFileTypes: true })) {
         if (!file.isFile() || !file.name.endsWith(".jsonl")) continue;
         const info = scanSessionFile(join(projectDir, file.name));
-        if (info) sessions.push(info);
+        if (info) scanned.push(info);
       }
     }
   } catch {
     // sessions 目录不存在等场景 返回空列表
   }
 
+  const sessions = await enrichProjectIdentity(scanned);
   sessions.sort((a, b) => (a.modified < b.modified ? 1 : -1));
   listCache = { data: sessions, ts: Date.now() };
   return sessions;

@@ -161,6 +161,36 @@ export interface SessionInfo {
   modified: string;
   messageCount: number;
   firstMessage: string;
+  /** 会话分组用的稳定键 同一仓库不同 worktree 的会话共享一个键 */
+  projectKey: string;
+  /** 会话所属项目根 worktree 会话指向主仓库根 */
+  projectRoot: string;
+  /** 会话 cwd 是链接 worktree 顶层时记录该 worktree 路径 主检出不填 */
+  worktreePath?: string;
+}
+
+// 项目身份 由 cwd 解析而来 projectKey 是分组与记忆的稳定键 不能用展示名代替
+export interface ProjectIdentity {
+  cwd: string;
+  projectRoot: string;
+  projectKey: string;
+}
+
+// 已有 worktree 条目 分支名不是路径 不能做路径转换
+export interface WorktreeInfo {
+  path: string;
+  branch: string | null;
+  isMain: boolean;
+  isCurrent: boolean;
+}
+
+export interface WorktreesResponse {
+  projectRoot: string;
+  projectKey: string;
+  isGit: boolean;
+  isTopLevel: boolean;
+  currentWorktreePath: string | null;
+  worktrees: WorktreeInfo[];
 }
 
 // 会话使用量的文件累计
