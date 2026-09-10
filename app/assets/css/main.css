@@ -72,6 +72,29 @@
   --radius-sm: 8px;
 }
 
+/* 深色主题 覆盖语义别名到一套夜间色板
+   @theme 的工具类变量不动 深色下用语义类与别名保证一致 */
+:root[data-theme="dark"] {
+  --paper: #141a20;
+  --surface: #1a222a;
+  --surface-2: #222c36;
+  --ink: #d8e2e8;
+  --ink-soft: #b3c2cc;
+  --muted: #7f93a1;
+  --line: #2a3540;
+  --line-strong: #3a4753;
+  --accent: #2fb8ae;
+  --accent-deep: #58cec4;
+  --accent-soft: #1d3a3c;
+  --amber: #d4a94e;
+  --amber-soft: #3a3220;
+  --danger: #e07b74;
+  --danger-soft: #3d2624;
+  --code-bg: #0e161c;
+  --code-ink: #cfe0e4;
+  color-scheme: dark;
+}
+
 /* ---------- 基础 ---------- */
 
 * {

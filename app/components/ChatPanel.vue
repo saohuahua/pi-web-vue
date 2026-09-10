@@ -139,6 +139,8 @@
 
     <!-- 运行信息抽屉 系统提示词与工具 -->
     <RuntimeInfoDrawer />
+    <!-- 配置抽屉 模型 技能 设置 -->
+    <SettingsDrawer />
   </div>
 </template>
 
@@ -152,11 +154,20 @@ import ChatComposer from "~/components/ChatComposer.vue";
 import MessageItem from "~/components/MessageItem.vue";
 import PiIndicator from "~/components/PiIndicator.vue";
 import RuntimeInfoDrawer from "~/components/RuntimeInfoDrawer.vue";
+import SettingsDrawer from "~/components/SettingsDrawer.vue";
+import { useSettingsStore } from "~/stores/settings";
+import { playCompletionChime } from "~/utils/chime";
 
 const chat = useChatStore();
 const sessionsStore = useSessionsStore();
 const ui = useUiStore();
+const settings = useSettingsStore();
 const scrollEl = ref<HTMLElement | null>(null);
+
+// 运行结束时按偏好播放提示音
+watch(() => chat.isRunning, (running, was) => {
+  if (!running && was && settings.completionSound) playCompletionChime();
+});
 
 // 依赖含流式消息内容长度 流式每增长一帧评估一次跟随
 const { onScroll } = useAutoScroll(scrollEl, () => [

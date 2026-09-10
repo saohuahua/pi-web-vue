@@ -256,6 +256,17 @@ export interface SlashCommandInfo {
   source: "prompt" | "skill";
 }
 
+// ---------- 技能面板 ----------
+
+export interface SkillEntry {
+  name: string;
+  description: string;
+  filePath: string;
+  baseDir: string;
+  sourceInfo: { source?: string };
+  disableModelInvocation: boolean;
+}
+
 // 会话使用量的文件累计
 // compaction 只追加摘要 entry 被汇总的历史仍留在文件里 因此累计值单调增长
 // 与运行态的 context usage 是两项独立指标 前端不得相加

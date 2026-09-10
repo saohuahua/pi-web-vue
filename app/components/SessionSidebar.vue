@@ -70,6 +70,25 @@
 
     <!-- 左下文件树 根跟随工作区选择 -->
     <FileExplorer />
+
+    <!-- 左下配置入口 模型 技能 设置 三个面板 -->
+    <div class="flex items-center gap-1 border-t border-line px-3 py-2">
+      <button
+        v-for="entry in settingsEntries"
+        :key="entry.tab"
+        class="rounded-full px-2.5 py-1 text-[11.5px] text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+        type="button"
+        @click="ui.openSettings(entry.tab)"
+      >{{ entry.label }}</button>
+      <span class="flex-1"></span>
+      <button
+        class="rounded-full px-2 py-1 text-[12px] text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+        type="button"
+        title="配置"
+        aria-label="配置"
+        @click="ui.openSettings('settings')"
+      >⚙</button>
+    </div>
   </aside>
 </template>
 
@@ -91,6 +110,13 @@ const route = useRoute();
 const chat = useChatStore();
 const sessionsStore = useSessionsStore();
 const workspace = useWorkspaceStore();
+const ui = useUiStore();
+
+const settingsEntries = [
+  { tab: "models" as const, label: "模型" },
+  { tab: "skills" as const, label: "技能" },
+  { tab: "settings" as const, label: "设置" },
+];
 
 const showForm = ref(false);
 const search = ref("");
