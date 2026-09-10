@@ -5,7 +5,7 @@ import type { AgentEventLike, ClientAssistantMessageEvent } from "#shared/lib/ag
 import { extractTextBlocks } from "#shared/lib/message-text";
 import { normalizeToolCalls } from "#shared/lib/normalize";
 import { INITIAL_STREAMING_STATE, streamReducer, type StreamingState } from "#shared/lib/streaming-message";
-import type { AgentMessage, AttachedImage, SessionContext, SessionInfo, ToolResultMessage } from "#shared/lib/types";
+import type { AgentMessage, AttachedImage, SessionContext, SessionInfo, SessionStatsInfo, ToolResultMessage } from "#shared/lib/types";
 import { getToolExecutionProgress } from "~/utils/tool-progress";
 import { useSessionsStore } from "./sessions";
 import { useWorkspaceStore } from "./workspace";
@@ -48,6 +48,8 @@ export const useChatStore = defineStore("chat", () => {
   const systemPrompt = ref("");
   const toolDefinitions = ref<Array<{ name: string; description: string; active: boolean }>>([]);
   const slashCommands = ref<Array<{ name: string; description: string; source: string }>>([]);
+  const stats = ref<SessionStatsInfo | null>(null);      // 文件累计 usage 与运行态 context 是两项指标
+  const sessionName = ref<string | null>(null);          // 当前会话名 顶栏展示与重命名入口
   const notices = ref<Notice[]>([]);
   // 活跃工具执行 tool_execution_start 到 end 之间的实时状态
   // reactive Map 的 set delete 天然触发视图更新
@@ -102,6 +104,8 @@ export const useChatStore = defineStore("chat", () => {
       ? { provider: body.context.model.provider, id: body.context.model.modelId }
       : null;
     thinkingLevel.value = body.context?.thinkingLevel ?? "off";
+    stats.value = body.context?.stats ?? null;
+    sessionName.value = body.info?.name ?? null;
     // 侧栏时间戳与首条消息预览跟着变
     void sessionsStore.refresh();
     return body.info ?? null;
@@ -293,6 +297,8 @@ export const useChatStore = defineStore("chat", () => {
     systemPrompt.value = "";
     toolDefinitions.value = [];
     slashCommands.value = [];
+    stats.value = null;
+    sessionName.value = null;
     activeTools.clear();
     retryInfo.value = null;
     queuedMessages.value = { steering: [], followUp: [] };
@@ -507,6 +513,7 @@ export const useChatStore = defineStore("chat", () => {
   return {
     sessionId, messages, entryIds, draft, attachedImages, stream, isRunning, isCompacting,
     model, thinkingLevel, contextUsage, systemPrompt, toolDefinitions, slashCommands,
+    stats, sessionName,
     notices, activeTools, retryInfo, queuedMessages,
     toolResultsByCallId,
     openSession, newSession, sendPrompt, stop, close, closeIfCurrent, reload, dismissNotice,

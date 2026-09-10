@@ -1,13 +1,72 @@
 <template>
   <div class="chat-panel">
-    <!-- 状态栏 模型与运行态 -->
+    <!-- 顶栏 会话操作与使用量 -->
     <header class="chat-status">
       <div class="status-left">
-        <span class="status-model">{{ chat.model ? `${chat.model.provider} / ${chat.model.id}` : "未加载" }}</span>
-        <span v-if="chat.thinkingLevel !== 'off'" class="status-chip thinking">思考 {{ chat.thinkingLevel }}</span>
+        <button
+          class="status-icon-btn"
+          type="button"
+          :aria-label="ui.sidebarCollapsed ? '展开侧栏' : '收起侧栏'"
+          :title="ui.sidebarCollapsed ? '展开侧栏' : '收起侧栏'"
+          @click="ui.toggleSidebar()"
+        >☰</button>
+
+        <!-- 会话名 悬停出现重命名与生成标题 -->
+        <div v-if="!renaming" class="status-title-group">
+          <span class="status-title" :title="titleText">{{ titleText }}</span>
+          <span v-if="chat.sessionId" class="status-title-actions">
+            <button type="button" title="重命名" aria-label="重命名会话" @click="startRename">✎</button>
+            <button
+              v-if="hasMessages"
+              type="button"
+              title="生成标题"
+              aria-label="生成标题"
+              :disabled="sessionsStore.titlingIds.has(chat.sessionId)"
+              @click="autoTitle"
+            >{{ sessionsStore.titlingIds.has(chat.sessionId) ? "…" : "✦" }}</button>
+          </span>
+        </div>
+        <input
+          v-else
+          ref="renameInput"
+          v-model="renameValue"
+          class="status-rename-input"
+          type="text"
+          spellcheck="false"
+          @keydown.enter.prevent="commitRename"
+          @keydown.esc.stop.prevent="renaming = false"
+          @blur="commitRename"
+        >
+
         <span v-if="chat.isCompacting" class="status-chip compacting">压缩上下文中</span>
       </div>
+
       <div class="status-right">
+        <!-- 使用量 文件累计 token 与成本 悬浮明细 -->
+        <span
+          v-if="chat.stats"
+          class="status-usage font-mono"
+          :title="chat.stats ? usageBreakdown(chat.stats) : ''"
+        >
+          <span>{{ formatTokenCount(chat.stats.tokens.total) }} tok</span>
+          <span class="status-usage-cost">{{ formatCost(chat.stats.cost) }}</span>
+        </span>
+        <!-- 当前上下文占用 无 window 数据时整块隐藏 -->
+        <span
+          v-if="contextPercent !== null"
+          class="status-usage font-mono"
+          :class="{ warn: contextPercent >= 80 }"
+          :title="contextTitle"
+        >ctx {{ contextPercent }}%</span>
+
+        <button
+          class="status-icon-btn"
+          type="button"
+          title="系统与工具"
+          aria-label="系统与工具"
+          @click="ui.runtimeInfoOpen = true"
+        >⚙</button>
+
         <PiIndicator v-if="chat.isRunning" />
       </div>
     </header>
@@ -77,17 +136,26 @@
     </div>
 
     <ChatComposer />
+
+    <!-- 运行信息抽屉 系统提示词与工具 -->
+    <RuntimeInfoDrawer />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useAutoScroll } from "~/composables/useAutoScroll";
 import { useChatStore } from "~/stores/chat";
+import { useSessionsStore } from "~/stores/sessions";
+import { useUiStore } from "~/stores/ui";
+import { formatCost, formatTokenCount, usageBreakdown } from "~/utils/usage-format";
 import ChatComposer from "~/components/ChatComposer.vue";
 import MessageItem from "~/components/MessageItem.vue";
 import PiIndicator from "~/components/PiIndicator.vue";
+import RuntimeInfoDrawer from "~/components/RuntimeInfoDrawer.vue";
 
 const chat = useChatStore();
+const sessionsStore = useSessionsStore();
+const ui = useUiStore();
 const scrollEl = ref<HTMLElement | null>(null);
 
 // 依赖含流式消息内容长度 流式每增长一帧评估一次跟随
@@ -100,4 +168,55 @@ const { onScroll } = useAutoScroll(scrollEl, () => [
 const queuedCount = computed(
   () => chat.queuedMessages.steering.length + chat.queuedMessages.followUp.length,
 );
+
+// ---------- 顶栏 ----------
+
+// 标题 优先会话名 无名空会话用引导文案
+const titleText = computed(() => chat.sessionName ?? (chat.messages.length ? "未命名会话" : "空会话"));
+const hasMessages = computed(() => chat.messages.some((m) => m.role === "user"));
+
+const renaming = ref(false);
+const renameValue = ref("");
+const renameInput = ref<HTMLInputElement | null>(null);
+
+function startRename() {
+  renameValue.value = chat.sessionName ?? "";
+  renaming.value = true;
+  nextTick(() => {
+    renameInput.value?.focus();
+    renameInput.value?.select();
+  });
+}
+
+async function commitRename() {
+  if (!renaming.value) return;
+  const value = renameValue.value.trim();
+  renaming.value = false;
+  if (!value || value === chat.sessionName || !chat.sessionId) return;
+  if (await sessionsStore.rename(chat.sessionId, value)) {
+    chat.sessionName = value;
+  }
+}
+
+async function autoTitle() {
+  if (!chat.sessionId) return;
+  await sessionsStore.autoTitle(chat.sessionId);
+  // 生成后详情里拉新名字
+  void chat.reload();
+}
+
+// ---------- 使用量 ----------
+
+const contextPercent = computed(() =>
+  chat.contextUsage?.percent !== null && chat.contextUsage?.percent !== undefined
+    ? Math.round(chat.contextUsage.percent)
+    : null,
+);
+const contextTitle = computed(() => {
+  const usage = chat.contextUsage;
+  if (!usage) return "";
+  const tokensK = usage.tokens !== null ? `${Math.round(usage.tokens / 1000)}k` : "?";
+  const windowK = Math.round(usage.contextWindow / 1000);
+  return `当前上下文 ${tokensK} / ${windowK}k tokens`;
+});
 </script>
