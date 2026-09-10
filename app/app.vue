@@ -3,6 +3,8 @@
     <SessionSidebar @navigate="sidebarOpen = false" />
     <main class="main">
       <NuxtPage />
+      <!-- 右侧文件预览 从文件树打开 按需覆盖不挤聊天 -->
+      <FileViewer />
     </main>
     <!-- 窄屏开关 打开后点遮罩关闭 -->
     <button
@@ -21,6 +23,7 @@
 
 <script setup lang="ts">
 import SessionSidebar from "~/components/SessionSidebar.vue";
+import FileViewer from "~/components/FileViewer.vue";
 
 // 两栏布局壳 左 280px 固定 右侧自适应
 // 窄屏下侧栏变抽屉 由浮动按钮开关

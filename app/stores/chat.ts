@@ -35,6 +35,7 @@ export const useChatStore = defineStore("chat", () => {
   const sessionId = ref<string | null>(null);
   const messages = ref<AgentMessage[]>([]);      // 已定稿消息
   const entryIds = ref<string[]>([]);            // 与 messages 平行 分支操作要 entryId
+  const draft = ref("");                         // 输入框草稿 文件树 @ 引用从外部写入
   // reactive 包装的 reducer 状态 每次整体 Object.assign 写回
   // AgentEventConnection 不能进 reactive EventSource 被代理会出诡异问题 所以放闭包
   const stream = reactive<StreamingState>({ ...INITIAL_STREAMING_STATE });
@@ -385,7 +386,7 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   return {
-    sessionId, messages, entryIds, stream, isRunning, isCompacting,
+    sessionId, messages, entryIds, draft, stream, isRunning, isCompacting,
     model, thinkingLevel, notices, activeTools, retryInfo, queuedMessages,
     toolResultsByCallId,
     openSession, newSession, sendPrompt, stop, close, closeIfCurrent, reload, dismissNotice,

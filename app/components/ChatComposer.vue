@@ -3,7 +3,7 @@
     <div class="composer-box">
       <textarea
         ref="textareaEl"
-        v-model="draft"
+        v-model="chat.draft"
         class="composer-input"
         rows="1"
         placeholder="给 π agent 发消息…"
@@ -22,7 +22,7 @@
         v-else
         class="composer-btn send"
         type="button"
-        :disabled="!draft.trim()"
+        :disabled="!chat.draft.trim()"
         aria-label="发送"
         @click="submit"
       >发送</button>
@@ -34,8 +34,8 @@
 <script setup lang="ts">
 import { useChatStore } from "~/stores/chat";
 
+// 草稿放在 chat store 文件树的 @ 引用要能从外部写入输入框
 const chat = useChatStore();
-const draft = ref("");
 const textareaEl = ref<HTMLTextAreaElement | null>(null);
 
 // 输入框高度自适应内容 上限 200px 超出后内部滚动
@@ -46,16 +46,19 @@ function autosize() {
   el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
 }
 
+// 草稿被外部写入时也要重新量高
+watch(() => chat.draft, () => nextTick(autosize));
+
 async function submit() {
-  const text = draft.value;
+  const text = chat.draft;
   if (!text.trim() || chat.isRunning) return;
-  draft.value = "";
+  chat.draft = "";
   await nextTick();
   autosize();
   // 提交失败回填草稿 用户输入不能无声消失
   // 用户已另起输入时保留现在的内容
-  if (!(await chat.sendPrompt(text)) && !draft.value) {
-    draft.value = text;
+  if (!(await chat.sendPrompt(text)) && !chat.draft) {
+    chat.draft = text;
     await nextTick();
     autosize();
   }

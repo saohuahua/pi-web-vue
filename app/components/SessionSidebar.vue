@@ -31,8 +31,7 @@
       >
     </div>
 
-    <nav class="sidebar-list" aria-label="会话列表">
-      <!-- 已选项目 单项目平铺 -->
+    <nav class="sidebar-list" aria-label="会话列表">      <!-- 已选项目 单项目平铺 -->
       <template v-if="workspace.projectKey">
         <p v-if="!filteredSessions.length" class="sidebar-empty">
           {{ sessionsStore.loading ? "加载中…" : "这个项目还没有会话" }}
@@ -67,6 +66,9 @@
         </p>
       </template>
     </nav>
+
+    <!-- 左下文件树 根跟随工作区选择 -->
+    <FileExplorer />
   </aside>
 </template>
 
@@ -76,6 +78,7 @@ import { useSessionsStore } from "~/stores/sessions";
 import { useWorkspaceStore } from "~/stores/workspace";
 import { filterSessions, groupSessionsByProject } from "~/utils/session-groups";
 import NewSessionForm from "~/components/NewSessionForm.vue";
+import FileExplorer from "~/components/FileExplorer.vue";
 import SessionRow from "~/components/SessionRow.vue";
 import WorkspaceSelector from "~/components/WorkspaceSelector.vue";
 import type { SessionInfo } from "#shared/lib/types";

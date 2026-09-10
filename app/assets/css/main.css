@@ -148,6 +148,8 @@ a {
   display: flex;
   flex-direction: column;
   background: var(--paper);
+  /* 右侧文件预览面板相对它定位 */
+  position: relative;
 }
 
 .sidebar-toggle {
@@ -991,6 +993,58 @@ a {
 
 .hljs-emphasis { font-style: italic; }
 .hljs-strong { font-weight: 600; }
+
+/* ---------- 文件查看器 主区域右侧覆盖面板 ---------- */
+
+.file-viewer {
+  position: absolute;
+  inset: 0 auto 0 0;
+  left: auto;
+  right: 0;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 72%);
+  background: var(--surface);
+  border-left: 1px solid var(--line);
+  box-shadow: -8px 0 24px rgba(36, 51, 66, 0.08);
+}
+
+.file-viewer-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.file-viewer-note {
+  padding: 10px 16px;
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--paper);
+}
+
+.file-viewer-error {
+  color: var(--danger);
+}
+
+.file-viewer-image {
+  display: block;
+  max-width: 100%;
+  margin: 14px auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+}
+
+.file-viewer-text {
+  margin: 0;
+  padding: 14px 16px 24px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
 
 /* ---------- 输入区 ---------- */
 

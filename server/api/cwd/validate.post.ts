@@ -1,6 +1,7 @@
 import { statSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, resolve } from "node:path";
+import { allowFileRoot } from "../../utils/file-access";
 import { projectIdentityKey } from "../../utils/project-identity";
 import { toNativePath } from "../../utils/paths";
 import { resolveProject } from "../../utils/worktree";
@@ -38,6 +39,8 @@ export default defineEventHandler(async (event) => {
     }
 
     const project = await resolveProject(normalizedCwd);
+    // 校验通过即授权该目录进文件浏览允许根 pi-web 同款语义
+    allowFileRoot(normalizedCwd);
     return {
       success: true,
       cwd: normalizedCwd,

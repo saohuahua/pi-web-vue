@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import type { WorktreesResponse, WorktreeInfo } from "#shared/lib/types";
+import { allowFileRoot } from "../utils/file-access";
 import { projectIdentityKey } from "../utils/project-identity";
 import { samePath } from "../utils/paths";
 import { findCurrentWorktreePath, listWorktrees, resolveProject } from "../utils/worktree";
@@ -30,6 +31,9 @@ export default defineEventHandler(async (event) => {
       ...w,
       isCurrent: currentWorktreePath !== null && samePath(w.path, currentWorktreePath),
     }));
+
+    // 列出的都是该仓库的合法 worktree 授权浏览 无会话的 worktree 也能进文件树
+    for (const w of enriched) allowFileRoot(w.path);
 
     const response: WorktreesResponse = {
       projectRoot: project.projectRoot,

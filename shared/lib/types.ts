@@ -193,6 +193,34 @@ export interface WorktreesResponse {
   worktrees: WorktreeInfo[];
 }
 
+// ---------- 文件浏览 ----------
+
+// 目录列表条目 目录在前按名排序由服务端保证
+export interface FileEntry {
+  name: string;
+  isDir: boolean;
+}
+
+export interface FileListResponse {
+  path: string;
+  entries: FileEntry[];
+}
+
+// 文本读取 超过上限截断并标记 完整内容由 agent 工具读取
+export interface FileTextContent {
+  kind: "text";
+  content: string;
+  language: string;
+  size: number;
+  truncated: boolean;
+}
+
+// 文件索引 @ 补全与文件搜索共用 有上限
+export interface FileIndexResponse {
+  files: string[];
+  truncated: boolean;
+}
+
 // 会话使用量的文件累计
 // compaction 只追加摘要 entry 被汇总的历史仍留在文件里 因此累计值单调增长
 // 与运行态的 context usage 是两项独立指标 前端不得相加
