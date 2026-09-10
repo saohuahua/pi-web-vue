@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { ref } from "vue";
 import type { ProjectIdentity, WorktreeInfo, WorktreesResponse } from "#shared/lib/types";
 
 const STORAGE_KEY = "pi-agent:workspace";

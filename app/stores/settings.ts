@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { ref } from "vue";
 
 // 应用偏好 不触及凭证 持久化到浏览器
 // 主题 auto 跟随系统 浅色 深色三档

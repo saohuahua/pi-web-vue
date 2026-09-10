@@ -14,7 +14,13 @@
 | `shared/lib/agent-client.ts` | `lib/agent-client.ts` | 原样 |
 | `shared/lib/image-attachments.ts` | `lib/image-attachments.ts` | 原样 注释改写 |
 | `shared/lib/session-stats.ts` | `lib/session-stats.ts` | 只保留 computeSessionStats 省略为惰性加载准备的 mergeSessionStats 与 computeMessageStats 未移植 branch_summary 分支 本项目 SessionEntry 无该类型 |
+| `shared/lib/file-paths.ts` | `lib/file-paths.ts` | 精简掉 upload 与 watch 相关辅助 |
 | `server/utils/path-security.ts` | `lib/path-security.ts` 与 `lib/paths.ts` 的 isWindowsAbsolutePath | 原样 注释改写 |
+| `server/utils/session-title.ts` | `lib/session-title.ts` | generateSessionTitle 改为直接接收 Agent 类型 跳过 AgentSession 包装 |
+| `server/utils/models-cache.ts` | `lib/models-cache.ts` | 简化为模块级缓存 无 generation 对账 |
+| `server/utils/skill-frontmatter.ts` | `lib/skill-frontmatter.ts` | 原样 BOM 字面量改用 charCode 判断 |
+| `app/utils/image-compress.ts` | `components/ChatInput.tsx` 的压缩部分 | 抽取为独立纯函数模块 |
+| `app/utils/at-query.ts` | `lib/file-fuzzy.ts` | 原样 注释改写 |
 | `server/utils/session-reader.ts` | `lib/session-reader.ts`（readBoundedLines / readBoundedTailLines / buildSessionContext / sliceActiveBranch / getSessionSettings） | 去掉 defer 选项与图片惰性化 列表改为全量扫描加 30 秒缓存 buildSessionContext 增加文件累计统计 |
 | `server/utils/event-stream.ts` | `lib/agent-event-stream.ts` | 原样 输入改为标准 AbortSignal |
 | `server/utils/rpc-manager.ts` | `lib/rpc-manager.ts` | 简化重写（约 2118 行 → 约 280 行）去扩展 UI/子代理/工具预设/模型作用域/推送通知 |

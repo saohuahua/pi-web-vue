@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { reactive, ref } from "vue";
 import type { SessionInfo } from "#shared/lib/types";
 
 // 会话列表 store 只负责列表数据与运行中标记
@@ -13,7 +14,8 @@ export const useSessionsStore = defineStore("sessions", () => {
 
   function setError(message: string) {
     error.value = message;
-    window.setTimeout(() => {
+    // 裸 setTimeout 浏览器与测试环境都可用
+    setTimeout(() => {
       if (error.value === message) error.value = "";
     }, 5000);
   }

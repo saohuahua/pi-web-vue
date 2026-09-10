@@ -1626,6 +1626,20 @@ a {
 /* ---------- 窄屏 ---------- */
 
 @media (max-width: 760px) {
+  /* 顶栏数值折叠 只留警告态的 context 指示 */
+  .status-usage {
+    display: none;
+  }
+
+  .status-usage.warn {
+    display: inline-flex;
+  }
+
+  .status-title {
+    max-width: 34vw;
+    font-size: 12.5px;
+  }
+
   .sidebar {
     position: fixed;
     inset: 0 auto 0 0;

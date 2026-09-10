@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { ref } from "vue";
 import type { ModelsResponse } from "#shared/lib/types";
 
 // 可用模型列表 输入框模型选择器的数据源

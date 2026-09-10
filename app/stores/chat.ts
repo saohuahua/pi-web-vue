@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { computed, reactive, ref } from "vue";
 import { sendAgentCommand } from "#shared/lib/agent-client";
 import { AgentEventConnection } from "#shared/lib/agent-event-connection";
 import type { AgentEventLike, ClientAssistantMessageEvent } from "#shared/lib/agent-event-wire";
