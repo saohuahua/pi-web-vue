@@ -1,6 +1,21 @@
 <template>
+  <!-- 重命名模式 行内容换成输入框 -->
+  <div v-if="renaming" class="session-row renaming">
+    <input
+      ref="renameInput"
+      v-model="renameValue"
+      class="session-rename-input"
+      type="text"
+      spellcheck="false"
+      @keydown.enter.prevent="commitRename"
+      @keydown.esc.stop.prevent="cancelRename"
+      @blur="commitRename"
+    >
+  </div>
+
   <button
-    class="session-row"
+    v-else
+    class="session-row group"
     :class="{ active: route.params.id === session.id }"
     type="button"
     @click="emit('open', session.id)"
@@ -8,7 +23,7 @@
     <span class="session-preview">{{ session.name ?? session.firstMessage }}</span>
     <span class="session-meta">
       <!-- 未选项目时行内显示项目名 已选项目时显示 worktree 名 -->
-      <span class="session-project">{{ scopeLabel }}</span>
+      <span v-if="scopeLabel" class="session-project">{{ scopeLabel }}</span>
       <span class="session-time">{{ relativeTime(session.modified) }}</span>
       <!-- 运行中小圆点 铜绿呼吸 -->
       <span
@@ -16,6 +31,25 @@
         class="session-running"
         title="运行中"
       ></span>
+      <!-- 悬停操作 重命名与自动标题 空会话不可自动命名 -->
+      <span class="session-actions" @click.stop>
+        <button
+          class="session-action"
+          type="button"
+          title="重命名"
+          aria-label="重命名会话"
+          @click="startRename"
+        >✎</button>
+        <button
+          v-if="hasMessages"
+          class="session-action"
+          type="button"
+          title="生成标题"
+          aria-label="自动生成标题"
+          :disabled="sessionsStore.titlingIds.has(session.id)"
+          @click="sessionsStore.autoTitle(session.id)"
+        >{{ sessionsStore.titlingIds.has(session.id) ? "…" : "✦" }}</button>
+      </span>
     </span>
   </button>
 </template>
@@ -33,6 +67,13 @@ const emit = defineEmits<{ open: [id: string] }>();
 const route = useRoute();
 const sessionsStore = useSessionsStore();
 const workspace = useWorkspaceStore();
+
+const renaming = ref(false);
+const renameValue = ref("");
+const renameInput = ref<HTMLInputElement | null>(null);
+
+// 空会话没有可命名的上下文
+const hasMessages = computed(() => props.session.firstMessage !== "(no messages)");
 
 // 相对时间 列表刷新时重新计算
 function relativeTime(iso: string): string {
@@ -53,4 +94,25 @@ const scopeLabel = computed(() => {
   if (props.session.worktreePath) return projectLabelOf(props.session.worktreePath);
   return "";
 });
+
+function startRename() {
+  renameValue.value = props.session.name ?? props.session.firstMessage;
+  renaming.value = true;
+  nextTick(() => {
+    renameInput.value?.focus();
+    renameInput.value?.select();
+  });
+}
+
+function cancelRename() {
+  renaming.value = false;
+}
+
+async function commitRename() {
+  if (!renaming.value) return; // blur 在取消后还会触发一次
+  const value = renameValue.value.trim();
+  renaming.value = false;
+  if (!value || value === (props.session.name ?? props.session.firstMessage)) return;
+  await sessionsStore.rename(props.session.id, value);
+}
 </script>

@@ -264,6 +264,49 @@ a {
   color: var(--muted);
 }
 
+/* 悬停操作 重命名与自动标题 */
+.session-actions {
+  display: none;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.session-row:hover .session-actions,
+.session-row:focus-within .session-actions {
+  display: inline-flex;
+}
+
+.session-action {
+  padding: 0 4px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted);
+  border-radius: 4px;
+  transition: color 0.12s ease, background-color 0.12s ease;
+}
+
+.session-action:hover {
+  color: var(--accent-deep);
+  background: var(--accent-soft);
+}
+
+.session-action:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* 重命名输入框 覆盖行内布局 */
+.session-rename-input {
+  width: 100%;
+  padding: 4px 8px;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+
 /* 运行中小圆点 水青呼吸 */
 .session-running {
   width: 7px;

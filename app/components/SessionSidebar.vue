@@ -29,6 +29,7 @@
         aria-label="搜索会话"
         @keydown.esc="search = ''"
       >
+      <p v-if="sessionsStore.error" class="pt-1.5 text-[11.5px] text-danger">{{ sessionsStore.error }}</p>
     </div>
 
     <nav class="sidebar-list" aria-label="会话列表">      <!-- 已选项目 单项目平铺 -->
