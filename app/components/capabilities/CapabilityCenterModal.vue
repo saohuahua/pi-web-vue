@@ -79,14 +79,6 @@
             <ExtensionsPanel v-if="center.activeTab === 'extensions'" />
           </div>
           <div
-            id="plugins-panel"
-            role="tabpanel"
-            aria-labelledby="plugins-tab"
-            :hidden="center.activeTab !== 'plugins'"
-          >
-            <PluginsPanel v-if="center.activeTab === 'plugins'" />
-          </div>
-          <div
             id="mcp-panel"
             role="tabpanel"
             aria-labelledby="mcp-tab"
@@ -120,7 +112,6 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import {
   BrainCircuit,
   Cable,
-  Package,
   Puzzle,
   Settings2,
   SlidersHorizontal,
@@ -139,7 +130,6 @@ import GeneralSettingsPanel from "~/components/capabilities/GeneralSettingsPanel
 import ModelsPanel from "~/components/capabilities/ModelsPanel.vue";
 import SkillsPanel from "~/components/capabilities/SkillsPanel.vue";
 import ExtensionsPanel from "~/components/capabilities/ExtensionsPanel.vue";
-import PluginsPanel from "~/components/capabilities/PluginsPanel.vue";
 import McpPanel from "~/components/capabilities/McpPanel.vue";
 
 const center = useCapabilityCenterStore();
@@ -154,12 +144,11 @@ const tabs = [
   { key: "models" as const, label: "模型", icon: BrainCircuit },
   { key: "skills" as const, label: "技能", icon: Sparkles },
   { key: "extensions" as const, label: "扩展", icon: Puzzle },
-  { key: "plugins" as const, label: "插件", icon: Package },
   { key: "mcp" as const, label: "MCP", icon: Cable },
 ];
 const scopeLabel = computed(() => (workspace.selectedCwd ? "当前项目" : "浏览器偏好"));
 const compactTab = computed(() => ["general", "extensions", "mcp"].includes(center.activeTab));
-const splitTab = computed(() => ["models", "skills", "plugins"].includes(center.activeTab));
+const splitTab = computed(() => ["models", "skills"].includes(center.activeTab));
 
 const requestClose = () => {
   if (center.dirty) {

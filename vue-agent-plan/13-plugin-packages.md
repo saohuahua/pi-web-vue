@@ -86,6 +86,7 @@
 
 ## 7 执行记录
 
+- 产品调整 2026-09-13 包管理不设独立 Tab 改为嵌入扩展面板下方上下排布 侧栏只保留 Plugin 一个入口 capabilityTabs 回到 5 个
 - 新增 `server/utils/plugins.ts` 与 `server/utils/plugin-updates.ts` 三个路由 plugins.get plugins.post plugins/check.post
 - 共享类型落在 `shared/lib/types.ts` 的插件包管理一节 与 pi-web api-types 对齐
 - `app/stores/plugins.ts` 承载数据与动作 cwd 由面板传入 store 不保存工作区状态

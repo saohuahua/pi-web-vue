@@ -832,6 +832,14 @@
     white-space: nowrap;
   }
 
+  /* 插件包嵌入扩展面板时的限高容器 内部主从结构自行滚动 */
+  .cap-plugin-embed {
+    height: min(520px, 60vh);
+    overflow: hidden;
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-radius-md);
+  }
+
   @keyframes cap-loading {
     to {
       opacity: var(--ds-loading-opacity);
