@@ -37,6 +37,8 @@
 | [06-history-branching.md](./06-history-branching.md) | Step 4：会话内分支（编辑重发 / 分支切换） | B（差异化增强） |
 | [07-optional.md](./07-optional.md) | Step 5（可选）：fork、删除、单测、终端等加分项 | 加分项 |
 | [11-capability-center.md](./11-capability-center.md) | Step C：三栏工作台收口与能力中心 Modal 模型 技能 扩展 MCP | UI 与资源管理增强 |
+| [12-test-reorganization.md](./12-test-reorganization.md) | 工程规范：测试集中到 tests/ 镜像结构（一次性迁移） | 工程规范 |
+| [13-plugin-packages.md](./13-plugin-packages.md) | Step PP：插件包管理（安装 卸载 启停 更新检查） 解除 CC-6 非目标 | 能力中心增强 |
 
 ## 当前执行基线
 
@@ -93,12 +95,12 @@ Step C 的能力中心不读取或修改会话内分支状态 因此在 Step A+ 
 
 ### 样式
 
-12. **Tailwind v4 与样式架构约定**：新组件的局部布局与间距用 Tailwind 工具类写；不引 preflight；色板经 `@theme` 桥接到 `--color-*`，组件取色走语义变量。进行 UI 样式架构重构时遵循 `DESIGN.md` 与 `design/ui-system.md`，将既有 `main.css` 语义类迁移到对应所有权文件，最终让 `main.css` 只保留 CSS layer 和导入入口，不新增末尾覆盖规则。
+12. **Tailwind v4 与样式架构约定**：新组件的局部布局与间距用 Tailwind 工具类写；不引 preflight；色板经 `@theme` 桥接到 `--color-*`，组件取色走语义变量。进行 UI 样式架构重构时遵循 `DESIGN.md` 与 `design/ui-system.md`，将既有 `main.css` 语义类迁移到对应所有权文件，最终让 `main.css` 只保留 CSS layer 和导入入口，不新增末尾覆盖规则。公共 Pi 原语固定为 `app/components/pi/PiX/index.vue` 与同目录 `style.css`，`index.vue` 只负责 API 行为和无障碍逻辑；普通领域组件默认保持扁平 SFC，只有样式规模已经妨碍阅读或需要与复杂交互一起维护时才拆为目录模块。
 13. **store 用显式 vue 导入**（`import { ref, computed } from 'vue'`），保证 vitest 可直接测试。
 
 ### 测试与提交
 
-14. **测试**：关键纯函数与 store 逻辑配 vitest 用例，测试文件与被测文件同目录同名（`xxx.test.ts`）。
+14. **测试**：关键纯函数与 store 逻辑配 vitest 用例，测试文件统一放在 `tests/` 下，路径为 `tests/` + 被测文件所在目录（如 `tests/app/stores/ui.test.ts` 对应 `app/stores/ui.ts`）；导入被测模块一律用别名（`~/`、`#shared/`、`#server/`），vitest `include` 已收窄到 `tests/`，业务目录里的散落测试不会被收集。
 15. **提交**：conventional commit 前缀（feat / fix / test / docs / refactor / chore）+ 中文描述；每完成一块完整功能立即 commit，不留大杂烩。
 
 ### 格式化
@@ -151,3 +153,4 @@ Step C 的能力中心不读取或修改会话内分支状态 因此在 Step A+ 
 - [ ] Step 4 会话内分支完成 → **里程碑 B：差异化增强**
 - [ ] （可选）Step 5 加分项（fork / 删除 / 终端 / 模型配置…）
 - [ ] Step C 能力中心与三栏工作台完成（见 11）
+- [ ] Step PP 插件包管理完成（见 13）
