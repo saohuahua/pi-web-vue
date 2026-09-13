@@ -23,3 +23,6 @@ logs
 .env.*
 !.env.example
 .claude/screenshots/
+
+# Design reference prototypes for visual verification only
+design/reference/stitch-agentcraft-studio/

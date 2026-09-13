@@ -62,13 +62,13 @@ Step C 的能力中心不读取或修改会话内分支状态 因此在 Step A+ 
    await this.destroy()
    ```
    （本计划示例代码里的注释带标点，落地时按本规范改写。）
-3. **密度按需，不强制全覆盖**：不要求每个方法体、每一步都有注释；但导出函数、store action、复杂算法的入口处要有一句职责说明，长函数内部靠空行加少量注释分节。已有注释要把话说完整——宁可多半个短句交代前提，不为短而砍掉关键信息。
+3. **密度按需，不强制全覆盖**：不要求每个方法体、每一步都有注释；但导出函数、store action、复杂算法的入口处要有一句职责说明，长函数内部的逻辑段用空行隔开、段首补一句注释说明这段在做什么或为什么。已有注释要把话说完整——宁可多半个短句交代前提，不为短而砍掉关键信息。
 
 ### 命名与函数定义
 
 4. **函数 `const` + 箭头优先**：`const xxx = () => {}`；裸 `function xxx() {}` 只在确实需要提升或递归时使用。
 5. **命名能读出意图**：组件文件 PascalCase 多词（如 `FileKindIcon.vue`）；composable 以 `use` 开头；store 文件用单数名词（如 `chat.ts`）；常量 `UPPER_SNAKE_CASE`；事件名多词时用 kebab-case。
-6. **结构**：函数单一职责，一屏放不下就拆；嵌套超过三层用早返回拍平；参数超过三个收成 options 对象。
+6. **结构**：函数单一职责，一屏放不下就拆；嵌套超过三层用早返回拍平；参数超过三个收成 options 对象。多分支的 if / else 与 switch，分支之间空行隔开，每个分支头补一句核心注释说明该分支对应的情形。
 
 ### 文件组织
 
@@ -82,7 +82,8 @@ Step C 的能力中心不读取或修改会话内分支状态 因此在 Step A+ 
    → computed 与函数方法体
    → watch / 生命周期
    ```
-   `.ts` 文件同思路：import → 类型 → 常量 → 函数。长函数内部也要用空行切分逻辑段。
+   `.ts` 文件同思路：import → 类型 → 常量 → 函数。分区之间只用空行和必要的一句职责注释体现，**不用 `// ---- xxx ----` 这类横幅式分隔注释**。长函数内部也要用空行切分逻辑段。
+   template 同样要求：大区块（输入区、工具栏、弹层这类模块）之间空行隔开，区块头加 `<!-- -->` 注释标注职责或关键约束；复杂嵌套、多属性的元素组之间也补空行。template 注释同样无标点，写职责或为什么，不复述标签结构。
 9. **大文件适时拆分（软性要求，不强制）**：单文件超过约 400 行就评估拆分——组件拆子组件或 composable，store 拆纯函数到 `app/utils/` 或 `shared/lib/`，server 工具按职责拆文件。看时机拆，不为拆而拆。
 
 ### TypeScript
@@ -92,13 +93,17 @@ Step C 的能力中心不读取或修改会话内分支状态 因此在 Step A+ 
 
 ### 样式
 
-12. **Tailwind v4 约定**：新组件的布局与间距用 Tailwind 工具类写；既有 `main.css` 语义类不动；不引 preflight；色板经 `@theme` 桥接到 `--color-*`，组件取色走语义变量（`--paper` 等）。
+12. **Tailwind v4 与样式架构约定**：新组件的局部布局与间距用 Tailwind 工具类写；不引 preflight；色板经 `@theme` 桥接到 `--color-*`，组件取色走语义变量。进行 UI 样式架构重构时遵循 `DESIGN.md` 与 `design/ui-system.md`，将既有 `main.css` 语义类迁移到对应所有权文件，最终让 `main.css` 只保留 CSS layer 和导入入口，不新增末尾覆盖规则。
 13. **store 用显式 vue 导入**（`import { ref, computed } from 'vue'`），保证 vitest 可直接测试。
 
 ### 测试与提交
 
 14. **测试**：关键纯函数与 store 逻辑配 vitest 用例，测试文件与被测文件同目录同名（`xxx.test.ts`）。
 15. **提交**：conventional commit 前缀（feat / fix / test / docs / refactor / chore）+ 中文描述；每完成一块完整功能立即 commit，不留大杂烩。
+
+### 格式化
+
+16. **Prettier 统一机械格式**：引号、分号、缩进、换行宽度由根目录 `.prettierrc` 约定（printWidth 100 双引号 分号 trailing comma all LF），提交前跑 `npm run format`（单文件 `npx prettier --write <file>`，校验 `npm run format:check`）。分区、空行、注释 Prettier 不管理，仍按本规范人工维护——格式化是底线，不替代结构规范。
 
 ## 技术栈一览
 

@@ -1,0 +1,11 @@
+node_modules
+.nuxt
+.output
+dist
+coverage
+.impeccable
+design
+vue-agent-plan
+public
+*.md
+package-lock.json
