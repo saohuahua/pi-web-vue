@@ -8,20 +8,24 @@ const STORAGE_KEY = "pi-agent:workspace";
 // 选择只影响新会话 cwd 与后续文件树根 不篡改已打开会话的任何状态
 // Git worktree 与 Step B 的会话内分支是两套模型 activeLeafId 不在本 store 出现
 export const useWorkspaceStore = defineStore("workspace", () => {
-  const selectedCwd = ref<string | null>(null);   // 新会话实际使用的 cwd
+  const selectedCwd = ref<string | null>(null); // 新会话实际使用的 cwd
   const projectRoot = ref<string | null>(null);
-  const projectKey = ref<string | null>(null);    // 会话过滤与分组的稳定键
+  const projectKey = ref<string | null>(null); // 会话过滤与分组的稳定键
   const worktrees = ref<WorktreeInfo[]>([]);
   const isGit = ref(false);
+  const currentBranch = ref<string | null>(null);
   const loading = ref(false);
   const error = ref("");
 
   function persist() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      cwd: selectedCwd.value,
-      projectRoot: projectRoot.value,
-      projectKey: projectKey.value,
-    }));
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        cwd: selectedCwd.value,
+        projectRoot: projectRoot.value,
+        projectKey: projectKey.value,
+      }),
+    );
   }
 
   function applyIdentity(identity: ProjectIdentity) {
@@ -35,10 +39,11 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     try {
       const res = await fetch(`/api/worktrees?cwd=${encodeURIComponent(cwd)}`);
       if (!res.ok) return;
-      const body = await res.json() as WorktreesResponse & { error?: string };
+      const body = (await res.json()) as WorktreesResponse & { error?: string };
       if (body.error) return;
       worktrees.value = body.worktrees ?? [];
       isGit.value = body.isGit === true;
+      currentBranch.value = body.currentBranch;
       // worktree 接口带回权威项目身份 顺带校正本地状态
       if (body.projectKey) {
         projectRoot.value = body.projectRoot;
@@ -74,7 +79,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ cwd }),
       });
-      const body = await res.json() as ProjectIdentity & { error?: string };
+      const body = (await res.json()) as ProjectIdentity & { error?: string };
       if (!res.ok || !body.projectKey) {
         error.value = body.error ?? `HTTP ${res.status}`;
         return false;
@@ -107,7 +112,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
         body: JSON.stringify({ cwd }),
       });
       if (!res.ok) return; // 目录已删除等场景保持现选择
-      const body = await res.json() as ProjectIdentity;
+      const body = (await res.json()) as ProjectIdentity;
       if (!body.projectKey) return;
       const projectChanged = body.projectKey !== projectKey.value;
       const cwdChanged = body.cwd !== selectedCwd.value;
@@ -126,12 +131,24 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     projectKey.value = null;
     worktrees.value = [];
     isGit.value = false;
+    currentBranch.value = null;
     error.value = "";
     localStorage.removeItem(STORAGE_KEY);
   }
 
   return {
-    selectedCwd, projectRoot, projectKey, worktrees, isGit, loading, error,
-    restore, selectProject, selectWorktree, syncFromSessionCwd, clearSelection,
+    selectedCwd,
+    projectRoot,
+    projectKey,
+    worktrees,
+    isGit,
+    currentBranch,
+    loading,
+    error,
+    restore,
+    selectProject,
+    selectWorktree,
+    syncFromSessionCwd,
+    clearSelection,
   };
 });

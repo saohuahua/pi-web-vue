@@ -1,22 +1,71 @@
 <template>
   <section class="workspace-selector relative border-b border-line" aria-label="工作区">
-    <!-- 当前项目行 点击展开项目面板 -->
-    <button
-      type="button"
-      class="workspace-trigger"
-      :aria-expanded="panelOpen"
-      title="切换项目"
-      aria-label="切换项目"
-      @click="panelOpen = !panelOpen"
-    >
-      <span class="min-w-0 flex-1 truncate text-[14px] font-medium text-ink">
-        {{ workspace.projectKey ? projectLabel : "选择项目" }}
-      </span>
-      <!-- 当前分支 仅真实 git 检出才显示 不伪造 main -->
-      <span v-if="currentBranch" class="workspace-branch"><GitBranch :size="12" aria-hidden="true" />{{ currentBranch }}</span>
-      <ChevronDown :size="14" class="shrink-0 text-muted" aria-hidden="true" />
-      <span class="workspace-switch-hint" aria-hidden="true">切换项目</span>
-    </button>
+    <PiPopover v-model:open="panelOpen" label="选择项目" placement="bottom-start">
+      <template #trigger="{ toggle }">
+        <!-- 当前项目行 点击展开项目面板 -->
+        <button
+          type="button"
+          class="workspace-trigger"
+          :aria-expanded="panelOpen"
+          aria-label="切换项目"
+          @click="toggle"
+        >
+          <span class="min-w-0 flex-1 truncate text-[14px] font-medium text-ink">
+            {{ workspace.projectKey ? projectLabel : "选择项目" }}
+          </span>
+          <!-- 当前分支 仅真实 git 检出才显示 不伪造 main -->
+          <span v-if="currentBranch" class="workspace-branch"
+            ><GitBranch :size="12" aria-hidden="true" />{{ currentBranch }}</span
+          >
+          <ChevronDown :size="14" class="shrink-0 text-muted" aria-hidden="true" />
+          <span class="workspace-switch-hint" aria-hidden="true">切换项目</span>
+        </button>
+      </template>
+
+      <!-- 项目下拉面板 -->
+      <div class="workspace-menu">
+        <p class="workspace-menu-label">项目</p>
+        <div class="workspace-menu-list">
+          <button
+            v-for="project in recentProjects"
+            :key="project.key"
+            type="button"
+            class="workspace-menu-row"
+            :class="{ 'bg-accent-soft': project.key === workspace.projectKey }"
+            @click="chooseProject(project.root)"
+          >
+            <span class="min-w-0 flex-1 truncate text-[14px] text-ink">{{ project.label }}</span>
+            <span class="shrink-0 font-mono text-[12px] text-muted">{{ project.count }} 会话</span>
+          </button>
+          <p v-if="!recentProjects.length" class="workspace-menu-empty">还没有项目的会话</p>
+        </div>
+
+        <div class="workspace-menu-picker-action">
+          <PiButton variant="primary" :loading="workspace.loading" @click="openDirectoryPicker">
+            <FolderOpen :size="16" aria-hidden="true" />选择电脑项目
+          </PiButton>
+        </div>
+
+        <p v-if="workspace.error" class="workspace-menu-error">{{ workspace.error }}</p>
+
+        <button
+          v-if="workspace.projectKey"
+          type="button"
+          class="workspace-menu-clear"
+          @click="clearAll"
+        >
+          查看全部项目
+        </button>
+      </div>
+    </PiPopover>
+
+    <ProjectDirectoryPicker
+      v-model:open="directoryPickerOpen"
+      :initial-path="workspace.selectedCwd"
+      :busy="workspace.loading"
+      :error="workspace.error"
+      @select="chooseProject"
+    />
 
     <!-- worktree 切换行 只有多个 worktree 才出现 -->
     <div v-if="workspace.isGit && workspace.worktrees.length > 1" class="workspace-worktrees">
@@ -25,69 +74,26 @@
         :key="wt.path"
         type="button"
         class="workspace-worktree"
-        :class="wt.isCurrent
-          ? 'bg-accent-soft text-accent-deep'
-          : 'text-muted hover:bg-surface-2 hover:text-ink-soft'"
+        :class="
+          wt.isCurrent
+            ? 'bg-accent-soft text-accent-deep'
+            : 'text-muted hover:bg-surface-2 hover:text-ink-soft'
+        "
         :title="wt.path"
         @click="selectWorktree(wt)"
       >
         {{ wt.branch ?? wt.path.split(/[\\/]/).pop() }}
       </button>
     </div>
-
-    <!-- 项目下拉面板 -->
-    <div
-      v-if="panelOpen"
-      class="workspace-menu"
-    >
-      <p class="workspace-menu-label">项目</p>
-      <button
-        v-for="project in recentProjects"
-        :key="project.key"
-        type="button"
-        class="workspace-menu-row"
-        :class="{ 'bg-accent-soft': project.key === workspace.projectKey }"
-        @click="chooseProject(project.root)"
-      >
-        <span class="min-w-0 flex-1 truncate text-[14px] text-ink">{{ project.label }}</span>
-        <span class="shrink-0 font-mono text-[12px] text-muted">{{ project.count }} 会话</span>
-      </button>
-      <p v-if="!recentProjects.length" class="workspace-menu-empty">还没有项目的会话</p>
-
-      <!-- 手动输入路径 -->
-      <form class="workspace-path-form" @submit.prevent="submitPath">
-        <input
-          v-model="pathInput"
-          class="workspace-path-input"
-          type="text"
-          placeholder="D:\project\demo"
-          spellcheck="false"
-          autocomplete="off"
-        >
-        <button
-          class="workspace-path-submit"
-          type="submit"
-          :disabled="!pathInput.trim() || workspace.loading"
-        >{{ workspace.loading ? "…" : "选择" }}</button>
-      </form>
-
-      <p v-if="workspace.error" class="workspace-menu-error">{{ workspace.error }}</p>
-
-      <button
-        v-if="workspace.projectKey"
-        type="button"
-        class="workspace-menu-clear"
-        @click="clearAll"
-      >查看全部项目</button>
-    </div>
-
-    <!-- 点击面板外关闭 -->
-    <div v-if="panelOpen" class="fixed inset-0 z-30" @click="panelOpen = false"></div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ChevronDown, GitBranch } from "lucide-vue-next";
+import { computed, ref } from "vue";
+import { ChevronDown, FolderOpen, GitBranch } from "lucide-vue-next";
+import ProjectDirectoryPicker from "~/components/ProjectDirectoryPicker.vue";
+import PiButton from "~/components/pi/PiButton/index.vue";
+import PiPopover from "~/components/pi/PiPopover/index.vue";
 import { useSessionsStore } from "~/stores/sessions";
 import { useWorkspaceStore } from "~/stores/workspace";
 import { projectLabelOf } from "~/utils/session-groups";
@@ -99,15 +105,14 @@ const workspace = useWorkspaceStore();
 const sessionsStore = useSessionsStore();
 
 const panelOpen = ref(false);
-const pathInput = ref("");
+const directoryPickerOpen = ref(false);
 
 const projectLabel = computed(() =>
   workspace.projectRoot ? projectLabelOf(workspace.projectRoot) : "",
 );
 
 const currentBranch = computed(() => {
-  if (!workspace.isGit) return null;
-  return workspace.worktrees.find((w) => w.isCurrent)?.branch ?? null;
+  return workspace.currentBranch ?? workspace.worktrees.find((w) => w.isCurrent)?.branch ?? null;
 });
 
 // 候选项目来自已有会话 按最近活动排序
@@ -129,23 +134,24 @@ const recentProjects = computed(() => {
   return [...byKey.values()];
 });
 
-async function chooseProject(root: string) {
+const chooseProject = async (root: string) => {
   if (await workspace.selectProject(root)) {
     panelOpen.value = false;
-    pathInput.value = "";
+    directoryPickerOpen.value = false;
   }
-}
+};
 
-async function submitPath() {
-  await chooseProject(pathInput.value.trim());
-}
+const openDirectoryPicker = () => {
+  panelOpen.value = false;
+  directoryPickerOpen.value = true;
+};
 
-function selectWorktree(wt: WorktreeInfo) {
+const selectWorktree = (wt: WorktreeInfo) => {
   void workspace.selectWorktree(wt.path);
-}
+};
 
-function clearAll() {
+const clearAll = () => {
   workspace.clearSelection();
   panelOpen.value = false;
-}
+};
 </script>

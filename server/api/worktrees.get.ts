@@ -40,6 +40,7 @@ export default defineEventHandler(async (event) => {
       projectKey: projectIdentityKey(project.projectRoot),
       isGit,
       isTopLevel: project.isTopLevel,
+      currentBranch: project.branch,
       currentWorktreePath,
       worktrees: enriched,
     };
