@@ -24,6 +24,14 @@
 | `server/utils/session-reader.ts` | `lib/session-reader.ts`（readBoundedLines / readBoundedTailLines / buildSessionContext / sliceActiveBranch / getSessionSettings） | 去掉 defer 选项与图片惰性化 列表改为全量扫描加 30 秒缓存 buildSessionContext 增加文件累计统计 |
 | `server/utils/event-stream.ts` | `lib/agent-event-stream.ts` | 原样 输入改为标准 AbortSignal |
 | `server/utils/rpc-manager.ts` | `lib/rpc-manager.ts` | 简化重写（约 2118 行 → 约 280 行）去扩展 UI/子代理/工具预设/模型作用域/推送通知 |
+| `server/utils/model-scope.ts` | `lib/model-scope.ts` | 只移植 resolveVisibleModels 未移植 selectInitialModelScope 本项目会话启动不经由模型选择 |
+| `server/utils/atomic-file.ts` | `lib/atomic-file.ts` | 原样 注释改写 |
+| `server/utils/models-config-store.ts` | `lib/models-config-store.ts` | 原样 类型改用 shared/lib/types 的 ModelsConfigFile 注释改写 |
+| `server/api/models-config/test.post.ts` | `app/api/models-config/test/route.ts` | Next 路由改写为 Nitro handler 校验与错误文案本地化 |
+| `server/utils/plugin-updates.ts` | `lib/plugin-updates.ts` | 逻辑原样 函数改 const 箭头 注释改写 信任状态改用本项目 readTrustDecision |
+| `server/utils/plugins.ts` | `app/api/plugins/route.ts` 的读取聚合与动作逻辑 | Next 路由拆为 util 层 class PluginActionError 承载状态码 函数改 const 箭头 注释改写 |
+| `server/api/capabilities/plugins/check.post.ts` | `app/api/plugins/check/route.ts` | Next 路由改写为 Nitro handler |
+| `app/components/capabilities/PluginsPanel.vue` | `components/PluginsConfig.tsx` 的交互模型 | React 改写为 Vue SFC 复用本项目 cap-* 样式与 Pi 原语 |
 
 ## MIT License（pi-web）
 
