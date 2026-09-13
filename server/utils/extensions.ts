@@ -86,7 +86,8 @@ function normalizeTrustPath(path: string): string {
   return process.platform === "win32" ? normalized.toLowerCase() : normalized;
 }
 
-function readTrustDecision(agentDir: string, cwd: string): boolean {
+// 沿父目录向上找最近的信任决定 插件包管理等其他能力也依赖它判断 project 作用域是否可写
+export function readTrustDecision(agentDir: string, cwd: string): boolean {
   const trustPath = join(agentDir, "trust.json");
   if (!existsSync(trustPath)) return false;
   try {

@@ -30,6 +30,7 @@
     "markdown-it": "^15.0.1",
     "nuxt": "^4.5.2",
     "pinia": "^4.0.3",
+    "semver": "^7.8.5",
     "vue": "^3.5.42",
     "vue-router": "^5.3.1"
   },
@@ -43,6 +44,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "@types/markdown-it": "^14.2.0",
     "@types/node": "^26.5.0",
+    "@types/semver": "^7.8.0",
     "prettier": "^3.9.6",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",

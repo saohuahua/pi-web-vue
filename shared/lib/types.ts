@@ -287,6 +287,76 @@ export interface ExtensionsResponse {
   projectNeedsTrust: boolean;
 }
 
+// 插件包管理
+// 来源是 settings.json packages 配置 资源由包安装产生 与扩展注册表的目录扫描不同
+export type PluginScope = "global" | "project";
+export type PluginResourceKind = "extension" | "skill" | "prompt" | "theme";
+
+export interface PluginResourceCounts {
+  extensions: number;
+  skills: number;
+  prompts: number;
+  themes: number;
+}
+
+// 读取阶段的静态诊断 不执行包内代码
+export interface PluginDiagnostic {
+  type: "warning" | "error";
+  message: string;
+  source?: string;
+  path?: string;
+}
+
+export interface PluginResourceInfo {
+  kind: PluginResourceKind;
+  name: string;
+  path: string;
+  relativePath: string;
+}
+
+// 固定版本或固定 ref 的来源无法自动检查更新
+export type PluginUpdateState = "update-available" | "up-to-date" | "unsupported" | "error";
+
+export interface PluginUpdateResult {
+  source: string;
+  scope: PluginScope;
+  displayName: string;
+  type: "npm" | "git";
+  state: PluginUpdateState;
+  message?: string;
+}
+
+// status loaded 已解析出资源 installed 已安装但没解析出资源 missing 配置存在但安装路径缺失 disabled settings 中资源数组全空
+export interface PluginPackageInfo {
+  source: string;
+  scope: PluginScope;
+  canCheckForUpdates: boolean;
+  filtered: boolean;
+  disabled: boolean;
+  installedPath?: string;
+  packageName?: string;
+  version?: string;
+  configuredVersion?: string;
+  counts: PluginResourceCounts;
+  resources: PluginResourceInfo[];
+  status: "loaded" | "installed" | "missing" | "disabled";
+}
+
+export interface PluginsResponse {
+  packages: PluginPackageInfo[];
+  totals: PluginResourceCounts;
+  diagnostics: PluginDiagnostic[];
+  // 项目资源未信任时不参与 resolve 前端据此禁用 project 作用域
+  projectResourcesLoaded: boolean;
+}
+
+export interface PluginActionRequest {
+  action: "install" | "remove" | "update" | "disable" | "enable";
+  source?: string;
+  scope?: PluginScope;
+  cwd: string;
+}
+
 // 会话使用量的文件累计
 // compaction 只追加摘要 entry 被汇总的历史仍留在文件里 因此累计值单调增长
 // 与运行态的 context usage 是两项独立指标 前端不得相加
