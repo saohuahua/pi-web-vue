@@ -361,13 +361,15 @@ const normalizeSourceInput = (value: string): string => {
   return match?.[1] ?? value.trim();
 };
 
-// 安装后服务端可能归一化 source 字符串 按精确 npm 前缀 尾部匹配依次回退
+// 安装后服务端可能归一化 source 字符串 按精确 npm 前缀 尾部匹配 文件名依次回退
 const findInstalled = (source: string, scope: PluginScope): PluginPackageInfo | undefined => {
   const withoutNpmPrefix = source.startsWith("npm:") ? source.slice(4) : source;
+  const name = withoutNpmPrefix.replaceAll("\\", "/").split("/").filter(Boolean).pop() ?? "";
   return (
     packages.value.find((pkg) => pkg.scope === scope && pkg.source === source) ??
     packages.value.find((pkg) => pkg.scope === scope && pkg.source === `npm:${withoutNpmPrefix}`) ??
-    packages.value.find((pkg) => pkg.scope === scope && pkg.source.endsWith(source))
+    packages.value.find((pkg) => pkg.scope === scope && pkg.source.endsWith(source)) ??
+    packages.value.find((pkg) => pkg.scope === scope && pkg.source.endsWith(name))
   );
 };
 

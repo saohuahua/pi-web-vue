@@ -4,7 +4,11 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { gt, maxSatisfying, rcompare, valid, validRange } from "semver";
-import { DefaultPackageManager, getAgentDir, SettingsManager } from "@earendil-works/pi-coding-agent";
+import {
+  DefaultPackageManager,
+  getAgentDir,
+  SettingsManager,
+} from "@earendil-works/pi-coding-agent";
 import type { PluginScope, PluginUpdateResult } from "#shared/lib/types";
 import { readTrustDecision } from "./extensions";
 
@@ -15,7 +19,7 @@ interface ConfiguredPackage {
   installedPath?: string;
 }
 
-type CommandRunner = (
+export type CommandRunner = (
   command: string,
   args: string[],
   options: { cwd: string; env?: NodeJS.ProcessEnv },
@@ -39,7 +43,7 @@ const toPluginScope = (scope: ConfiguredPackage["scope"]): PluginScope =>
   scope === "project" ? "project" : "global";
 
 // npm source 形如 npm:name@version scoped 包名以 @ 开头 版本在最后一个 @ 之后
-const parseNpmSource = (source: string): ParsedNpmSource | undefined => {
+export const parseNpmSource = (source: string): ParsedNpmSource | undefined => {
   if (!source.startsWith("npm:")) return undefined;
   const spec = source.slice(4).trim();
   const match = spec.match(/^(@?[^@]+(?:\/[^@]+)?)(?:@(.+))?$/);
@@ -51,7 +55,7 @@ const parseNpmSource = (source: string): ParsedNpmSource | undefined => {
 };
 
 // git 来源里路径段的 @ 是版本 ref scp 语法 git@host:path 的 @ 属于主机段不能误判
-const hasGitRef = (source: string): boolean => {
+export const hasGitRef = (source: string): boolean => {
   const value = source.startsWith("git:") ? source.slice(4).trim() : source.trim();
   const scpPath = value.match(/^git@[^:]+:(.+)$/)?.[1];
   if (scpPath) return scpPath.includes("@");
@@ -76,7 +80,11 @@ export const isPluginSourceCheckable = (source: string): boolean => {
   return false;
 };
 
-const result = (pkg: ConfiguredPackage, state: PluginUpdateResult["state"], message?: string): PluginUpdateResult => {
+const result = (
+  pkg: ConfiguredPackage,
+  state: PluginUpdateResult["state"],
+  message?: string,
+): PluginUpdateResult => {
   const npm = parseNpmSource(pkg.source);
   return {
     source: pkg.source,
@@ -113,7 +121,9 @@ const readLatestVersion = (stdout: string, range?: string): string => {
   const parsed = JSON.parse(stdout.trim()) as unknown;
   if (typeof parsed === "string" && valid(parsed)) return parsed;
   if (Array.isArray(parsed)) {
-    const versions = parsed.filter((value): value is string => typeof value === "string" && valid(value) !== null);
+    const versions = parsed.filter(
+      (value): value is string => typeof value === "string" && valid(value) !== null,
+    );
     const latest = range ? maxSatisfying(versions, range) : versions.sort(rcompare)[0];
     if (latest) return latest;
   }
@@ -134,13 +144,18 @@ const checkNpmPackage = async (
   const [command = "npm", ...commandArgs] = npmCommand ?? [];
   if (!command) return result(pkg, "error", "Invalid npmCommand.");
   const current = readInstalledVersion(pkg.installedPath);
-  const stdout = await runner(command, [...commandArgs, "view", npm.spec, "version", "--json"], { cwd });
-  const range = npm.version ? validRange(npm.version) ?? undefined : undefined;
+  const stdout = await runner(command, [...commandArgs, "view", npm.spec, "version", "--json"], {
+    cwd,
+  });
+  const range = npm.version ? (validRange(npm.version) ?? undefined) : undefined;
   const latest = readLatestVersion(stdout, range);
   return result(pkg, gt(latest, current) ? "update-available" : "up-to-date");
 };
 
-const checkGitPackage = async (pkg: ConfiguredPackage, runner: CommandRunner): Promise<PluginUpdateResult> => {
+const checkGitPackage = async (
+  pkg: ConfiguredPackage,
+  runner: CommandRunner,
+): Promise<PluginUpdateResult> => {
   if (!pkg.installedPath || !existsSync(pkg.installedPath)) {
     return result(pkg, "error", "Package is not installed.");
   }
@@ -177,7 +192,11 @@ export const checkPluginUpdates = async (
     const settingsManager = SettingsManager.create(cwd, agentDir, {
       projectTrusted: readTrustDecision(agentDir, cwd),
     });
-    packages = new DefaultPackageManager({ cwd, agentDir, settingsManager }).listConfiguredPackages();
+    packages = new DefaultPackageManager({
+      cwd,
+      agentDir,
+      settingsManager,
+    }).listConfiguredPackages();
     npmCommand ??= settingsManager.getNpmCommand();
   }
 
@@ -187,19 +206,25 @@ export const checkPluginUpdates = async (
   });
   const runner = options.runCommand ?? runCommand;
 
-  return Promise.all(selected.map(async (pkg) => {
-    if (!isPluginSourceCheckable(pkg.source)) {
-      return result(pkg, "unsupported", "Pinned or local packages cannot be checked automatically.");
-    }
-    if (isOffline()) {
-      return result(pkg, "error", "Update checks are disabled while PI_OFFLINE=1.");
-    }
-    try {
-      return parseNpmSource(pkg.source)
-        ? await checkNpmPackage(pkg, cwd, npmCommand, runner)
-        : await checkGitPackage(pkg, runner);
-    } catch (error) {
-      return result(pkg, "error", error instanceof Error ? error.message : String(error));
-    }
-  }));
+  return Promise.all(
+    selected.map(async (pkg) => {
+      if (!isPluginSourceCheckable(pkg.source)) {
+        return result(
+          pkg,
+          "unsupported",
+          "Pinned or local packages cannot be checked automatically.",
+        );
+      }
+      if (isOffline()) {
+        return result(pkg, "error", "Update checks are disabled while PI_OFFLINE=1.");
+      }
+      try {
+        return parseNpmSource(pkg.source)
+          ? await checkNpmPackage(pkg, cwd, npmCommand, runner)
+          : await checkGitPackage(pkg, runner);
+      } catch (error) {
+        return result(pkg, "error", error instanceof Error ? error.message : String(error));
+      }
+    }),
+  );
 };

@@ -31,10 +31,14 @@ function readManifest(dir: string): PackageManifest | null {
 }
 
 function statusFor(scope: ExtensionScope, projectTrusted: boolean) {
-  return scope === "project" && !projectTrusted ? "needs-trust" as const : "ready" as const;
+  return scope === "project" && !projectTrusted ? ("needs-trust" as const) : ("ready" as const);
 }
 
-function entryFromFile(filePath: string, scope: ExtensionScope, projectTrusted: boolean): ExtensionEntry {
+function entryFromFile(
+  filePath: string,
+  scope: ExtensionScope,
+  projectTrusted: boolean,
+): ExtensionEntry {
   return {
     id: `${scope}:${filePath}`,
     name: basename(filePath, extname(filePath)),
@@ -45,7 +49,12 @@ function entryFromFile(filePath: string, scope: ExtensionScope, projectTrusted: 
   };
 }
 
-function entryFromPackage(dir: string, manifest: PackageManifest, scope: ExtensionScope, projectTrusted: boolean): ExtensionEntry {
+function entryFromPackage(
+  dir: string,
+  manifest: PackageManifest,
+  scope: ExtensionScope,
+  projectTrusted: boolean,
+): ExtensionEntry {
   const name = typeof manifest.name === "string" && manifest.name ? manifest.name : basename(dir);
   return {
     id: `${scope}:${dir}`,
@@ -71,7 +80,8 @@ function scanRoot(root: string, scope: ExtensionScope, projectTrusted: boolean):
     const index = ["index.ts", "index.js", "index.mjs", "index.cjs"]
       .map((name) => join(itemPath, name))
       .find(existsSync);
-    const declaredExtensions = Array.isArray(manifest?.pi?.extensions) && manifest?.pi?.extensions.length > 0;
+    const declaredExtensions =
+      Array.isArray(manifest?.pi?.extensions) && manifest?.pi?.extensions.length > 0;
     if (manifest && (declaredExtensions || index)) {
       entries.push(entryFromPackage(itemPath, manifest, scope, projectTrusted));
       continue;

@@ -1,5 +1,6 @@
+// 移植自 pi-web app/api/plugins/route.ts 的读取聚合与包动作逻辑 MIT License 按 CLAUDE.md 编码规范改写
 import { existsSync, readFileSync, statSync } from "node:fs";
-import { basename, dirname, extname, join, relative } from "node:path";
+import { basename, dirname, extname, isAbsolute, join, relative } from "node:path";
 import {
   DefaultPackageManager,
   getAgentDir,
@@ -50,23 +51,33 @@ const createManager = (cwd: string, agentDir?: string) => {
   };
 };
 
-const emptyCounts = (): PluginResourceCounts => ({ extensions: 0, skills: 0, prompts: 0, themes: 0 });
+const emptyCounts = (): PluginResourceCounts => ({
+  extensions: 0,
+  skills: 0,
+  prompts: 0,
+  themes: 0,
+});
 
 const toPluginScope = (scope: string): PluginScope => (scope === "project" ? "project" : "global");
 
 // settings 里的包没有 id 字段 用 scope 加 source 拼出唯一键 与 pi-web 保持一致
 const keyFor = (source: string, scope: PluginScope): string => `${scope}\0${source}`;
 
-const getPackageSource = (entry: PackageSource): string => (typeof entry === "string" ? entry : entry.source);
+const getPackageSource = (entry: PackageSource): string =>
+  typeof entry === "string" ? entry : entry.source;
 
 // disable 的实现是把四类资源数组清空 所以四个数组同时为空就代表被禁用
 const isDisabledPackage = (entry: PackageSource): boolean => {
   if (typeof entry === "string") return false;
   return (
-    Array.isArray(entry.extensions) && entry.extensions.length === 0 &&
-    Array.isArray(entry.skills) && entry.skills.length === 0 &&
-    Array.isArray(entry.prompts) && entry.prompts.length === 0 &&
-    Array.isArray(entry.themes) && entry.themes.length === 0
+    Array.isArray(entry.extensions) &&
+    entry.extensions.length === 0 &&
+    Array.isArray(entry.skills) &&
+    entry.skills.length === 0 &&
+    Array.isArray(entry.prompts) &&
+    entry.prompts.length === 0 &&
+    Array.isArray(entry.themes) &&
+    entry.themes.length === 0
   );
 };
 
@@ -88,9 +99,10 @@ const setPackageDisabled = (
   scope: PluginScope,
   disabled: boolean,
 ): boolean => {
-  const current = scope === "project"
-    ? settingsManager.getProjectSettings().packages ?? []
-    : settingsManager.getGlobalSettings().packages ?? [];
+  const current =
+    scope === "project"
+      ? (settingsManager.getProjectSettings().packages ?? [])
+      : (settingsManager.getGlobalSettings().packages ?? []);
   let changed = false;
   const next = current.map((entry): PackageSource => {
     if (getPackageSource(entry) !== source) return entry;
@@ -150,7 +162,9 @@ const getConfiguredVersion = (source: string): string | undefined => {
   return undefined;
 };
 
-const readPackageMetadata = (installedPath?: string): { packageName?: string; version?: string } => {
+const readPackageMetadata = (
+  installedPath?: string,
+): { packageName?: string; version?: string } => {
   if (!installedPath) return {};
   try {
     const stats = statSync(installedPath);
@@ -191,13 +205,14 @@ const collectResource = (
   addCount(totals, kind);
   maps.countsByPackage.set(key, counts);
   const resources = maps.resourcesByPackage.get(key) ?? [];
-  const resourceKind: PluginResourceKind = kind === "extensions"
-    ? "extension"
-    : kind === "skills"
-      ? "skill"
-      : kind === "prompts"
-        ? "prompt"
-        : "theme";
+  const resourceKind: PluginResourceKind =
+    kind === "extensions"
+      ? "extension"
+      : kind === "skills"
+        ? "skill"
+        : kind === "prompts"
+          ? "prompt"
+          : "theme";
   resources.push({
     kind: resourceKind,
     name: getResourceName(resource.path, resourceKind),
@@ -207,7 +222,9 @@ const collectResource = (
   maps.resourcesByPackage.set(key, resources);
 };
 
-const collectResources = (paths: ResolvedPaths): PackageKeyedMaps & { totals: PluginResourceCounts } => {
+const collectResources = (
+  paths: ResolvedPaths,
+): PackageKeyedMaps & { totals: PluginResourceCounts } => {
   const maps: PackageKeyedMaps = {
     countsByPackage: new Map(),
     resourcesByPackage: new Map(),
@@ -278,7 +295,13 @@ export const readPlugins = async (cwd: string): Promise<PluginsResponse> => {
       configuredVersion: getConfiguredVersion(pkg.source),
       counts,
       resources,
-      status: disabled ? "disabled" : resourceCount > 0 ? "loaded" : pkg.installedPath ? "installed" : "missing",
+      status: disabled
+        ? "disabled"
+        : resourceCount > 0
+          ? "loaded"
+          : pkg.installedPath
+            ? "installed"
+            : "missing",
     };
   });
 
@@ -290,6 +313,20 @@ export const readPlugins = async (cwd: string): Promise<PluginsResponse> => {
   };
 };
 
+// SDK 把 settings 里的本地来源按 agentDir 或项目 .pi 为基准归一化成相对路径
+// 但 remove 的输入匹配按 manager 的 cwd 解析 直接回传相对串会解析错位置导致静默不删
+const resolvePersistSource = (source: string, cwd: string, projectScope: boolean): string => {
+  if (
+    source.startsWith("~") ||
+    /^(npm:|git:|github:|http:|https:|ssh:)/i.test(source) ||
+    isAbsolute(source)
+  ) {
+    return source;
+  }
+  const base = projectScope ? join(cwd, ".pi") : getAgentDir();
+  return join(base, source);
+};
+
 // 包变更动作的统一入口 route 只负责参数校验与状态码映射
 export const runPluginAction = async (request: PluginActionRequest): Promise<PluginsResponse> => {
   const { cwd, action, source, scope } = request;
@@ -298,7 +335,10 @@ export const runPluginAction = async (request: PluginActionRequest): Promise<Plu
   const { settingsManager, packageManager, projectTrusted } = createManager(cwd);
 
   if (projectScope && !projectTrusted) {
-    throw new PluginActionError("Project resources must be trusted before modifying project plugins", 403);
+    throw new PluginActionError(
+      "Project resources must be trusted before modifying project plugins",
+      403,
+    );
   }
 
   if (action === "install") {
@@ -306,11 +346,20 @@ export const runPluginAction = async (request: PluginActionRequest): Promise<Plu
     await packageManager.installAndPersist(trimmed, { local: projectScope });
   } else if (action === "remove") {
     if (!trimmed) throw new PluginActionError("source is required", 400);
-    await packageManager.removeAndPersist(trimmed, { local: projectScope });
+    await packageManager.removeAndPersist(resolvePersistSource(trimmed, cwd, projectScope), {
+      local: projectScope,
+    });
   } else if (action === "update") {
     // 全量更新会触及 project 包 未信任时拒绝而不是静默跳过
-    if (!trimmed && !projectTrusted && packageManager.listConfiguredPackages().some((pkg) => pkg.scope === "project")) {
-      throw new PluginActionError("Project resources must be trusted before updating project plugins", 403);
+    if (
+      !trimmed &&
+      !projectTrusted &&
+      packageManager.listConfiguredPackages().some((pkg) => pkg.scope === "project")
+    ) {
+      throw new PluginActionError(
+        "Project resources must be trusted before updating project plugins",
+        403,
+      );
     }
     await packageManager.update(trimmed || undefined);
   } else if (action === "disable") {
