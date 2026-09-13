@@ -1,18 +1,22 @@
 <template>
-  <div class="layout" :class="{ 'sidebar-open': sidebarOpen, 'sidebar-collapsed': ui.sidebarCollapsed }">
+  <div
+    class="layout"
+    :class="{ 'sidebar-open': sidebarOpen, 'sidebar-collapsed': ui.sidebarCollapsed }"
+    :style="{ '--sidebar-w': `${ui.sidebarWidth}px`, '--viewer-w': `${ui.viewerWidth}px` }"
+  >
     <SessionSidebar @navigate="sidebarOpen = false" />
     <main class="main">
       <NuxtPage />
-      <!-- 右侧文件预览 从文件树打开 按需覆盖不挤聊天 -->
-      <FileViewer />
     </main>
+    <FileViewer />
+    <CapabilityCenterModal />
     <!-- 窄屏开关 打开后点遮罩关闭 -->
     <button
       class="sidebar-toggle"
       type="button"
       aria-label="会话列表"
       @click="sidebarOpen = !sidebarOpen"
-    >π</button>
+    ><BrandMark variant="mobile" /></button>
     <div
       v-if="sidebarOpen"
       class="sidebar-scrim"
@@ -24,6 +28,8 @@
 <script setup lang="ts">
 import SessionSidebar from "~/components/SessionSidebar.vue";
 import FileViewer from "~/components/FileViewer.vue";
+import BrandMark from "~/components/BrandMark.vue";
+import CapabilityCenterModal from "~/components/capabilities/CapabilityCenterModal.vue";
 import { useSettingsStore } from "~/stores/settings";
 import { useUiStore } from "~/stores/ui";
 
@@ -34,5 +40,8 @@ const settings = useSettingsStore();
 const sidebarOpen = ref(false);
 
 // 主题与偏好尽早初始化 避免闪白
-onMounted(() => settings.init());
+onMounted(() => {
+  settings.init();
+  ui.restoreLayout();
+});
 </script>

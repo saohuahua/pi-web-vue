@@ -1,5 +1,5 @@
 <template>
-  <details class="tool-card" :class="{ 'is-error': isError, 'is-running': isRunningTool }">
+  <details class="tool-card" :class="[toneClass, { 'is-error': isError, 'is-running': isRunningTool }]">
     <summary>
       <span class="fold-mark" aria-hidden="true"></span>
       <span class="tool-name">{{ block.toolName || "tool" }}</span>
@@ -64,6 +64,13 @@ const argsText = computed(() => {
 });
 
 const preview = computed(() => toolPreview(props.block));
+const toneClass = computed(() => {
+  const name = props.block.toolName.toLowerCase();
+  if (["read", "find", "grep", "ls"].includes(name)) return "is-read";
+  if (["bash", "powershell"].includes(name)) return "is-shell";
+  if (["write", "edit"].includes(name)) return "is-write";
+  return "is-tool";
+});
 
 // 结果文本块拼接 bash 输出走 ANSI 着色 其余纯文本插值
 const resultText = computed(() => {

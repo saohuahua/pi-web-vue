@@ -267,6 +267,26 @@ export interface SkillEntry {
   disableModelInvocation: boolean;
 }
 
+// ---------- 扩展注册表 ----------
+
+export type ExtensionScope = "global" | "project";
+export type ExtensionStatus = "ready" | "needs-trust";
+
+export interface ExtensionEntry {
+  id: string;
+  name: string;
+  filePath: string;
+  scope: ExtensionScope;
+  kind: "file" | "package";
+  status: ExtensionStatus;
+}
+
+export interface ExtensionsResponse {
+  extensions: ExtensionEntry[];
+  projectTrusted: boolean;
+  projectNeedsTrust: boolean;
+}
+
 // 会话使用量的文件累计
 // compaction 只追加摘要 entry 被汇总的历史仍留在文件里 因此累计值单调增长
 // 与运行态的 context usage 是两项独立指标 前端不得相加

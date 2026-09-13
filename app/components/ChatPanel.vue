@@ -9,13 +9,13 @@
           :aria-label="ui.sidebarCollapsed ? '展开侧栏' : '收起侧栏'"
           :title="ui.sidebarCollapsed ? '展开侧栏' : '收起侧栏'"
           @click="ui.toggleSidebar()"
-        >☰</button>
+        ><Menu :size="16" aria-hidden="true" /></button>
 
         <!-- 会话名 悬停出现重命名与生成标题 -->
         <div v-if="!renaming" class="status-title-group">
           <span class="status-title" :title="titleText">{{ titleText }}</span>
           <span v-if="chat.sessionId" class="status-title-actions">
-            <button type="button" title="重命名" aria-label="重命名会话" @click="startRename">✎</button>
+            <button type="button" title="重命名" aria-label="重命名会话" @click="startRename"><Pencil :size="14" aria-hidden="true" /></button>
             <button
               v-if="hasMessages"
               type="button"
@@ -23,7 +23,7 @@
               aria-label="生成标题"
               :disabled="sessionsStore.titlingIds.has(chat.sessionId)"
               @click="autoTitle"
-            >{{ sessionsStore.titlingIds.has(chat.sessionId) ? "…" : "✦" }}</button>
+            ><span v-if="sessionsStore.titlingIds.has(chat.sessionId)">…</span><Sparkles v-else :size="14" aria-hidden="true" /></button>
           </span>
         </div>
         <input
@@ -43,33 +43,50 @@
 
       <div class="status-right">
         <!-- 使用量 文件累计 token 与成本 悬浮明细 -->
-        <span
-          v-if="chat.stats"
-          class="status-usage font-mono"
-          :title="chat.stats ? usageBreakdown(chat.stats) : ''"
-        >
-          <span>{{ formatTokenCount(chat.stats.tokens.total) }} tok</span>
-          <span class="status-usage-cost">{{ formatCost(chat.stats.cost) }}</span>
-        </span>
-        <!-- 当前上下文占用 无 window 数据时整块隐藏 -->
-        <span
-          v-if="contextPercent !== null"
-          class="status-usage font-mono"
-          :class="{ warn: contextPercent >= 80 }"
-          :title="contextTitle"
-        >ctx {{ contextPercent }}%</span>
-
+        <div v-if="chat.stats" class="status-usage-wrap">
+          <button
+            class="status-usage status-usage-trigger font-mono"
+            type="button"
+            :aria-expanded="usageOpen"
+            :aria-label="usageButtonLabel"
+            :title="usageButtonLabel"
+            @click="usageOpen = !usageOpen"
+          >
+            <span
+              class="status-usage-ring"
+              :class="{ warn: contextPercent !== null && contextPercent >= 80, unknown: contextPercent === null }"
+              :style="contextRingStyle"
+              aria-hidden="true"
+            ><span v-if="contextRemaining !== null">{{ contextRemaining }}</span><CircleHelp v-else :size="14" aria-hidden="true" /></span>
+            <span>{{ formatTokenCount(chat.stats.tokens.total) }} tok</span>
+            <span v-if="chat.stats.cost > 0" class="status-usage-cost">{{ formatCost(chat.stats.cost) }}</span>
+          </button>
+          <div v-if="usageOpen" class="status-usage-popover" role="status">
+            <p>会话累计</p>
+            <dl>
+              <div><dt>输入</dt><dd>{{ formatTokenCount(chat.stats.tokens.input) }}</dd></div>
+              <div><dt>输出</dt><dd>{{ formatTokenCount(chat.stats.tokens.output) }}</dd></div>
+              <div><dt>缓存读</dt><dd>{{ formatTokenCount(chat.stats.tokens.cacheRead) }}</dd></div>
+              <div><dt>缓存写</dt><dd>{{ formatTokenCount(chat.stats.tokens.cacheWrite) }}</dd></div>
+              <div><dt>成本</dt><dd>{{ chat.stats.cost > 0 ? formatCost(chat.stats.cost) : "未提供" }}</dd></div>
+              <div><dt>当前上下文</dt><dd>{{ contextUsageText || "未提供" }}</dd></div>
+            </dl>
+          </div>
+        </div>
         <button
-          class="status-icon-btn"
+          class="status-icon-btn status-general-btn"
           type="button"
-          title="系统与工具"
-          aria-label="系统与工具"
-          @click="ui.runtimeInfoOpen = true"
-        >⚙</button>
+          title="常规设置"
+          aria-label="常规设置"
+          aria-haspopup="dialog"
+          @click="center.show('general')"
+        ><Settings2 :size="16" aria-hidden="true" /></button>
 
         <PiIndicator v-if="chat.isRunning" />
       </div>
     </header>
+
+    <button v-if="usageOpen" class="status-usage-scrim" type="button" aria-label="关闭使用量详情" @click="usageOpen = false"></button>
 
     <!-- 通知条 错误可关闭 -->
     <div v-if="chat.notices.length" class="notices" role="status">
@@ -80,14 +97,18 @@
         :class="notice.type"
       >
         <span class="notice-text">{{ notice.message }}</span>
-        <button class="notice-close" type="button" aria-label="关闭通知" @click="chat.dismissNotice(notice.id)">×</button>
+        <button class="notice-close" type="button" aria-label="关闭通知" @click="chat.dismissNotice(notice.id)"><X :size="14" aria-hidden="true" /></button>
       </div>
     </div>
 
     <!-- 消息区 -->
     <div ref="scrollEl" class="messages" @scroll="onScroll">
-      <div class="messages-inner">
-        <template v-if="chat.messages.length || chat.stream.streamingMessage">
+      <Transition name="session-view" mode="out-in">
+      <div :key="chat.sessionId ?? 'empty-session'" class="messages-inner">
+        <div v-if="chat.sessionLoading" class="session-loading" aria-busy="true">
+          <span v-for="index in 5" :key="index"></span>
+        </div>
+        <template v-else-if="chat.messages.length || chat.stream.streamingMessage">
           <MessageItem
             v-for="(m, i) in chat.messages"
             :key="chat.entryIds[i] || `local-${i}`"
@@ -106,12 +127,22 @@
 
         <!-- 空会话引导 -->
         <div v-else class="chat-empty">
-          <span class="chat-empty-mark">π</span>
+          <BrandMark variant="empty" />
           <p class="chat-empty-title">空会话已就绪</p>
           <p class="chat-empty-hint">第一条消息会成为会话名 你可以让它读代码 写文件 或跑命令</p>
         </div>
       </div>
+      </Transition>
     </div>
+
+    <button
+      v-if="!nearBottom"
+      class="scroll-bottom-button"
+      type="button"
+      title="回到最新消息"
+      aria-label="回到最新消息"
+      @click="scrollToBottom(true)"
+    ><ArrowDown :size="17" aria-hidden="true" /></button>
 
     <!-- 运行状态条 此刻正在跑什么 工具卡片由定稿后的历史渲染 -->
     <div v-if="chat.isRunning && (chat.activeTools.size || chat.retryInfo)" class="run-strip" role="status">
@@ -137,32 +168,31 @@
 
     <ChatComposer />
 
-    <!-- 运行信息抽屉 系统提示词与工具 -->
-    <RuntimeInfoDrawer />
-    <!-- 配置抽屉 模型 技能 设置 -->
-    <SettingsDrawer />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useAutoScroll } from "~/composables/useAutoScroll";
+import { ArrowDown, CircleHelp, Menu, Pencil, Settings2, Sparkles, X } from "lucide-vue-next";
+import BrandMark from "~/components/BrandMark.vue";
 import { useChatStore } from "~/stores/chat";
 import { useSessionsStore } from "~/stores/sessions";
 import { useUiStore } from "~/stores/ui";
-import { formatCost, formatTokenCount, usageBreakdown } from "~/utils/usage-format";
+import { formatCost, formatTokenCount } from "~/utils/usage-format";
 import ChatComposer from "~/components/ChatComposer.vue";
 import MessageItem from "~/components/MessageItem.vue";
 import PiIndicator from "~/components/PiIndicator.vue";
-import RuntimeInfoDrawer from "~/components/RuntimeInfoDrawer.vue";
-import SettingsDrawer from "~/components/SettingsDrawer.vue";
 import { useSettingsStore } from "~/stores/settings";
+import { useCapabilityCenterStore } from "~/stores/capability-center";
 import { playCompletionChime } from "~/utils/chime";
 
 const chat = useChatStore();
 const sessionsStore = useSessionsStore();
 const ui = useUiStore();
 const settings = useSettingsStore();
+const center = useCapabilityCenterStore();
 const scrollEl = ref<HTMLElement | null>(null);
+const usageOpen = ref(false);
 
 // 运行结束时按偏好播放提示音
 watch(() => chat.isRunning, (running, was) => {
@@ -170,7 +200,7 @@ watch(() => chat.isRunning, (running, was) => {
 });
 
 // 依赖含流式消息内容长度 流式每增长一帧评估一次跟随
-const { onScroll } = useAutoScroll(scrollEl, () => [
+const { onScroll, scrollToBottom, nearBottom } = useAutoScroll(scrollEl, () => [
   chat.messages.length,
   chat.stream.streamingMessage?.content.length ?? 0,
 ]);
@@ -220,14 +250,22 @@ async function autoTitle() {
 
 const contextPercent = computed(() =>
   chat.contextUsage?.percent !== null && chat.contextUsage?.percent !== undefined
-    ? Math.round(chat.contextUsage.percent)
+    ? Math.max(0, Math.min(100, Math.round(chat.contextUsage.percent)))
     : null,
 );
+const contextRemaining = computed(() => contextPercent.value === null ? null : 100 - contextPercent.value);
+const contextRingStyle = computed(() => ({ "--context-progress": `${contextPercent.value ?? 0}%` }));
 const contextTitle = computed(() => {
   const usage = chat.contextUsage;
-  if (!usage) return "";
+  if (!usage || contextPercent.value === null) return "当前上下文窗口未提供";
   const tokensK = usage.tokens !== null ? `${Math.round(usage.tokens / 1000)}k` : "?";
   const windowK = Math.round(usage.contextWindow / 1000);
-  return `当前上下文 ${tokensK} / ${windowK}k tokens`;
+  return `当前上下文 ${tokensK} / ${windowK}k tokens 已用 ${contextPercent.value}% 剩余 ${contextRemaining.value}%`;
+});
+const usageButtonLabel = computed(() => `查看会话使用量 ${contextTitle.value}`);
+const contextUsageText = computed(() => {
+  const usage = chat.contextUsage;
+  if (!usage || usage.tokens === null) return "";
+  return `${formatTokenCount(usage.tokens)} / ${formatTokenCount(usage.contextWindow)} tokens`;
 });
 </script>

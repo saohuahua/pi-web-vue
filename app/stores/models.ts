@@ -32,5 +32,30 @@ export const useModelsStore = defineStore("models", () => {
     }
   }
 
-  return { modelList, defaultModel, thinkingLevels, modelError, loading, load };
+  async function setDefault(cwd: string | null, provider: string, modelId: string): Promise<boolean> {
+    if (!cwd) {
+      modelError.value = "先在左侧选择项目";
+      return false;
+    }
+    try {
+      const res = await fetch("/api/capabilities/models/default", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ cwd, provider, modelId }),
+      });
+      const body = await res.json().catch(() => ({})) as { error?: string };
+      if (!res.ok || body.error) {
+        modelError.value = body.error ?? `HTTP ${res.status}`;
+        return false;
+      }
+      defaultModel.value = { provider, modelId };
+      modelError.value = "";
+      return true;
+    } catch (e) {
+      modelError.value = e instanceof Error ? e.message : String(e);
+      return false;
+    }
+  }
+
+  return { modelList, defaultModel, thinkingLevels, modelError, loading, load, setDefault };
 });

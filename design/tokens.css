@@ -1,0 +1,66 @@
+:root {
+  --ds-canvas: #eaf0f4;
+  --ds-surface: #f9fbfc;
+  --ds-surface-subtle: #e5ecf1;
+  --ds-surface-hover: #e2ebf6;
+  --ds-primary: #2563eb;
+  --ds-primary-hover: #1d4ed8;
+  --ds-primary-ink: #ffffff;
+  --ds-accent-text: #1d4ed8;
+  --ds-primary-soft: #e4edff;
+  --ds-primary-line: #bfd2ff;
+  --ds-primary-border: #c9d9ff;
+  --ds-ink: #17212b;
+  --ds-ink-muted: #536271;
+  --ds-line: #d1dbe4;
+  --ds-line-strong: #b9c7d3;
+  --ds-success: #15803d;
+  --ds-success-soft: #dcfce7;
+  --ds-warning: #a16207;
+  --ds-warning-soft: #fef3c7;
+  --ds-warning-line: #e7c968;
+  --ds-danger: #b42318;
+  --ds-danger-soft: #fee4e2;
+  --ds-danger-line: #f1b9b6;
+  --ds-danger-border: #f0c6c3;
+  --ds-code: #18212f;
+  --ds-code-ink: #dce8f7;
+  --ds-font-sans: Inter, "Segoe UI Variable", "Microsoft YaHei", system-ui, sans-serif;
+  --ds-font-mono: "IBM Plex Mono", "Cascadia Code", Consolas, monospace;
+  --ds-radius-xs: 4px;
+  --ds-radius-sm: 6px;
+  --ds-radius-md: 8px;
+  --ds-radius-lg: 12px;
+  --ds-shadow-floating: 0 10px 30px rgba(22, 37, 57, 0.12);
+  --ds-shadow-composer: 0 3px 14px rgba(22, 37, 57, 0.08);
+  --ds-ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+:root[data-theme="dark"] {
+  --ds-canvas: #111827;
+  --ds-surface: #17202b;
+  --ds-surface-subtle: #202b38;
+  --ds-surface-hover: #1e3a8a;
+  --ds-primary: #2563eb;
+  --ds-primary-hover: #1d4ed8;
+  --ds-primary-ink: #ffffff;
+  --ds-accent-text: #bfdbfe;
+  --ds-primary-soft: #1e3a8a;
+  --ds-primary-line: #2d5ca8;
+  --ds-primary-border: #365f9d;
+  --ds-ink: #e5e7eb;
+  --ds-ink-muted: #94a3b8;
+  --ds-line: #2d3947;
+  --ds-line-strong: #415168;
+  --ds-success: #4ade80;
+  --ds-success-soft: #163b29;
+  --ds-warning: #fbbf24;
+  --ds-warning-soft: #45350c;
+  --ds-warning-line: #806a23;
+  --ds-danger: #f87171;
+  --ds-danger-soft: #4c1d1d;
+  --ds-danger-line: #854141;
+  --ds-danger-border: #713737;
+  --ds-code: #0c1118;
+  --ds-code-ink: #dce8f7;
+}

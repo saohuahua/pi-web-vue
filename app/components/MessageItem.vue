@@ -1,7 +1,17 @@
 <template>
   <!-- 用户消息 右对齐的紧凑气泡 -->
   <div v-if="isUser" class="msg msg-user">
-    <div class="user-chip">{{ userText(message) }}</div>
+    <div ref="userChipEl" class="user-chip" :class="{ 'is-collapsed': userCollapsed }">
+      <span ref="userTextEl" class="user-chip-text">{{ userMessageText }}</span>
+    </div>
+    <button
+      v-if="userCollapsible"
+      class="user-message-toggle"
+      type="button"
+      :aria-expanded="userExpanded"
+      :aria-label="userExpanded ? '收起长消息' : '展开长消息'"
+      @click="userExpanded = !userExpanded"
+    ><span>{{ userExpanded ? "收起" : "展开" }}</span><ChevronDown :size="13" :class="{ 'rotate-180': userExpanded }" aria-hidden="true" /></button>
   </div>
 
   <!-- toolResult 不再独立渲染 配对进 ToolCallCard 的下半区 -->
@@ -20,6 +30,7 @@
 
   <!-- assistant 文档 严格按 content 块顺序渲染 空 content 的 abort 占位不渲染 -->
   <article v-else-if="assistantMessage && !isEmptyAssistant" class="msg msg-assistant">
+    <header v-if="streaming" class="message-meta"><span class="message-streaming">生成中</span></header>
     <template v-for="(block, i) in assistantMessage.content" :key="i">
       <div
         v-if="block.type === 'text'"
@@ -56,6 +67,7 @@
 </template>
 
 <script setup lang="ts">
+import { ChevronDown } from "lucide-vue-next";
 import { renderMarkdown } from "~/utils/markdown";
 import { useChatStore } from "~/stores/chat";
 import { imageDataUrl } from "#shared/lib/images";
@@ -74,6 +86,11 @@ const props = defineProps<{
 }>();
 
 const chat = useChatStore();
+const USER_COLLAPSE_LINE_LIMIT = 5;
+const userChipEl = ref<HTMLElement | null>(null);
+const userTextEl = ref<HTMLElement | null>(null);
+const userCollapsible = ref(false);
+const userExpanded = ref(false);
 
 // 气泡展示保留块间换行 与去重 key 的空格拼接区分
 function userText(m: AgentMessage): string {
@@ -103,10 +120,36 @@ function toolCallDuration(result: { timestamp?: number } | undefined): number | 
 }
 
 const isUser = computed(() => props.message.role === "user");
+const userMessageText = computed(() => userText(props.message));
+const userCollapsed = computed(() => userCollapsible.value && !userExpanded.value);
 const isToolResult = computed(() => props.message.role === "toolResult");
 const isBash = computed(() => props.message.role === "bashExecution");
 // abort 会落盘一条空 content 的 assistant 占位 无内容不渲染
 const isEmptyAssistant = computed(
   () => props.message.role === "assistant" && props.message.content.length === 0,
 );
+
+function measureUserMessage() {
+  const chip = userChipEl.value;
+  const text = userTextEl.value;
+  if (!chip || !text) return;
+  const lineHeight = Number.parseFloat(getComputedStyle(text).lineHeight);
+  if (!Number.isFinite(lineHeight) || lineHeight <= 0) return;
+  userCollapsible.value = text.scrollHeight > lineHeight * USER_COLLAPSE_LINE_LIMIT + 1;
+  if (!userCollapsible.value) userExpanded.value = false;
+}
+
+let userMessageResizeObserver: ResizeObserver | null = null;
+
+onMounted(() => {
+  if (!isUser.value) return;
+  void nextTick(() => {
+    measureUserMessage();
+    if (!userChipEl.value) return;
+    userMessageResizeObserver = new ResizeObserver(measureUserMessage);
+    userMessageResizeObserver.observe(userChipEl.value);
+  });
+});
+
+onBeforeUnmount(() => userMessageResizeObserver?.disconnect());
 </script>

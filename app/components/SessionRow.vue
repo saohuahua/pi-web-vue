@@ -39,7 +39,7 @@
           title="重命名"
           aria-label="重命名会话"
           @click="startRename"
-        >✎</button>
+        ><Pencil :size="13" aria-hidden="true" /></button>
         <button
           v-if="hasMessages"
           class="session-action"
@@ -48,13 +48,14 @@
           aria-label="自动生成标题"
           :disabled="sessionsStore.titlingIds.has(session.id)"
           @click="sessionsStore.autoTitle(session.id)"
-        >{{ sessionsStore.titlingIds.has(session.id) ? "…" : "✦" }}</button>
+        ><span v-if="sessionsStore.titlingIds.has(session.id)">…</span><Sparkles v-else :size="13" aria-hidden="true" /></button>
       </span>
     </span>
   </button>
 </template>
 
 <script setup lang="ts">
+import { Pencil, Sparkles } from "lucide-vue-next";
 import { useSessionsStore } from "~/stores/sessions";
 import { useWorkspaceStore } from "~/stores/workspace";
 import { projectLabelOf } from "~/utils/session-groups";

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-10T16:30:00+08:00",
+  "title": "Design System: Agent Workspace",
+  "extensions": {
+    "colorMeta": {
+      "canvas": { "role": "neutral", "displayName": "Cool Canvas", "canonical": "#F7F9FB", "tonalRamp": ["#18212F", "#344256", "#5F6875", "#9CAAB8", "#C8D3DF", "#DDE4EC", "#F1F5F9", "#F7F9FB"] },
+      "primary": { "role": "primary", "displayName": "Signal Blue", "canonical": "#2563EB", "tonalRamp": ["#172554", "#1E3A8A", "#1D4ED8", "#2563EB", "#60A5FA", "#93C5FD", "#DBEAFE", "#EFF6FF"] },
+      "success": { "role": "secondary", "displayName": "Success Green", "canonical": "#15803D", "tonalRamp": ["#14532D", "#166534", "#15803D", "#22C55E", "#4ADE80", "#86EFAC", "#DCFCE7", "#F0FDF4"] }
+    },
+    "typographyMeta": {
+      "title": { "displayName": "Interface Title", "purpose": "会话和面板标题" },
+      "body": { "displayName": "Interface Body", "purpose": "可扫描的说明和消息正文" },
+      "mono": { "displayName": "Technical Voice", "purpose": "路径 命令 Token 和模型标识" }
+    },
+    "shadows": [
+      { "name": "floating", "value": "0 10px 30px rgba(22, 37, 57, 0.12)", "purpose": "抽屉和下拉面板" },
+      { "name": "composer", "value": "0 3px 14px rgba(22, 37, 57, 0.08)", "purpose": "消息输入区" }
+    ],
+    "motion": [
+      { "name": "standard", "value": "cubic-bezier(0.2, 0, 0, 1)", "purpose": "状态和抽屉过渡" }
+    ],
+    "breakpoints": [
+      { "name": "compact", "value": "1100px" },
+      { "name": "mobile", "value": "760px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "单一首要提交动作",
+      "html": "<button class=\"ds-btn-primary\">保存更改</button>",
+      "css": ".ds-btn-primary { padding: 7px 12px; border: 1px solid #2563eb; border-radius: 6px; background: #2563eb; color: #fff; font: 600 13px/20px Inter, system-ui, sans-serif; cursor: pointer; } .ds-btn-primary:hover { background: #1d4ed8; border-color: #1d4ed8; } .ds-btn-primary:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "工作区搜索和配置字段",
+      "html": "<input class=\"ds-input\" aria-label=\"搜索会话\" placeholder=\"搜索会话\">",
+      "css": ".ds-input { width: 100%; padding: 9px 12px; border: 1px solid #c8d3df; border-radius: 6px; background: #fff; color: #191c1e; font: 14px/22px Inter, system-ui, sans-serif; } .ds-input:focus-visible { border-color: #2563eb; outline: 2px solid #2563eb; outline-offset: 1px; }"
+    },
+    {
+      "name": "Status Chip",
+      "kind": "chip",
+      "refersTo": "status-chip",
+      "description": "模型 上下文和运行状态",
+      "html": "<span class=\"ds-chip\">运行中</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; min-height: 22px; padding: 2px 8px; border: 1px solid #c8d3df; border-radius: 999px; background: #f1f5f9; color: #5f6875; font: 12px/16px IBM Plex Mono, Consolas, monospace; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Code Review Desk",
+    "overview": "冷白画布承载高密度 AI coding agent 工作流 电蓝只承担焦点和主操作。会话 工具结果和文件证据按任务关联而不是按装饰分块。",
+    "keyCharacteristics": ["冷白画布与细边线", "技术对象使用等宽字体", "按需出现的证据 Inspector", "带可恢复出口的异步状态"],
+    "rules": [
+      { "name": "The One Signal Rule", "body": "primary 不得覆盖大面积容器 只用于当前动作和状态", "section": "colors" },
+      { "name": "The Technical Voice Rule", "body": "只有可复制 检查或比较的对象使用等宽字体", "section": "typography" }
+    ],
+    "dos": ["使用语义 token", "在窄屏使用抽屉", "为高风险操作呈现真实作用域"],
+    "donts": ["不复制参考原型的产品名和假凭证", "不把全部设置塞入一个对话框", "不依赖颜色或图标单独表达状态"]
+  }
+}

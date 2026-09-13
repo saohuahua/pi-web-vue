@@ -1,17 +1,21 @@
 <template>
   <aside class="sidebar">
-    <!-- 左上工作区 项目与 worktree 选择 -->
+    <PaneResizeHandle edge="right" :value="ui.sidebarWidth" :min="220" :max="420" @update:value="ui.setSidebarWidth" />
+    <!-- 品牌在顶部 项目选择放入工作区区块 对齐 pi-web 侧栏层级 -->
+    <div class="sidebar-header">
+      <BrandMark />
+      <span class="brand-name">agentDesk</span>
+    </div>
+
     <WorkspaceSelector />
 
-    <div class="sidebar-header">
-      <span class="brand-mark" aria-hidden="true">π</span>
-      <span class="brand-name">agent</span>
+    <div class="sidebar-new-row">
       <button
         class="sidebar-new"
         type="button"
         :aria-expanded="showForm"
         @click="onNewSession"
-      >新会话</button>
+      ><Plus :size="15" aria-hidden="true" />新会话</button>
     </div>
 
     <!-- 未选项目时手输 cwd 已选项目时新会话直接落入选中目录 -->
@@ -20,15 +24,13 @@
     </div>
 
     <!-- 项目内搜索 匹配名称与首条消息 -->
-    <div class="px-3 py-2">
-      <input
+    <div class="sidebar-search-row">
+      <SidebarSearchInput
         v-model="search"
-        class="w-full rounded-lg border border-line-strong bg-surface px-2.5 py-1.5 text-[12.5px] text-ink outline-none transition-colors placeholder:text-muted focus:border-accent"
-        type="search"
         :placeholder="workspace.projectKey ? '搜索当前项目' : '搜索全部会话'"
-        aria-label="搜索会话"
+        label="搜索会话"
         @keydown.esc="search = ''"
-      >
+      />
       <p v-if="sessionsStore.error" class="pt-1.5 text-[11.5px] text-danger">{{ sessionsStore.error }}</p>
     </div>
 
@@ -71,36 +73,37 @@
     <!-- 左下文件树 根跟随工作区选择 -->
     <FileExplorer />
 
-    <!-- 左下配置入口 模型 技能 设置 三个面板 -->
-    <div class="flex items-center gap-1 border-t border-line px-3 py-2">
+    <!-- 常用能力平铺为工具入口 Modal 仍是唯一配置容器 -->
+    <nav class="sidebar-capability" aria-label="Agent 能力">
       <button
-        v-for="entry in settingsEntries"
+        v-for="entry in capabilityEntries"
         :key="entry.tab"
-        class="rounded-full px-2.5 py-1 text-[11.5px] text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+        class="sidebar-capability-button"
         type="button"
-        @click="ui.openSettings(entry.tab)"
-      >{{ entry.label }}</button>
-      <span class="flex-1"></span>
-      <button
-        class="rounded-full px-2 py-1 text-[12px] text-muted transition-colors hover:bg-surface-2 hover:text-ink"
-        type="button"
-        title="配置"
-        aria-label="配置"
-        @click="ui.openSettings('settings')"
-      >⚙</button>
-    </div>
+        :title="entry.label"
+        :aria-label="entry.label"
+        aria-haspopup="dialog"
+        @click="center.show(entry.tab)"
+      ><component :is="entry.icon" :size="15" aria-hidden="true" /><span>{{ entry.label }}</span></button>
+    </nav>
   </aside>
 </template>
 
 <script setup lang="ts">
+import { BrainCircuit, Cable, Plus, Puzzle, Sparkles } from "lucide-vue-next";
+import BrandMark from "~/components/BrandMark.vue";
+import SidebarSearchInput from "~/components/SidebarSearchInput.vue";
 import { useChatStore } from "~/stores/chat";
 import { useSessionsStore } from "~/stores/sessions";
 import { useWorkspaceStore } from "~/stores/workspace";
+import { useCapabilityCenterStore } from "~/stores/capability-center";
+import { useUiStore } from "~/stores/ui";
 import { filterSessions, groupSessionsByProject } from "~/utils/session-groups";
 import NewSessionForm from "~/components/NewSessionForm.vue";
 import FileExplorer from "~/components/FileExplorer.vue";
 import SessionRow from "~/components/SessionRow.vue";
 import WorkspaceSelector from "~/components/WorkspaceSelector.vue";
+import PaneResizeHandle from "~/components/PaneResizeHandle.vue";
 import type { SessionInfo } from "#shared/lib/types";
 
 const emit = defineEmits<{ navigate: [] }>();
@@ -110,12 +113,14 @@ const route = useRoute();
 const chat = useChatStore();
 const sessionsStore = useSessionsStore();
 const workspace = useWorkspaceStore();
+const center = useCapabilityCenterStore();
 const ui = useUiStore();
 
-const settingsEntries = [
-  { tab: "models" as const, label: "模型" },
-  { tab: "skills" as const, label: "技能" },
-  { tab: "settings" as const, label: "设置" },
+const capabilityEntries = [
+  { tab: "models" as const, label: "Model", icon: BrainCircuit },
+  { tab: "skills" as const, label: "Skill", icon: Sparkles },
+  { tab: "extensions" as const, label: "Plugin", icon: Puzzle },
+  { tab: "mcp" as const, label: "MCP", icon: Cable },
 ];
 
 const showForm = ref(false);

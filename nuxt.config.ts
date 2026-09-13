@@ -9,7 +9,7 @@ export default defineNuxtConfig({
   devServer: { host: "127.0.0.1", port: 3000 },
   app: {
     head: {
-      title: "π agent",
+      title: "agentDesk",
       htmlAttrs: { lang: "zh-CN" },
       // Plex 双字族 本地离线时回退系统字体
       link: [

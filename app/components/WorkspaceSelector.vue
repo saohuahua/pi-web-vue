@@ -1,30 +1,30 @@
 <template>
-  <section class="relative border-b border-line px-3 pt-3 pb-2" aria-label="工作区">
+  <section class="workspace-selector relative border-b border-line" aria-label="工作区">
     <!-- 当前项目行 点击展开项目面板 -->
     <button
       type="button"
-      class="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-surface-2"
+      class="workspace-trigger"
       :aria-expanded="panelOpen"
+      title="切换项目"
+      aria-label="切换项目"
       @click="panelOpen = !panelOpen"
     >
-      <span class="min-w-0 flex-1 truncate text-[13px] font-medium text-ink">
+      <span class="min-w-0 flex-1 truncate text-[14px] font-medium text-ink">
         {{ workspace.projectKey ? projectLabel : "选择项目" }}
       </span>
       <!-- 当前分支 仅真实 git 检出才显示 不伪造 main -->
-      <span
-        v-if="currentBranch"
-        class="shrink-0 rounded-full bg-accent-soft px-2 py-0.5 font-mono text-[11px] text-accent-deep"
-      >{{ currentBranch }}</span>
-      <span class="shrink-0 text-[10px] text-muted" aria-hidden="true">▾</span>
+      <span v-if="currentBranch" class="workspace-branch"><GitBranch :size="12" aria-hidden="true" />{{ currentBranch }}</span>
+      <ChevronDown :size="14" class="shrink-0 text-muted" aria-hidden="true" />
+      <span class="workspace-switch-hint" aria-hidden="true">切换项目</span>
     </button>
 
     <!-- worktree 切换行 只有多个 worktree 才出现 -->
-    <div v-if="workspace.isGit && workspace.worktrees.length > 1" class="mt-1 flex flex-wrap gap-1 px-1">
+    <div v-if="workspace.isGit && workspace.worktrees.length > 1" class="workspace-worktrees">
       <button
         v-for="wt in workspace.worktrees"
         :key="wt.path"
         type="button"
-        class="max-w-full truncate rounded-md px-2 py-0.5 font-mono text-[11px] transition-colors"
+        class="workspace-worktree"
         :class="wt.isCurrent
           ? 'bg-accent-soft text-accent-deep'
           : 'text-muted hover:bg-surface-2 hover:text-ink-soft'"
@@ -38,45 +38,45 @@
     <!-- 项目下拉面板 -->
     <div
       v-if="panelOpen"
-      class="absolute inset-x-3 top-full z-40 mt-1 rounded-xl border border-line bg-surface p-2 shadow-soft"
+      class="workspace-menu"
     >
-      <p class="px-2 pt-1 pb-1.5 text-[11px] text-muted">项目</p>
+      <p class="workspace-menu-label">项目</p>
       <button
         v-for="project in recentProjects"
         :key="project.key"
         type="button"
-        class="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-surface-2"
+        class="workspace-menu-row"
         :class="{ 'bg-accent-soft': project.key === workspace.projectKey }"
         @click="chooseProject(project.root)"
       >
-        <span class="min-w-0 flex-1 truncate text-[13px] text-ink">{{ project.label }}</span>
-        <span class="shrink-0 font-mono text-[11px] text-muted">{{ project.count }} 会话</span>
+        <span class="min-w-0 flex-1 truncate text-[14px] text-ink">{{ project.label }}</span>
+        <span class="shrink-0 font-mono text-[12px] text-muted">{{ project.count }} 会话</span>
       </button>
-      <p v-if="!recentProjects.length" class="px-2 pb-1.5 text-[12px] text-muted">还没有项目的会话</p>
+      <p v-if="!recentProjects.length" class="workspace-menu-empty">还没有项目的会话</p>
 
       <!-- 手动输入路径 -->
-      <form class="mt-1 flex gap-1 border-t border-line pt-2" @submit.prevent="submitPath">
+      <form class="workspace-path-form" @submit.prevent="submitPath">
         <input
           v-model="pathInput"
-          class="min-w-0 flex-1 rounded-lg border border-line-strong bg-surface px-2 py-1.5 font-mono text-[12px] text-ink outline-none focus:border-accent"
+          class="workspace-path-input"
           type="text"
           placeholder="D:\project\demo"
           spellcheck="false"
           autocomplete="off"
         >
         <button
-          class="shrink-0 rounded-lg bg-accent px-3 py-1.5 text-[12px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+          class="workspace-path-submit"
           type="submit"
           :disabled="!pathInput.trim() || workspace.loading"
         >{{ workspace.loading ? "…" : "选择" }}</button>
       </form>
 
-      <p v-if="workspace.error" class="px-2 pt-1.5 text-[12px] text-danger">{{ workspace.error }}</p>
+      <p v-if="workspace.error" class="workspace-menu-error">{{ workspace.error }}</p>
 
       <button
         v-if="workspace.projectKey"
         type="button"
-        class="mt-1 w-full rounded-lg px-2 py-1.5 text-left text-[12px] text-muted transition-colors hover:bg-surface-2 hover:text-ink-soft"
+        class="workspace-menu-clear"
         @click="clearAll"
       >查看全部项目</button>
     </div>
@@ -87,6 +87,7 @@
 </template>
 
 <script setup lang="ts">
+import { ChevronDown, GitBranch } from "lucide-vue-next";
 import { useSessionsStore } from "~/stores/sessions";
 import { useWorkspaceStore } from "~/stores/workspace";
 import { projectLabelOf } from "~/utils/session-groups";

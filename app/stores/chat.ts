@@ -42,6 +42,7 @@ export const useChatStore = defineStore("chat", () => {
   // AgentEventConnection 不能进 reactive EventSource 被代理会出诡异问题 所以放闭包
   const stream = reactive<StreamingState>({ ...INITIAL_STREAMING_STATE });
   const isRunning = ref(false);                  // run 进行中的 UI 总开关
+  const sessionLoading = ref(false);
   const isCompacting = ref(false);
   const model = ref<{ provider: string; id: string } | null>(null);
   const thinkingLevel = ref("off");
@@ -293,6 +294,7 @@ export const useChatStore = defineStore("chat", () => {
     attachedImages.value = [];
     Object.assign(stream, INITIAL_STREAMING_STATE);
     isRunning.value = false;
+    sessionLoading.value = false;
     isCompacting.value = false;
     contextUsage.value = null;
     systemPrompt.value = "";
@@ -419,9 +421,15 @@ export const useChatStore = defineStore("chat", () => {
     // 打开新会话前先关旧连接 否则旧事件还会流进新会话的视图
     close();
     sessionId.value = id;
-    const info = await reload();
-    // 工作区跟随会话的项目与 worktree 打开别的项目时选择器同步过去
-    if (info?.cwd) void workspaceStore.syncFromSessionCwd(info.cwd);
+    sessionLoading.value = true;
+    try {
+      const info = await reload();
+      // 工作区跟随会话的项目与 worktree 打开别的项目时选择器同步过去
+      if (info?.cwd) void workspaceStore.syncFromSessionCwd(info.cwd);
+    } finally {
+      if (sessionId.value === id) sessionLoading.value = false;
+    }
+    if (sessionId.value !== id) return;
     connection.maintain(id);
     void refreshRuntimeState();
     void fetchRuntimeInfo();
@@ -512,7 +520,7 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   return {
-    sessionId, messages, entryIds, draft, attachedImages, stream, isRunning, isCompacting,
+    sessionId, messages, entryIds, draft, attachedImages, stream, isRunning, sessionLoading, isCompacting,
     model, thinkingLevel, contextUsage, systemPrompt, toolDefinitions, slashCommands,
     stats, sessionName,
     notices, activeTools, retryInfo, queuedMessages,

@@ -1,15 +1,17 @@
 <template>
   <details class="fold thinking">
     <summary>
-      <span class="fold-mark" aria-hidden="true"></span>
+      <Lightbulb :size="14" class="thinking-icon" aria-hidden="true" />
       <span class="thinking-header">{{ headerText }}</span>
       <span v-if="streaming" class="thinking-live" aria-hidden="true"></span>
+      <ChevronRight :size="14" class="thinking-chevron" aria-hidden="true" />
     </summary>
     <pre class="thinking-body">{{ block.thinking }}</pre>
   </details>
 </template>
 
 <script setup lang="ts">
+import { ChevronRight, Lightbulb } from "lucide-vue-next";
 import type { ThinkingContent } from "#shared/lib/types";
 
 // 思考过程折叠块

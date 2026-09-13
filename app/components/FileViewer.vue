@@ -1,103 +1,113 @@
 <template>
-  <!-- 主区域右侧的文件查看面板 不挤压聊天布局 按需覆盖 -->
-  <aside
-    v-if="viewer.currentPath"
-    class="file-viewer"
-    aria-label="文件预览"
-  >
-    <header class="flex items-center gap-2 border-b border-line px-4 py-2.5">
-      <span class="min-w-0 flex-1 truncate font-mono text-[12px] text-ink" :title="viewer.currentPath">
-        {{ fileName }}
-      </span>
-      <span class="shrink-0 text-[11px] text-muted">{{ metaLabel }}</span>
-      <button
-        class="shrink-0 rounded px-1 text-[15px] leading-none text-muted transition-colors hover:text-ink"
-        type="button"
-        aria-label="关闭预览"
-        @click="viewer.close()"
-      >×</button>
+  <aside v-if="viewer.tabs.length" class="file-viewer" aria-label="文件预览">
+    <PaneResizeHandle edge="left" :value="ui.viewerWidth" :min="360" :max="720" @update:value="ui.setViewerWidth" />
+    <header class="file-viewer-tabs">
+      <div class="file-tab-list" role="tablist" aria-label="已打开文件">
+        <div v-for="path in viewer.tabs" :key="path" class="file-tab-wrap">
+          <button
+            class="file-tab"
+            :class="{ active: path === viewer.activePath }"
+            type="button"
+            role="tab"
+            :aria-selected="path === viewer.activePath"
+            :title="path"
+            @click="viewer.activate(path)"
+          >
+            <FileKindIcon :name="getFileName(path)" :size="13" />
+            <span>{{ getFileName(path) }}</span>
+          </button>
+          <button class="file-tab-close" type="button" :aria-label="`关闭 ${getFileName(path)}`" @click="viewer.close(path)">
+            <X :size="13" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+      <button class="file-viewer-close-all" type="button" title="关闭全部文件" aria-label="关闭全部文件" @click="viewer.closeAll()">
+        <PanelRightClose :size="16" aria-hidden="true" />
+      </button>
     </header>
+
+    <div class="file-viewer-toolbar">
+      <span class="file-viewer-path" :title="activePath">{{ activePath }}</span>
+      <span class="file-viewer-meta">{{ metaLabel }}</span>
+    </div>
 
     <div class="file-viewer-body">
       <p v-if="state.loading" class="file-viewer-note">加载中…</p>
       <p v-else-if="state.error" class="file-viewer-note file-viewer-error">{{ state.error }}</p>
-
-      <!-- 图片直接走白名单流接口 -->
-      <img
-        v-else-if="isImage"
-        class="file-viewer-image"
-        :src="fileApiUrl"
-        :alt="fileName"
-      >
-
-      <!-- 文本截断标记 完整内容交给 agent -->
+      <img v-else-if="isImage" class="file-viewer-image" :src="fileApiUrl" :alt="fileName">
       <template v-else-if="state.text">
-        <p v-if="state.text.truncated" class="file-viewer-note">
-          文件超过 256KB 已截断显示 完整内容请让 agent 读取
-        </p>
-        <pre class="file-viewer-text">{{ state.text.content }}</pre>
+        <p v-if="state.text.truncated" class="file-viewer-note">文件超过 256KB 已截断显示 完整内容请让 agent 读取</p>
+        <div class="file-code-viewer">
+          <ol class="file-line-numbers" aria-hidden="true">
+            <li v-for="line in lineCount" :key="line">{{ line }}</li>
+          </ol>
+          <pre class="file-viewer-code"><code class="hljs" v-html="highlightedText"></code></pre>
+        </div>
       </template>
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
+import { PanelRightClose, X } from "lucide-vue-next";
+import FileKindIcon from "~/components/FileKindIcon.vue";
+import PaneResizeHandle from "~/components/PaneResizeHandle.vue";
 import { useFileViewerStore } from "~/stores/file-viewer";
+import { useUiStore } from "~/stores/ui";
+import { highlightFile } from "~/utils/file-highlight";
 import { encodeFilePathForApi, getFileName } from "#shared/lib/file-paths";
 import type { FileTextContent } from "#shared/lib/types";
 
-// 右侧文件查看器 文本走 JSON 接口 图片走二进制流
 const viewer = useFileViewerStore();
-
+const ui = useUiStore();
 const state = reactive<{ loading: boolean; error: string; text: FileTextContent | null }>({
   loading: false,
   error: "",
   text: null,
 });
 
-// 扩展名判断图片 与服务端 file-types 同一张映射
 const IMAGE_EXTS = new Set(["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ico", "avif"]);
-const fileName = computed(() => (viewer.currentPath ? getFileName(viewer.currentPath) : ""));
+const activePath = computed(() => viewer.activePath ?? "");
+const fileName = computed(() => activePath.value ? getFileName(activePath.value) : "");
 const isImage = computed(() => IMAGE_EXTS.has(fileName.value.toLowerCase().split(".").pop() ?? ""));
-const fileApiUrl = computed(() =>
-  viewer.currentPath ? `/api/files/${encodeFilePathForApi(viewer.currentPath)}?type=read` : "",
-);
+const fileApiUrl = computed(() => activePath.value ? `/api/files/${encodeFilePathForApi(activePath.value)}?type=read` : "");
 const metaLabel = computed(() => {
   if (state.loading || state.error) return "";
   if (isImage.value) return "图片";
-  if (state.text) return state.text.language;
-  return "";
+  return state.text?.language ?? "";
 });
+const lineCount = computed(() => state.text ? Math.max(1, state.text.content.split("\n").length) : 0);
+const highlightedText = computed(() => state.text ? highlightFile(state.text.content, state.text.language) : "");
+
+let loadVersion = 0;
 
 async function load(path: string) {
+  const version = ++loadVersion;
   state.loading = true;
   state.error = "";
   state.text = null;
-  if (isImage.value) {
-    // 图片由 <img> 自行请求 这里只负责重置状态
+  if (IMAGE_EXTS.has(getFileName(path).toLowerCase().split(".").pop() ?? "")) {
     state.loading = false;
     return;
   }
   try {
-    const res = await fetch(fileApiUrl.value);
-    const body = await res.json().catch(() => ({})) as (Partial<FileTextContent> & { error?: string });
+    const res = await fetch(`/api/files/${encodeFilePathForApi(path)}?type=read`);
+    const body = await res.json().catch(() => ({})) as Partial<FileTextContent> & { error?: string };
+    if (version !== loadVersion) return;
     if (!res.ok || body.error) {
       state.error = body.error ?? `HTTP ${res.status}`;
       return;
     }
-    if (body.kind === "text") {
-      state.text = body as FileTextContent;
-    } else {
-      state.error = "暂不支持预览该文件类型";
-    }
-  } catch (e) {
-    state.error = e instanceof Error ? e.message : String(e);
+    state.text = body.kind === "text" ? body as FileTextContent : null;
+    if (!state.text) state.error = "暂不支持预览该文件类型";
+  } catch (error) {
+    if (version === loadVersion) state.error = error instanceof Error ? error.message : String(error);
   } finally {
-    state.loading = false;
+    if (version === loadVersion) state.loading = false;
   }
 }
 
-watch(() => viewer.currentPath, (path) => {
+watch(activePath, (path) => {
   if (path) void load(path);
 }, { immediate: true });
 </script>
