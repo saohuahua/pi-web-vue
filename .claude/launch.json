@@ -6,6 +6,23 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 3000
+    },
+    {
+      "name": "nuxt-dev-attach",
+      "url": "http://localhost:3000",
+      "port": 3000
+    },
+    {
+      "name": "nuxt-dev-3002",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "3002"],
+      "port": 3002
+    },
+    {
+      "name": "nuxt-dev-3010",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "3010"],
+      "port": 3010
     }
   ]
 }
