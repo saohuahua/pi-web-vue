@@ -1,0 +1,13 @@
+{
+  // 继承 Nuxt 生成的全量别名(~ #shared #server)与编译选项 nuxt prepare 重新生成后自动跟进
+  // 挂进根 tsconfig references 后 vue-tsc -b 才会检查 tests/ 否则集中化会让测试脱离 typecheck
+  "extends": "../.nuxt/tsconfig.json",
+  // 独立 project 只收 tests 不把业务源码重复纳入检查
+  // nuxt.d.ts 是自动导入全局(navigateTo 等)与 nitro 类型的声明入口 覆写 include 会丢掉它
+  // 被测试引入的业务源码依赖这些全局声明 不带回会报 TS2552
+  "include": ["./**/*.ts", "../.nuxt/nuxt.d.ts"],
+  "compilerOptions": {
+    // 基配置 types 是空数组 而 server 测试的 node: 导入需要 @types/node
+    "types": ["node"]
+  }
+}

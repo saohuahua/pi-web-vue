@@ -13,6 +13,10 @@
     },
     {
       "path": "./.nuxt/tsconfig.node.json"
+    },
+    // 测试独立 project 没有它 集中化后 tests/ 会脱离 nuxt typecheck 的覆盖
+    {
+      "path": "./tests/tsconfig.json"
     }
   ]
 }

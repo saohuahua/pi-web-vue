@@ -26,3 +26,6 @@ logs
 
 # Design reference prototypes for visual verification only
 design/reference/stitch-agentcraft-studio/
+
+# vue-tsc -b 增量编译缓存 tests project 接线后会在 tests/ 下生成
+tests/tsconfig.tsbuildinfo
