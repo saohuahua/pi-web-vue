@@ -1,0 +1,93 @@
+@layer primitives {
+  .pi-button {
+    display: inline-flex;
+    min-height: var(--ds-control-height);
+    align-items: center;
+    justify-content: center;
+    gap: var(--ds-space-2);
+    padding: 0 var(--ds-space-3);
+    border: 1px solid transparent;
+    border-radius: var(--ds-radius-sm);
+    font-size: var(--ds-font-size-body);
+    font-weight: 600;
+    line-height: var(--ds-line-height-caption);
+    transition:
+      background-color var(--ds-duration-fast) var(--ds-ease),
+      border-color var(--ds-duration-fast) var(--ds-ease),
+      color var(--ds-duration-fast) var(--ds-ease),
+      opacity var(--ds-duration-fast) var(--ds-ease);
+  }
+
+  .pi-button--compact {
+    min-height: var(--ds-control-height-compact);
+    padding: 0 var(--ds-space-2);
+    font-size: var(--ds-font-size-caption);
+  }
+
+  .pi-button--primary {
+    color: var(--ds-primary-ink);
+    background: var(--ds-primary);
+  }
+
+  .pi-button--primary:hover:not(:disabled) {
+    background: var(--ds-primary-hover);
+  }
+
+  .pi-button--secondary {
+    color: var(--ds-ink);
+    background: var(--ds-surface);
+    border-color: var(--ds-line);
+  }
+
+  .pi-button--secondary:hover:not(:disabled) {
+    background: var(--ds-surface-subtle);
+    border-color: var(--ds-line-strong);
+  }
+
+  .pi-button--ghost {
+    color: var(--ds-ink-muted);
+    background: transparent;
+  }
+
+  .pi-button--ghost:hover:not(:disabled) {
+    color: var(--ds-accent-text);
+    background: var(--ds-primary-soft);
+  }
+
+  .pi-button--danger {
+    color: var(--ds-danger);
+    background: var(--ds-danger-soft);
+    border-color: var(--ds-danger-border);
+  }
+
+  .pi-button--danger:hover:not(:disabled) {
+    color: var(--ds-primary-ink);
+    background: var(--ds-danger);
+  }
+
+  .pi-button:disabled {
+    opacity: var(--ds-disabled-opacity);
+  }
+
+  .pi-button__content {
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+    gap: inherit;
+  }
+
+  .pi-button__spinner {
+    width: var(--ds-space-3);
+    height: var(--ds-space-3);
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: var(--ds-radius-circle);
+    animation: pi-button-spin var(--ds-duration-standard) var(--ds-ease-linear) infinite;
+  }
+
+  @keyframes pi-button-spin {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+}

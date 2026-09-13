@@ -1,24 +1,26 @@
 <template>
   <form class="new-session-form" @submit.prevent="submit">
-    <label class="form-label" for="new-session-cwd">工作目录</label>
-    <input
+    <span class="form-label">工作目录</span>
+    <PiInput
       id="new-session-cwd"
       v-model="cwd"
-      class="form-input"
       type="text"
+      label="工作目录"
       placeholder="D:\project\demo"
       spellcheck="false"
       autocomplete="off"
-    >
+    />
     <p v-if="error" class="form-error">{{ error }}</p>
-    <button class="form-submit" type="submit" :disabled="!cwd.trim() || submitting">
+    <PiButton type="submit" variant="primary" :disabled="!cwd.trim()" :loading="submitting">
       {{ submitting ? "创建中…" : "开始会话" }}
-    </button>
+    </PiButton>
   </form>
 </template>
 
 <script setup lang="ts">
 import { useChatStore } from "~/stores/chat";
+import PiButton from "~/components/pi/PiButton/index.vue";
+import PiInput from "~/components/pi/PiInput/index.vue";
 
 // 新会话表单 侧栏与首页共用
 // 只收 cwd 不收首条消息 首条 prompt 必须等 SSE 建连后单独发
@@ -35,7 +37,7 @@ onMounted(() => {
   cwd.value = localStorage.getItem(LAST_CWD_KEY) ?? "";
 });
 
-async function submit() {
+const submit = async () => {
   const value = cwd.value.trim();
   if (!value || submitting.value) return;
   submitting.value = true;
@@ -49,5 +51,5 @@ async function submit() {
   } finally {
     submitting.value = false;
   }
-}
+};
 </script>

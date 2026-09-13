@@ -1,0 +1,39 @@
+@layer reset {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #__nuxt {
+    min-height: 100%;
+    height: 100%;
+  }
+
+  body,
+  h1,
+  h2,
+  h3,
+  p,
+  pre {
+    margin: 0;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  button {
+    border: 0;
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+}

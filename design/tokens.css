@@ -1,3 +1,14 @@
+@font-face {
+  font-family: "Noto Sans Mono";
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url("/fonts/noto-sans-mono-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
+}
+
 :root {
   --ds-canvas: #eaf0f4;
   --ds-surface: #f9fbfc;
@@ -25,15 +36,65 @@
   --ds-danger-border: #f0c6c3;
   --ds-code: #18212f;
   --ds-code-ink: #dce8f7;
+  --ds-code-block-surface: #edf1f5;
+  --ds-code-block-ink: #223247;
+  --ds-code-quiet-surface: #e9eef3;
+  --ds-code-quiet-ink: #344054;
   --ds-font-sans: Inter, "Segoe UI Variable", "Microsoft YaHei", system-ui, sans-serif;
   --ds-font-mono: "IBM Plex Mono", "Cascadia Code", Consolas, monospace;
+  --ds-font-code: "Noto Sans Mono", "JetBrains Mono", "Fira Code", Consolas, ui-monospace,
+    "PingFang SC", "Microsoft YaHei", monospace;
+  --ds-font-math: Georgia, "Times New Roman", serif;
+  --ds-font-size-caption: 12px;
+  --ds-font-size-body: 14px;
+  --ds-font-size-title: 16px;
+  --ds-line-height-caption: 18px;
+  --ds-line-height-body: 22px;
+  --ds-line-height-title: 24px;
+  --ds-space-1: 4px;
+  --ds-space-2: 8px;
+  --ds-space-3: 12px;
+  --ds-space-4: 16px;
+  --ds-space-5: 20px;
+  --ds-space-6: 24px;
+  --ds-sidebar-width: 256px;
+  --ds-control-height-compact: 28px;
+  --ds-control-height: 36px;
+  --ds-control-height-touch: 40px;
+  --ds-row-height: 40px;
+  --ds-switch-width: 40px;
+  --ds-switch-height: 24px;
+  --ds-switch-thumb-size: 16px;
+  --ds-switch-thumb-offset: 16px;
+  --ds-cap-index-item-min-height: 56px;
+  --ds-composer-min-height: 64px;
+  --ds-workspace-menu-max-height: 320px;
+  --ds-scroll-bottom-offset: 132px;
+  --ds-scroll-bottom-mobile-offset: 152px;
   --ds-radius-xs: 4px;
   --ds-radius-sm: 6px;
   --ds-radius-md: 8px;
   --ds-radius-lg: 12px;
+  --ds-radius-zero: 0;
+  --ds-radius-circle: 50%;
+  --ds-radius-pill: 999px;
+  --ds-radius-attachment: 0 0 0 var(--ds-radius-sm);
   --ds-shadow-floating: 0 10px 30px rgba(22, 37, 57, 0.12);
   --ds-shadow-composer: 0 3px 14px rgba(22, 37, 57, 0.08);
+  --ds-focus-ring: 0 0 0 2px color-mix(in srgb, var(--ds-primary) 28%, transparent);
+  --ds-danger-focus-ring: 0 0 0 2px color-mix(in srgb, var(--ds-danger) 24%, transparent);
+  --ds-scrim: color-mix(in srgb, var(--ds-ink) 28%, transparent);
+  --ds-duration-fast: 150ms;
+  --ds-duration-standard: 200ms;
+  --ds-duration-pulse: 1200ms;
+  --ds-duration-caret: 1000ms;
+  --ds-ease-linear: linear;
   --ds-ease: cubic-bezier(0.2, 0, 0, 1);
+  --ds-disabled-opacity: 0.56;
+  --ds-muted-opacity: 0.72;
+  --ds-active-opacity: 0.4;
+  --ds-resize-opacity: 0.45;
+  --ds-loading-opacity: 0.52;
 }
 
 :root[data-theme="dark"] {
@@ -63,4 +124,8 @@
   --ds-danger-border: #713737;
   --ds-code: #0c1118;
   --ds-code-ink: #dce8f7;
+  --ds-code-block-surface: #18212f;
+  --ds-code-block-ink: #dce8f7;
+  --ds-code-quiet-surface: #202b38;
+  --ds-code-quiet-ink: #dce8f7;
 }

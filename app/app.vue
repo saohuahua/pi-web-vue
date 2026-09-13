@@ -1,10 +1,10 @@
 <template>
   <div
     class="layout"
-    :class="{ 'sidebar-open': sidebarOpen, 'sidebar-collapsed': ui.sidebarCollapsed }"
+    :class="{ 'sidebar-open': ui.sidebarDrawerOpen, 'sidebar-collapsed': ui.sidebarCollapsed }"
     :style="{ '--sidebar-w': `${ui.sidebarWidth}px`, '--viewer-w': `${ui.viewerWidth}px` }"
   >
-    <SessionSidebar @navigate="sidebarOpen = false" />
+    <SessionSidebar @navigate="ui.closeSidebarDrawer" />
     <main class="main">
       <NuxtPage />
     </main>
@@ -12,20 +12,26 @@
     <CapabilityCenterModal />
     <!-- 窄屏开关 打开后点遮罩关闭 -->
     <button
+      v-if="!isSessionRoute"
       class="sidebar-toggle"
       type="button"
       aria-label="会话列表"
-      @click="sidebarOpen = !sidebarOpen"
-    ><BrandMark variant="mobile" /></button>
-    <div
-      v-if="sidebarOpen"
+      @click="ui.toggleSidebar"
+    >
+      <BrandMark variant="mobile" />
+    </button>
+    <button
+      v-if="ui.sidebarDrawerOpen"
       class="sidebar-scrim"
-      @click="sidebarOpen = false"
-    ></div>
+      type="button"
+      aria-label="关闭会话列表"
+      @click="ui.closeSidebarDrawer"
+    ></button>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed, onMounted } from "vue";
 import SessionSidebar from "~/components/SessionSidebar.vue";
 import FileViewer from "~/components/FileViewer.vue";
 import BrandMark from "~/components/BrandMark.vue";
@@ -37,7 +43,8 @@ import { useUiStore } from "~/stores/ui";
 // 窄屏下侧栏变抽屉 由浮动按钮开关 桌面下可整栏收起
 const ui = useUiStore();
 const settings = useSettingsStore();
-const sidebarOpen = ref(false);
+const route = useRoute();
+const isSessionRoute = computed(() => route.path.startsWith("/session/"));
 
 // 主题与偏好尽早初始化 避免闪白
 onMounted(() => {

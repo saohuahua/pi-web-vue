@@ -6,14 +6,9 @@
           <h2 id="skills-title">技能</h2>
           <p>{{ skills.entries.length }} 个已发现技能</p>
         </div>
-        <button
-          class="cap-icon-button"
-          type="button"
-          title="刷新技能"
-          aria-label="刷新技能"
-          :disabled="skills.loading"
-          @click="loadSkills"
-        ><RefreshCw :size="16" aria-hidden="true" /></button>
+        <PiIconButton label="刷新技能" :disabled="skills.loading" @click="loadSkills"
+          ><RefreshCw :size="16" aria-hidden="true"
+        /></PiIconButton>
       </div>
 
       <ResourceSearchInput v-model="query" placeholder="搜索技能" label="搜索技能" />
@@ -22,7 +17,11 @@
       <div v-else-if="skills.loading" class="cap-loading-list" aria-label="正在加载技能">
         <span v-for="index in 5" :key="index"></span>
       </div>
-      <p v-else-if="!skills.entries.length" class="cap-empty">选择项目后可查看全局和项目技能</p>
+      <PiEmptyState
+        v-else-if="!skills.entries.length"
+        title="没有已发现的技能"
+        description="选择项目后可查看全局和项目技能"
+      />
       <nav v-else class="cap-index-list" aria-label="技能列表">
         <button
           v-for="skill in filteredSkills"
@@ -33,7 +32,9 @@
           @click="selectedPath = skill.filePath"
         >
           <span class="cap-index-item-name">{{ skill.name }}</span>
-          <span class="cap-index-item-meta">{{ skill.disableModelInvocation ? "未调用" : "可调用" }}</span>
+          <span class="cap-index-item-meta">{{
+            skill.disableModelInvocation ? "未调用" : "可调用"
+          }}</span>
         </button>
       </nav>
     </aside>
@@ -44,9 +45,9 @@
           <div>
             <div class="cap-detail-title-row">
               <h2>{{ selected.name }}</h2>
-              <span class="cap-status" :class="{ active: !selected.disableModelInvocation }">
+              <PiStatusTag :tone="selected.disableModelInvocation ? 'neutral' : 'success'">
                 {{ selected.disableModelInvocation ? "不调用" : "可调用" }}
-              </span>
+              </PiStatusTag>
             </div>
             <p class="cap-mono" :title="selected.filePath">{{ selected.filePath }}</p>
           </div>
@@ -59,7 +60,7 @@
               role="switch"
               aria-label="允许模型调用"
               @change="changeInvocation(($event.target as HTMLInputElement).checked)"
-            >
+            />
           </label>
         </header>
 
@@ -81,7 +82,9 @@
 
         <div class="cap-section cap-model-note">
           <h3>重新加载</h3>
-          <p>变更会写入技能 frontmatter 已运行的 agent 不会被中途替换 下次创建或重新加载资源时生效</p>
+          <p>
+            变更会写入技能 frontmatter 已运行的 agent 不会被中途替换 下次创建或重新加载资源时生效
+          </p>
         </div>
       </template>
       <div v-else class="cap-empty-detail">从左侧选择一个技能查看详情</div>
@@ -90,7 +93,11 @@
 </template>
 
 <script setup lang="ts">
+import { computed, onMounted, ref, watch } from "vue";
 import { RefreshCw } from "lucide-vue-next";
+import PiEmptyState from "~/components/pi/PiEmptyState/index.vue";
+import PiIconButton from "~/components/pi/PiIconButton/index.vue";
+import PiStatusTag from "~/components/pi/PiStatusTag/index.vue";
 import ResourceSearchInput from "~/components/capabilities/ResourceSearchInput.vue";
 import { useSkillsStore } from "~/stores/skills";
 import { useWorkspaceStore } from "~/stores/workspace";
@@ -104,26 +111,35 @@ const filteredSkills = computed(() => {
   const text = query.value.trim().toLocaleLowerCase();
   if (!text) return skills.entries;
   return skills.entries.filter((skill) =>
-    `${skill.name} ${skill.description} ${skill.sourceInfo.source ?? ""}`.toLocaleLowerCase().includes(text),
+    `${skill.name} ${skill.description} ${skill.sourceInfo.source ?? ""}`
+      .toLocaleLowerCase()
+      .includes(text),
   );
 });
-const selected = computed(() =>
-  skills.entries.find((skill) => skill.filePath === selectedPath.value) ?? null,
+const selected = computed(
+  () => skills.entries.find((skill) => skill.filePath === selectedPath.value) ?? null,
 );
 
-function loadSkills() {
+const loadSkills = () => {
   void skills.load(workspace.selectedCwd);
-}
+};
 
-function changeInvocation(allowed: boolean) {
+const changeInvocation = (allowed: boolean) => {
   if (selected.value) void skills.setInvocation(selected.value, allowed);
-}
+};
 
-watch([() => skills.entries, filteredSkills], () => {
-  if (!selected.value || !filteredSkills.value.some((skill) => skill.filePath === selectedPath.value)) {
-    selectedPath.value = filteredSkills.value[0]?.filePath ?? "";
-  }
-}, { immediate: true });
+watch(
+  [() => skills.entries, filteredSkills],
+  () => {
+    if (
+      !selected.value ||
+      !filteredSkills.value.some((skill) => skill.filePath === selectedPath.value)
+    ) {
+      selectedPath.value = filteredSkills.value[0]?.filePath ?? "";
+    }
+  },
+  { immediate: true },
+);
 
 onMounted(loadSkills);
 </script>

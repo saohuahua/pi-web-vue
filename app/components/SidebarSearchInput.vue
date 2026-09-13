@@ -1,26 +1,22 @@
 <template>
   <div class="sidebar-search-input" role="search">
-    <Search :size="14" aria-hidden="true" />
-    <input
-      :value="modelValue"
+    <PiInput
+      :model-value="modelValue"
       type="search"
       :placeholder="placeholder"
-      :aria-label="label"
-      @input="emit('update:modelValue', ($event.target as HTMLInputElement).value)"
+      :label="label"
+      clearable
+      @update:model-value="emit('update:modelValue', $event)"
+      @clear="emit('update:modelValue', '')"
     >
-    <button
-      v-if="modelValue"
-      class="sidebar-search-clear"
-      type="button"
-      title="清空搜索"
-      aria-label="清空搜索"
-      @click="emit('update:modelValue', '')"
-    ><X :size="13" aria-hidden="true" /></button>
+      <template #leading><Search :size="14" aria-hidden="true" /></template>
+    </PiInput>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Search, X } from "lucide-vue-next";
+import { Search } from "lucide-vue-next";
+import PiInput from "~/components/pi/PiInput/index.vue";
 
 defineProps<{
   modelValue: string;

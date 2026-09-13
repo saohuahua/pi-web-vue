@@ -7,13 +7,12 @@
       </div>
     </div>
 
-    <div class="cap-unavailable">
-      <Cable :size="22" aria-hidden="true" />
-      <div>
-        <h3>尚未接入 MCP Bridge</h3>
-        <p>Pi 不提供原生 MCP 服务注册表 接入后这里才会显示真实服务状态 工具数量和最近错误</p>
-      </div>
-    </div>
+    <PiEmptyState
+      title="尚未接入 MCP Bridge"
+      description="Pi 不提供原生 MCP 服务注册表 接入后这里才会显示真实服务状态 工具数量和最近错误"
+    >
+      <template #icon><Cable :size="22" aria-hidden="true" /></template>
+    </PiEmptyState>
 
     <div class="cap-section cap-model-note">
       <h3>接入规则</h3>
@@ -24,4 +23,5 @@
 
 <script setup lang="ts">
 import { Cable } from "lucide-vue-next";
+import PiEmptyState from "~/components/pi/PiEmptyState/index.vue";
 </script>

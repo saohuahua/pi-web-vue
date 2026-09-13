@@ -20,4 +20,12 @@
 
 后续调整 UI 时先改 `tokens.css` 和 `DESIGN.md` 中的共同规则 再遵守 `ui-system.md` 的组件和样式所有权。不要从 `reference/` 复制运行时代码或外部 CDN 依赖。
 
+## 样式文件边界
+
+- `app/assets/css/main.css` 只能声明 layer 顺序和导入入口
+- `foundation` `layout` 和跨组件领域样式放在 `app/assets/css/` 对应目录 每条全局选择器必须以功能根节点开头
+- `Pi` 原语固定使用 `app/components/pi/PiX/index.vue` 与同目录 `style.css` 前者只负责 API 行为和无障碍 后者放入 `primitives` layer
+- 普通领域组件默认保持扁平 SFC 只有样式规模已妨碍阅读或需要与复杂交互同步维护时才拆为目录模块
+- 单个领域组件的局部样式默认 scoped 不得在调用点通过自由 class style 覆盖 Pi 原语的视觉角色
+
 能力中心的实现顺序 安全边界和验收见 `../vue-agent-plan/11-capability-center.md`。整体工作台只以 `pi_web_agent_2` 作为布局基准 `pi_web_agent_1` 和 `pi_web_agent_3` 只能用于能力中心的局部交互参考。

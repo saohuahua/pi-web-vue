@@ -1,0 +1,40 @@
+@layer base {
+  body {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--ds-ink);
+    background: var(--ds-canvas);
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-font-size-body);
+    line-height: var(--ds-line-height-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a {
+    color: var(--ds-accent-text);
+  }
+
+  ::selection {
+    color: var(--ds-ink);
+    background: var(--ds-primary-soft);
+  }
+
+  * {
+    scrollbar-color: var(--ds-line-strong) transparent;
+    scrollbar-width: thin;
+  }
+
+  *::-webkit-scrollbar {
+    width: var(--ds-space-2);
+    height: var(--ds-space-2);
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: var(--ds-line-strong);
+    border-radius: var(--ds-radius-xs);
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}

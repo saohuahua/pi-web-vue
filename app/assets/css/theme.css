@@ -1,0 +1,41 @@
+@theme static {
+  --color-paper: var(--ds-canvas);
+  --color-surface: var(--ds-surface);
+  --color-surface-2: var(--ds-surface-subtle);
+  --color-ink: var(--ds-ink);
+  --color-muted: var(--ds-ink-muted);
+  --color-line: var(--ds-line);
+  --color-accent: var(--ds-primary);
+  --color-accent-deep: var(--ds-accent-text);
+  --color-accent-soft: var(--ds-primary-soft);
+  --color-danger: var(--ds-danger);
+  --font-sans: var(--ds-font-sans);
+  --font-mono: var(--ds-font-mono);
+}
+
+@layer theme {
+  :root {
+    --paper: var(--ds-canvas);
+    --surface: var(--ds-surface);
+    --surface-2: var(--ds-surface-subtle);
+    --ink: var(--ds-ink);
+    --ink-soft: var(--ds-ink-muted);
+    --muted: var(--ds-ink-muted);
+    --line: var(--ds-line);
+    --line-strong: var(--ds-line-strong);
+    --accent: var(--ds-primary);
+    --accent-deep: var(--ds-accent-text);
+    --accent-soft: var(--ds-primary-soft);
+    --amber: var(--ds-warning);
+    --amber-soft: var(--ds-warning-soft);
+    --danger: var(--ds-danger);
+    --danger-soft: var(--ds-danger-soft);
+    --code-bg: var(--ds-code);
+    --code-ink: var(--ds-code-ink);
+    --font-math: var(--ds-font-math);
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+  }
+}

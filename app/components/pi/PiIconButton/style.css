@@ -1,0 +1,95 @@
+@layer primitives {
+  .pi-icon-button {
+    position: relative;
+    display: inline-flex;
+    width: var(--ds-control-height);
+    height: var(--ds-control-height);
+    align-items: center;
+    justify-content: center;
+    color: var(--ds-ink-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--ds-radius-sm);
+    transition:
+      background-color var(--ds-duration-fast) var(--ds-ease),
+      border-color var(--ds-duration-fast) var(--ds-ease),
+      color var(--ds-duration-fast) var(--ds-ease),
+      opacity var(--ds-duration-fast) var(--ds-ease);
+  }
+
+  .pi-icon-button--compact {
+    width: var(--ds-control-height-compact);
+    height: var(--ds-control-height-compact);
+  }
+
+  .pi-icon-button--ghost:hover:not(:disabled) {
+    color: var(--ds-accent-text);
+    background: var(--ds-primary-soft);
+  }
+
+  .pi-icon-button--secondary {
+    color: var(--ds-ink);
+    background: var(--ds-surface);
+    border-color: var(--ds-line);
+  }
+
+  .pi-icon-button--secondary:hover:not(:disabled) {
+    background: var(--ds-surface-subtle);
+    border-color: var(--ds-line-strong);
+  }
+
+  .pi-icon-button--danger {
+    color: var(--ds-danger);
+  }
+
+  .pi-icon-button--danger:hover:not(:disabled) {
+    color: var(--ds-danger);
+    background: var(--ds-danger-soft);
+  }
+
+  .pi-icon-button:disabled {
+    opacity: var(--ds-disabled-opacity);
+  }
+
+  .pi-icon-button__spinner {
+    width: var(--ds-space-3);
+    height: var(--ds-space-3);
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: var(--ds-radius-circle);
+    animation: pi-icon-button-spin var(--ds-duration-standard) var(--ds-ease-linear) infinite;
+  }
+
+  .pi-icon-button__tooltip {
+    position: absolute;
+    bottom: calc(100% + var(--ds-space-1));
+    left: 50%;
+    z-index: 60;
+    width: max-content;
+    max-width: 200px;
+    padding: var(--ds-space-1) var(--ds-space-2);
+    color: var(--ds-primary-ink);
+    background: var(--ds-ink);
+    border-radius: var(--ds-radius-xs);
+    font-size: var(--ds-font-size-caption);
+    line-height: var(--ds-line-height-caption);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, var(--ds-space-1));
+    transition:
+      opacity var(--ds-duration-fast) var(--ds-ease),
+      transform var(--ds-duration-fast) var(--ds-ease);
+  }
+
+  .pi-icon-button:hover .pi-icon-button__tooltip,
+  .pi-icon-button:focus-visible .pi-icon-button__tooltip {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  @keyframes pi-icon-button-spin {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+}

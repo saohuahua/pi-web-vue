@@ -35,6 +35,12 @@ typography:
     fontWeight: 400
     lineHeight: "18px"
     letterSpacing: "0"
+  code:
+    fontFamily: "Noto Sans Mono, JetBrains Mono, Fira Code, Consolas, ui-monospace, PingFang SC, Microsoft YaHei, monospace"
+    fontSize: "12px"
+    fontWeight: 400
+    lineHeight: "22px"
+    letterSpacing: "0"
 rounded:
   xs: "4px"
   sm: "6px"
@@ -116,6 +122,8 @@ components:
 
 **Label/Mono Font:** IBM Plex Mono 或 Cascadia Code 后备
 
+**Code Font:** Noto Sans Mono 用于文件预览与代码块 英文代码后备 JetBrains Mono Fira Code Consolas 中文回退 PingFang SC 或 Microsoft YaHei
+
 **Character:** 文字以中等字重和清晰行距承担信息层级。等宽字体只用于模型 名称 路径 Token 命令与代码 不用于长说明。
 
 ### Hierarchy
@@ -123,6 +131,7 @@ components:
 - **Title** 使用 `title` 表达会话名 面板标题与重要设置名
 - **Body** 使用 `body` 表达消息 正文和表单说明
 - **Mono** 使用 `mono` 表达可复制或机器可读信息
+- **Code** 使用 `code` 表达文件预览和需要逐字符对齐的代码内容
 - **Supporting text** 不小于 12px 不用全大写和字距制造伪层级
 
 **The Technical Voice Rule.** 一段文字只有在用户可能复制 检查或比较时才使用等宽字体。

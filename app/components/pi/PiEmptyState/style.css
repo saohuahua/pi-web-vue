@@ -1,0 +1,43 @@
+@layer primitives {
+  .pi-empty-state {
+    display: grid;
+    justify-items: center;
+    gap: var(--ds-space-2);
+    padding: var(--ds-space-6);
+    color: var(--ds-ink-muted);
+    text-align: center;
+  }
+
+  .pi-empty-state__icon {
+    display: inline-flex;
+    width: var(--ds-control-height-touch);
+    height: var(--ds-control-height-touch);
+    align-items: center;
+    justify-content: center;
+    color: var(--ds-accent-text);
+    background: var(--ds-primary-soft);
+    border-radius: var(--ds-radius-md);
+  }
+
+  .pi-empty-state__copy {
+    display: grid;
+    gap: var(--ds-space-1);
+  }
+
+  .pi-empty-state h3 {
+    color: var(--ds-ink);
+    font-size: var(--ds-font-size-body);
+    font-weight: 650;
+    line-height: var(--ds-line-height-body);
+  }
+
+  .pi-empty-state p {
+    max-width: 42ch;
+    font-size: var(--ds-font-size-caption);
+    line-height: var(--ds-line-height-caption);
+  }
+
+  .pi-empty-state__action {
+    margin-top: var(--ds-space-1);
+  }
+}

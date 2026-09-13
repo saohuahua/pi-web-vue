@@ -1,6 +1,12 @@
 <template>
   <aside class="sidebar">
-    <PaneResizeHandle edge="right" :value="ui.sidebarWidth" :min="220" :max="420" @update:value="ui.setSidebarWidth" />
+    <PaneResizeHandle
+      edge="right"
+      :value="ui.sidebarWidth"
+      :min="220"
+      :max="420"
+      @update:value="ui.setSidebarWidth"
+    />
     <!-- 品牌在顶部 项目选择放入工作区区块 对齐 pi-web 侧栏层级 -->
     <div class="sidebar-header">
       <BrandMark />
@@ -10,12 +16,11 @@
     <WorkspaceSelector />
 
     <div class="sidebar-new-row">
-      <button
-        class="sidebar-new"
-        type="button"
-        :aria-expanded="showForm"
-        @click="onNewSession"
-      ><Plus :size="15" aria-hidden="true" />新会话</button>
+      <div class="sidebar-new">
+        <PiButton variant="primary" :aria-expanded="showForm" @click="onNewSession"
+          ><Plus :size="15" aria-hidden="true" />新会话</PiButton
+        >
+      </div>
     </div>
 
     <!-- 未选项目时手输 cwd 已选项目时新会话直接落入选中目录 -->
@@ -31,10 +36,13 @@
         label="搜索会话"
         @keydown.esc="search = ''"
       />
-      <p v-if="sessionsStore.error" class="pt-1.5 text-[11.5px] text-danger">{{ sessionsStore.error }}</p>
+      <p v-if="sessionsStore.error" class="pt-1.5 text-[11.5px] text-danger">
+        {{ sessionsStore.error }}
+      </p>
     </div>
 
-    <nav class="sidebar-list" aria-label="会话列表">      <!-- 已选项目 单项目平铺 -->
+    <nav class="sidebar-list" aria-label="会话列表">
+      <!-- 已选项目 单项目平铺 -->
       <template v-if="workspace.projectKey">
         <p v-if="!filteredSessions.length" class="sidebar-empty">
           {{ sessionsStore.loading ? "加载中…" : "这个项目还没有会话" }}
@@ -64,7 +72,10 @@
             @open="openSession"
           />
         </details>
-        <p v-if="!groupedSessions.length && (search || sessionsStore.loading)" class="sidebar-empty">
+        <p
+          v-if="!groupedSessions.length && (search || sessionsStore.loading)"
+          class="sidebar-empty"
+        >
           {{ sessionsStore.loading ? "加载中…" : "没有匹配的会话" }}
         </p>
       </template>
@@ -84,14 +95,18 @@
         :aria-label="entry.label"
         aria-haspopup="dialog"
         @click="center.show(entry.tab)"
-      ><component :is="entry.icon" :size="15" aria-hidden="true" /><span>{{ entry.label }}</span></button>
+      >
+        <component :is="entry.icon" :size="15" aria-hidden="true" /><span>{{ entry.label }}</span>
+      </button>
     </nav>
   </aside>
 </template>
 
 <script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { BrainCircuit, Cable, Plus, Puzzle, Sparkles } from "lucide-vue-next";
 import BrandMark from "~/components/BrandMark.vue";
+import PiButton from "~/components/pi/PiButton/index.vue";
 import SidebarSearchInput from "~/components/SidebarSearchInput.vue";
 import { useChatStore } from "~/stores/chat";
 import { useSessionsStore } from "~/stores/sessions";
@@ -137,11 +152,11 @@ const filteredSessions = computed(() =>
 );
 
 // 未选项目时按项目分组 组内已被搜索过滤
-const groupedSessions = computed(() => groupSessionsByProject(
-  filterSessions(sessionsStore.sessions, null, search.value),
-));
+const groupedSessions = computed(() =>
+  groupSessionsByProject(filterSessions(sessionsStore.sessions, null, search.value)),
+);
 
-function openSession(id: string) {
+const openSession = (id: string) => {
   // 通知外层收起窄屏抽屉 桌面宽下无副作用
   emit("navigate");
   if (route.params.id === id) {
@@ -150,10 +165,10 @@ function openSession(id: string) {
     return;
   }
   router.push(`/session/${id}`);
-}
+};
 
 // 有选中目录直接在原地新建 没有则展开 cwd 表单
-async function onNewSession() {
+const onNewSession = async () => {
   if (!workspace.selectedCwd) {
     showForm.value = !showForm.value;
     return;
@@ -166,12 +181,12 @@ async function onNewSession() {
   } finally {
     creating.value = false;
   }
-}
+};
 
-function onCreated() {
+const onCreated = () => {
   showForm.value = false;
   emit("navigate");
-}
+};
 
 let pollTimer: number | null = null;
 

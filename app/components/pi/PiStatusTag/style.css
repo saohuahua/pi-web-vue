@@ -1,0 +1,63 @@
+@layer primitives {
+  .pi-status-tag {
+    display: inline-flex;
+    min-height: var(--ds-control-height-compact);
+    align-items: center;
+    gap: var(--ds-space-1);
+    padding: 0 var(--ds-space-2);
+    color: var(--ds-ink-muted);
+    background: var(--ds-surface-subtle);
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-radius-pill);
+    font-family: var(--ds-font-mono);
+    font-size: var(--ds-font-size-caption);
+    line-height: var(--ds-line-height-caption);
+  }
+
+  .pi-status-tag__dot {
+    width: var(--ds-space-1);
+    height: var(--ds-space-1);
+    flex: 0 0 auto;
+    background: var(--ds-ink-muted);
+    border-radius: var(--ds-radius-circle);
+  }
+
+  .pi-status-tag--active {
+    color: var(--ds-accent-text);
+    background: var(--ds-primary-soft);
+    border-color: var(--ds-primary-border);
+  }
+
+  .pi-status-tag--active .pi-status-tag__dot {
+    background: var(--ds-primary);
+  }
+
+  .pi-status-tag--success {
+    color: var(--ds-success);
+    background: var(--ds-success-soft);
+  }
+
+  .pi-status-tag--success .pi-status-tag__dot {
+    background: var(--ds-success);
+  }
+
+  .pi-status-tag--warning {
+    color: var(--ds-warning);
+    background: var(--ds-warning-soft);
+    border-color: var(--ds-warning-line);
+  }
+
+  .pi-status-tag--warning .pi-status-tag__dot {
+    background: var(--ds-warning);
+  }
+
+  .pi-status-tag--danger {
+    color: var(--ds-danger);
+    background: var(--ds-danger-soft);
+    border-color: var(--ds-danger-border);
+  }
+
+  .pi-status-tag--danger .pi-status-tag__dot {
+    background: var(--ds-danger);
+  }
+}

@@ -21,7 +21,7 @@
               <p>管理本机 Agent 的偏好 资源与可用能力</p>
             </div>
           </div>
-          <PiIconButton label="关闭能力中心" @click="requestClose">
+          <PiIconButton label="关闭能力中心" :tooltip="false" @click="requestClose">
             <X :size="18" aria-hidden="true" />
           </PiIconButton>
         </header>
@@ -53,6 +53,14 @@
             :hidden="center.activeTab !== 'general'"
           >
             <GeneralSettingsPanel v-if="center.activeTab === 'general'" />
+          </div>
+          <div
+            id="prompts-panel"
+            role="tabpanel"
+            aria-labelledby="prompts-tab"
+            :hidden="center.activeTab !== 'prompts'"
+          >
+            <QuickPromptsPanel v-if="center.activeTab === 'prompts'" />
           </div>
           <div
             id="models-panel"
@@ -112,6 +120,7 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import {
   BrainCircuit,
   Cable,
+  MessageSquareText,
   Puzzle,
   Settings2,
   SlidersHorizontal,
@@ -127,6 +136,7 @@ import {
 } from "~/stores/capability-center";
 import { useWorkspaceStore } from "~/stores/workspace";
 import GeneralSettingsPanel from "~/components/capabilities/GeneralSettingsPanel.vue";
+import QuickPromptsPanel from "~/components/capabilities/QuickPromptsPanel.vue";
 import ModelsPanel from "~/components/capabilities/ModelsPanel.vue";
 import SkillsPanel from "~/components/capabilities/SkillsPanel.vue";
 import ExtensionsPanel from "~/components/capabilities/ExtensionsPanel.vue";
@@ -141,13 +151,16 @@ let previousBodyOverflow = "";
 
 const tabs = [
   { key: "general" as const, label: "常规", icon: Settings2 },
+  { key: "prompts" as const, label: "提示词", icon: MessageSquareText },
   { key: "models" as const, label: "模型", icon: BrainCircuit },
   { key: "skills" as const, label: "技能", icon: Sparkles },
   { key: "extensions" as const, label: "扩展", icon: Puzzle },
   { key: "mcp" as const, label: "MCP", icon: Cable },
 ];
 const scopeLabel = computed(() => (workspace.selectedCwd ? "当前项目" : "浏览器偏好"));
-const compactTab = computed(() => ["general", "extensions", "mcp"].includes(center.activeTab));
+const compactTab = computed(() =>
+  ["general", "prompts", "extensions", "mcp"].includes(center.activeTab),
+);
 const splitTab = computed(() => ["models", "skills"].includes(center.activeTab));
 
 const requestClose = () => {

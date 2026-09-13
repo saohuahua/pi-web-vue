@@ -54,7 +54,8 @@
         v-model="chat.draft"
         class="composer-input"
         rows="1"
-        placeholder="给 agentDesk 发消息… @ 引用文件 / 使用命令"
+        aria-label="消息内容"
+        placeholder="输入问题、任务或 @ 引用文件"
         @keydown="onKeydown"
         @input="onInput"
         @paste="onPaste"
@@ -85,7 +86,7 @@
     </div>
 
     <!-- 工具行 附件 模型 思考等级 快捷提示词 context 压缩 -->
-    <div class="composer-toolbar">
+    <div class="composer-toolbar" :class="{ 'menu-open': quickPromptsOpen }">
       <!-- 附件按钮 点击转发给隐藏的 file input -->
       <button
         class="composer-tool"
@@ -99,18 +100,21 @@
       <input ref="fileInput" type="file" accept="image/*" multiple hidden @change="onFileChange" />
 
       <!-- 模型选择 下拉 -->
-      <div class="relative">
-        <button
-          class="composer-tool"
-          type="button"
-          :title="modelTitle"
-          :aria-label="`选择模型 ${modelLabel}`"
-          @click="modelOpen = !modelOpen"
-        >
-          <span class="max-w-[140px] truncate font-mono">{{ modelLabel }}</span>
-          <ChevronDown :size="13" class="text-muted" aria-hidden="true" />
-        </button>
-        <div v-if="modelOpen" class="composer-dropdown">
+      <PiPopover v-model:open="modelOpen" label="选择模型" placement="top-start">
+        <template #trigger="{ toggle }">
+          <button
+            class="composer-tool"
+            type="button"
+            :title="modelTitle"
+            :aria-label="`选择模型 ${modelLabel}`"
+            @click="toggle"
+          >
+            <span class="max-w-[140px] truncate font-mono">{{ modelLabel }}</span>
+            <ChevronDown :size="13" class="text-muted" aria-hidden="true" />
+          </button>
+        </template>
+
+        <div class="composer-dropdown">
           <p v-if="!models.modelList.length" class="composer-dropdown-empty">
             {{ models.loading ? "加载中…" : models.modelError || "无可用模型" }}
           </p>
@@ -127,10 +131,10 @@
             <span class="composer-dropdown-provider font-mono">{{ m.provider }}</span>
           </button>
         </div>
-      </div>
+      </PiPopover>
 
       <!-- 思考等级 无推理能力的模型整块隐藏 -->
-      <div v-if="thinkingLevels.length > 1" class="relative">
+      <div v-if="thinkingLevels.length > 1" class="composer-menu-control">
         <button
           class="composer-tool"
           type="button"
@@ -156,46 +160,50 @@
       </div>
 
       <!-- 快捷提示词菜单 从设置里读 用户可自行管理 -->
-      <div class="relative">
-        <button
-          class="composer-tool"
-          type="button"
-          title="快捷提示词"
-          aria-label="快捷提示词"
-          :aria-expanded="quickPromptsOpen"
-          @click="quickPromptsOpen = !quickPromptsOpen"
-        >
-          <Zap :size="14" aria-hidden="true" />
-          <span>快捷提问</span>
-          <ChevronDown :size="13" class="text-muted" aria-hidden="true" />
-        </button>
-        <div
-          v-if="quickPromptsOpen"
-          class="composer-quick-prompts"
+      <div class="composer-quick-popover">
+        <PiPopover
+          v-model:open="quickPromptsOpen"
+          label="快捷提示词"
+          placement="top-end"
           role="menu"
-          aria-label="快捷提示词"
         >
-          <button
-            v-for="prompt in settings.quickPrompts"
-            :key="prompt.id"
-            class="composer-quick-prompt"
-            type="button"
-            role="menuitem"
-            @click="insertQuickPrompt(prompt.prompt)"
-          >
-            <span>{{ prompt.label || "未命名提示词" }}</span>
-            <small>{{ prompt.prompt }}</small>
-          </button>
-          <p v-if="!settings.quickPrompts.length" class="composer-quick-empty">暂无快捷提示词</p>
-          <button
-            class="composer-quick-manage"
-            type="button"
-            role="menuitem"
-            @click="openQuickPromptSettings"
-          >
-            <Settings2 :size="14" aria-hidden="true" />管理提示词
-          </button>
-        </div>
+          <template #trigger="{ toggle }">
+            <button
+              class="composer-tool"
+              type="button"
+              title="快捷提示词"
+              aria-label="快捷提示词"
+              :aria-expanded="quickPromptsOpen"
+              @click="toggle"
+            >
+              <Zap :size="14" aria-hidden="true" />
+              <span>快捷提问</span>
+              <ChevronDown :size="13" class="text-muted" aria-hidden="true" />
+            </button>
+          </template>
+          <div class="composer-quick-prompts">
+            <button
+              v-for="prompt in settings.quickPrompts"
+              :key="prompt.id"
+              class="composer-quick-prompt"
+              type="button"
+              role="menuitem"
+              @click="insertQuickPrompt(prompt.prompt)"
+            >
+              <span>{{ prompt.label || "未命名提示词" }}</span>
+              <small>{{ prompt.prompt }}</small>
+            </button>
+            <p v-if="!settings.quickPrompts.length" class="composer-quick-empty">暂无快捷提示词</p>
+            <button
+              class="composer-quick-manage"
+              type="button"
+              role="menuitem"
+              @click="openQuickPromptSettings"
+            >
+              <Settings2 :size="14" aria-hidden="true" />管理提示词
+            </button>
+          </div>
+        </PiPopover>
       </div>
 
       <!-- 弹性占位 把 context 显示推到行尾 -->
@@ -229,23 +237,15 @@
       </button>
     </div>
 
-    <!-- 快捷键提示 -->
-    <p class="composer-hint">
-      Enter 发送 · Shift + Enter 换行 · @ 文件 · / 命令 · agent 在本机执行命令
-    </p>
-
     <!-- 透明遮罩 点击输入区外关闭所有下拉 -->
-    <div
-      v-if="modelOpen || thinkingOpen || quickPromptsOpen"
-      class="fixed inset-0 z-30"
-      @click="modelOpen = thinkingOpen = quickPromptsOpen = false"
-    ></div>
+    <div v-if="thinkingOpen" class="fixed inset-0 z-30" @click="thinkingOpen = false"></div>
   </footer>
 </template>
 
 <script setup lang="ts">
 import { ChevronDown, CircleArrowUp, Paperclip, Settings2, Square, X, Zap } from "lucide-vue-next";
 import { useComposerImages } from "~/composables/useComposerImages";
+import PiPopover from "~/components/pi/PiPopover/index.vue";
 import { useCapabilityCenterStore } from "~/stores/capability-center";
 import { useChatStore } from "~/stores/chat";
 import { useModelsStore } from "~/stores/models";
@@ -462,7 +462,7 @@ const insertQuickPrompt = (prompt: string) => {
 
 const openQuickPromptSettings = () => {
   quickPromptsOpen.value = false;
-  center.show("general");
+  center.show("prompts");
 };
 
 // 上下翻取历史条目 返回是否消费了这次按键

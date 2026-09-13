@@ -43,7 +43,7 @@ app/components/pi
   reusable Pi primitives with their own visual and accessibility behavior
 
 app/assets/css/features
-  feature specific global styles only where scoped CSS cannot own the output
+  cross component workflow styles and DOM generated outside a Vue template
 
 app/components
   domain behavior and domain layout composed from Pi primitives
@@ -55,7 +55,7 @@ The ownership seam is intentional:
 - Domain components own workflow specific layout and wording
 - Foundation owns browser wide behavior only
 - Layout owns the workspace frame only
-- Feature styles own rendered markdown syntax highlighting and other DOM generated outside a Vue template
+- Feature styles own a cross component workflow or DOM generated outside a Vue template
 - No domain component may redefine a primitive color radius shadow focus ring or disabled style
 
 ## File Layout
@@ -78,18 +78,40 @@ app/
       markdown.css
   components/
     pi/
-      PiButton.vue
-      PiIconButton.vue
-      PiInput.vue
-      PiPopover.vue
-      PiStatusTag.vue
-      PiEmptyState.vue
-      PiDialog.vue
+      PiButton/
+        index.vue
+        style.css
+      PiIconButton/
+        index.vue
+        style.css
+      PiInput/
+        index.vue
+        style.css
+      PiPopover/
+        index.vue
+        style.css
+      PiStatusTag/
+        index.vue
+        style.css
+      PiEmptyState/
+        index.vue
+        style.css
+      PiDialog/
+        index.vue
+        style.css
 ```
 
 `main.css` must only declare layer order and import the files above. It must not contain selectors for `ChatComposer` `FileViewer` `CapabilityCenterModal` or any other domain component.
 
 The component directory uses the existing project term `Pi` rather than the generic `ui`. The prefix also prevents names such as `Button` or `Dialog` from obscuring whether a component is native browser markup or a project primitive.
+
+## Component Style Layout
+
+Every Pi primitive uses a directory module. Its `index.vue` owns props emits keyboard behavior and accessibility while its sibling `style.css` owns all visual selectors inside the `primitives` layer.
+
+Domain components remain flat by default. A domain component may become a directory module only when a long local stylesheet or a tightly coupled visual interaction would make the SFC difficult to navigate. This is a maintenance decision not a naming convention. Small components must not gain a directory merely for symmetry.
+
+Cross component workflow styles may stay in `app/assets/css/features` when splitting them into scoped files would duplicate the same selectors or break the surface level relationship. Every selector in such a file must begin with that workflow root.
 
 ## Reuse Gate
 
@@ -159,7 +181,7 @@ Each primitive is a deep module. Callers choose semantic intent and content whil
 | Module | Public interface | Owns | Must not own |
 | --- | --- | --- | --- |
 | `PiButton` | `variant` primary secondary ghost danger `size` compact default `loading` disabled and native button attributes | Text command layout loading disabled focus and button variants | Navigation rows destructive confirmation policy or feature spacing |
-| `PiIconButton` | Required accessible `label` optional `tooltip` `variant` ghost secondary danger `size` compact default | Square hit area icon alignment tooltip and focus treatment | A text label hidden only by CSS or an icon without an accessible name |
+| `PiIconButton` | Required accessible `label` optional `tooltip` string or `false` `variant` ghost secondary danger `size` compact default | Square hit area icon alignment tooltip and focus treatment | A text label hidden only by CSS or an icon without an accessible name |
 | `PiInput` | `v-model` `type` `invalid` `disabled` `placeholder` `label` `clearable` native input attributes and leading trailing slots | Field geometry focus invalid disabled clear affordance and text selection states | Field label helper copy validation policy search result layout or Composer textarea behavior |
 | `PiPopover` | `v-model:open` `placement` `label` `role` and trigger content slots | Trigger relation outside click Escape focus restoration and floating surface treatment | Model selection quick prompt data or menu item business actions |
 | `PiDialog` | Reserved until the reuse gate passes | Future native dialog lifecycle focus trap focus restoration Escape backdrop and viewport layer | Dirty state confirmation copy save behavior or dialog page content |
@@ -193,6 +215,7 @@ Scoped styles are the default for `Pi*` primitives and domain components. Global
 - The root workspace shell and document level theme attributes
 - Scrollbar normalization and reduced motion handling
 - Explicitly teleported overlay compatibility that cannot be expressed inside its owner
+- A cross component workflow such as the conversation stream Inspector or capability center where one root owns the visual relationship
 
 Each global selector must start with its feature root. Selectors such as `button` `input` `.active` `.selected` and `.panel` are prohibited outside foundation rules because they create cross feature coupling.
 

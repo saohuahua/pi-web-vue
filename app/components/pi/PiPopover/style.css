@@ -1,0 +1,38 @@
+@layer primitives {
+  .pi-popover {
+    position: relative;
+  }
+
+  .pi-popover__content {
+    position: absolute;
+    z-index: 70;
+    min-width: max-content;
+    max-width: min(360px, calc(100vw - var(--ds-space-6)));
+    overflow: auto;
+    color: var(--ds-ink);
+    background: var(--ds-surface);
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-radius-md);
+    box-shadow: var(--ds-shadow-floating);
+  }
+
+  .pi-popover__content--bottom-start {
+    top: calc(100% + var(--ds-space-1));
+    left: 0;
+  }
+
+  .pi-popover__content--bottom-end {
+    top: calc(100% + var(--ds-space-1));
+    right: 0;
+  }
+
+  .pi-popover__content--top-start {
+    bottom: calc(100% + var(--ds-space-1));
+    left: 0;
+  }
+
+  .pi-popover__content--top-end {
+    right: 0;
+    bottom: calc(100% + var(--ds-space-1));
+  }
+}

@@ -1,0 +1,77 @@
+@layer primitives {
+  .pi-input {
+    display: flex;
+    min-height: var(--ds-control-height);
+    align-items: center;
+    gap: var(--ds-space-2);
+    width: 100%;
+    padding: 0 var(--ds-space-3);
+    color: var(--ds-ink);
+    background: var(--ds-surface);
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-radius-sm);
+    transition:
+      border-color var(--ds-duration-fast) var(--ds-ease),
+      box-shadow var(--ds-duration-fast) var(--ds-ease);
+  }
+
+  .pi-input:focus-within {
+    border-color: var(--ds-primary);
+    box-shadow: var(--ds-focus-ring);
+  }
+
+  .pi-input--invalid {
+    border-color: var(--ds-danger);
+  }
+
+  .pi-input--invalid:focus-within {
+    box-shadow: var(--ds-danger-focus-ring);
+  }
+
+  .pi-input--disabled {
+    color: var(--ds-ink-muted);
+    background: var(--ds-surface-subtle);
+    opacity: var(--ds-disabled-opacity);
+  }
+
+  .pi-input input {
+    min-width: 0;
+    flex: 1;
+    color: inherit;
+    background: transparent;
+    border: 0;
+    outline: 0;
+    font-size: var(--ds-font-size-body);
+    line-height: var(--ds-line-height-body);
+  }
+
+  .pi-input input::placeholder {
+    color: var(--ds-ink-muted);
+  }
+
+  .pi-input__leading,
+  .pi-input__trailing {
+    display: inline-flex;
+    flex: 0 0 auto;
+    color: var(--ds-ink-muted);
+  }
+
+  .pi-input__clear {
+    display: inline-flex;
+    width: var(--ds-control-height-compact);
+    height: var(--ds-control-height-compact);
+    align-items: center;
+    justify-content: center;
+    margin-right: calc(var(--ds-space-2) * -1);
+    color: var(--ds-ink-muted);
+    background: transparent;
+    border-radius: var(--ds-radius-xs);
+    font-size: var(--ds-font-size-title);
+    line-height: var(--ds-line-height-caption);
+  }
+
+  .pi-input__clear:hover {
+    color: var(--ds-accent-text);
+    background: var(--ds-primary-soft);
+  }
+}

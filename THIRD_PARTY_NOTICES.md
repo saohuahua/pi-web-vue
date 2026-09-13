@@ -2,6 +2,10 @@
 
 本项目从 [pi-web](https://github.com/agegr/pi-web)（MIT License）移植了部分纯函数模块（统一放 `shared/lib/`，两端以 `#shared/lib/...` 引用；server 侧的移植文件见下表）。移植即「实质性复制」，MIT 要求随附版权与许可声明：每个移植文件头部已加来源注释，本文件收录衍生文件清单与许可原文。
 
+## Noto Sans Mono
+
+`public/fonts/noto-sans-mono-latin.woff2` 用于对齐 pi-web 的代码字体。该字体版权归 The Noto Project Authors 所有，并以 SIL Open Font License 1.1 发布，完整许可见 `public/fonts/OFL-Noto-Sans-Mono.txt`。
+
 ## 衍生文件清单
 
 | 本项目文件 | pi-web 来源 | 改动说明 |
