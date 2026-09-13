@@ -54,6 +54,11 @@
     gap: var(--ds-space-2);
   }
 
+  .cap-detail-head > .cap-action-row {
+    margin-left: auto;
+    justify-content: flex-end;
+  }
+
   /* 独立在 cap-section 之外的按钮行与上方内容拉开一级节奏 */
   .cap-index > .cap-action-row,
   .cap-detail > .cap-action-row,
@@ -272,8 +277,8 @@
 
   .cap-switch-row input {
     appearance: none;
-    width: 40px;
-    height: var(--ds-control-height-compact);
+    width: var(--ds-switch-width);
+    height: var(--ds-switch-height);
     flex: 0 0 auto;
     padding: var(--ds-space-1);
     background: var(--ds-line-strong);
@@ -284,8 +289,8 @@
 
   .cap-switch-row input::after {
     display: block;
-    width: calc(var(--ds-control-height-compact) - var(--ds-space-4));
-    height: calc(var(--ds-control-height-compact) - var(--ds-space-4));
+    width: var(--ds-switch-thumb-size);
+    height: var(--ds-switch-thumb-size);
     background: var(--ds-primary-ink);
     border-radius: var(--ds-radius-circle);
     content: "";
@@ -297,11 +302,21 @@
   }
 
   .cap-switch-row input:checked::after {
-    transform: translateX(12px);
+    transform: translateX(var(--ds-switch-thumb-offset));
   }
 
   .cap-switch-row input:disabled {
     opacity: var(--ds-disabled-opacity);
+  }
+
+  .cap-switch-row.compact {
+    min-height: var(--ds-switch-height);
+    padding: 0;
+    border-bottom: 0;
+  }
+
+  .cap-switch-row.compact input {
+    margin: 0;
   }
 
   .cap-prompt-list {
@@ -470,6 +485,8 @@
 
   .cap-index-list {
     display: grid;
+    width: 100%;
+    align-content: start;
     gap: var(--ds-space-1);
     min-height: 0;
     margin-top: var(--ds-space-3);
@@ -483,9 +500,18 @@
     font-size: var(--ds-font-size-caption);
   }
 
+  .cap-index-group {
+    display: grid;
+    width: 100%;
+    gap: var(--ds-space-1);
+  }
+
   .cap-index-item {
     display: grid;
-    min-height: var(--ds-control-height-touch);
+    width: 100%;
+    min-height: var(--ds-cap-index-item-min-height);
+    box-sizing: border-box;
+    align-content: center;
     gap: var(--ds-space-1);
     padding: var(--ds-space-2);
     color: var(--ds-ink);
@@ -505,6 +531,7 @@
     overflow: hidden;
     font-size: var(--ds-font-size-body);
     font-weight: 600;
+    line-height: var(--ds-line-height-body);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -514,6 +541,7 @@
     color: var(--ds-ink-muted);
     font-family: var(--ds-font-mono);
     font-size: var(--ds-font-size-caption);
+    line-height: var(--ds-line-height-caption);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -965,12 +993,6 @@
 
   .cap-model-row-meta {
     color: var(--ds-ink-muted);
-    font-size: var(--ds-font-size-caption);
-  }
-
-  .cap-test-ok {
-    margin: var(--ds-space-2) 0 0;
-    color: var(--ds-success);
     font-size: var(--ds-font-size-caption);
   }
 
