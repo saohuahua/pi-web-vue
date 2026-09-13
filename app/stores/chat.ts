@@ -504,22 +504,32 @@ export const useChatStore = defineStore("chat", () => {
       mimeType,
     }));
     if (!trimmed && images.length === 0) return false;
-    // 先等 SSE 握手完成再发 prompt 短回复的事件才不会丢
-    // 连接超时直接提示并中止 此时还没有乐观消息要撤
-    try {
-      await connection.ensureConnected(sessionId.value);
-    } catch (e) {
-      addNotice("error", e instanceof Error ? e.message : String(e));
-      return false;
-    }
 
     // 乐观追加用户消息 message_end 到达时去重
+    // 提前到 SSE 握手之前 冷启动握手要数秒 消息与运行态立即可见才不会像卡住
     const optimistic: AgentMessage = { role: "user", content: trimmed, timestamp: Date.now() };
     optimisticKey = userMessageKey(optimistic);
     messages.value.push(optimistic);
     entryIds.value.push(""); // 占位 reload 后被真实 entryId 替换
     isRunning.value = true;
     applyStream({ type: "start" });
+
+    // 先等 SSE 握手完成再发 prompt 短回复的事件才不会丢
+    try {
+      await connection.ensureConnected(sessionId.value);
+    } catch (e) {
+      // 握手失败撤回乐观消息与运行态 与提交失败同一套回滚
+      const last = messages.value[messages.value.length - 1];
+      if (last === optimistic) {
+        messages.value.pop();
+        entryIds.value.pop();
+      }
+      optimisticKey = null;
+      isRunning.value = false;
+      applyStream({ type: "end" });
+      addNotice("error", e instanceof Error ? e.message : String(e));
+      return false;
+    }
 
     try {
       await sendAgentCommand(sessionId.value, {
@@ -537,6 +547,7 @@ export const useChatStore = defineStore("chat", () => {
       }
       optimisticKey = null;
       isRunning.value = false;
+      applyStream({ type: "end" });
       addNotice("error", e instanceof Error ? e.message : String(e));
       return false;
     }
