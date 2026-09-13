@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createPinia, setActivePinia } from "pinia";
-import { useCapabilityCenterStore } from "~/stores/capability-center";
+import { capabilityTabs, useCapabilityCenterStore } from "~/stores/capability-center";
 
 describe("capability center store", () => {
   beforeEach(() => {
@@ -21,5 +21,14 @@ describe("capability center store", () => {
 
     expect(center.open).toBe(false);
     expect(center.dirty).toBe(false);
+  });
+
+  it("快捷提示词属于能力中心页签而非侧栏入口", () => {
+    const center = useCapabilityCenterStore();
+
+    center.show("prompts");
+
+    expect(center.activeTab).toBe("prompts");
+    expect(capabilityTabs).toContain("prompts");
   });
 });

@@ -1,7 +1,14 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 
-export const capabilityTabs = ["general", "models", "skills", "extensions", "mcp"] as const;
+export const capabilityTabs = [
+  "general",
+  "prompts",
+  "models",
+  "skills",
+  "extensions",
+  "mcp",
+] as const;
 export type CapabilityTab = (typeof capabilityTabs)[number];
 
 // 能力中心只保存界面状态 资源数据继续归各自 store
