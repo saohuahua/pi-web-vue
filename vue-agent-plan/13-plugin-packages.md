@@ -79,7 +79,18 @@
 
 ## 6 进度
 
-- [ ] PP-1 服务端读取聚合与包管理 API
-- [ ] PP-2 更新检查
-- [ ] PP-3 插件 Tab UI 与 store
-- [ ] PP-4 测试与文档收口
+- [x] PP-1 服务端读取聚合与包管理 API
+- [x] PP-2 更新检查
+- [x] PP-3 插件 Tab UI 与 store
+- [x] PP-4 测试与文档收口
+
+## 7 执行记录
+
+- 新增 `server/utils/plugins.ts` 与 `server/utils/plugin-updates.ts` 三个路由 plugins.get plugins.post plugins/check.post
+- 共享类型落在 `shared/lib/types.ts` 的插件包管理一节 与 pi-web api-types 对齐
+- `app/stores/plugins.ts` 承载数据与动作 cwd 由面板传入 store 不保存工作区状态
+- `PluginsPanel.vue` 主从布局 project 作用域未信任时禁用并提示 安装面板归一化 `pi install` 粘贴
+- 更新检查 npm 走 `npm view` 加 semver 对比 git 走远端 commit 对比 PI_OFFLINE=1 时拒绝
+- 包变更后提示需重建会话生效 不伪造即时生效
+- 测试 19 例 纯函数覆盖 source 解析 可检查性 range 取版本 全量测试 166 例通过
+- 验收基线 `npm run typecheck` 通过 `npm test` 34 文件 166 用例通过 2026-09-13
