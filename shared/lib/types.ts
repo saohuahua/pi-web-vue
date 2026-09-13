@@ -105,7 +105,8 @@ export interface BashExecutionMessage {
   timestamp?: number;
 }
 
-export type AgentMessage = UserMessage | AssistantMessage | ToolResultMessage | BashExecutionMessage;
+export type AgentMessage =
+  UserMessage | AssistantMessage | ToolResultMessage | BashExecutionMessage;
 
 export interface SessionMessageEntry extends SessionEntryBase {
   type: "message";
@@ -189,6 +190,7 @@ export interface WorktreesResponse {
   projectKey: string;
   isGit: boolean;
   isTopLevel: boolean;
+  currentBranch: string | null;
   currentWorktreePath: string | null;
   worktrees: WorktreeInfo[];
 }
@@ -237,6 +239,63 @@ export interface ModelsResponse {
   /** provider:id 到该模型支持的思考等级 思考等级由模型能力决定 不能写死 */
   thinkingLevels: Record<string, string[]>;
   modelError?: string;
+  /** enabledModels 解析诊断 例如某个 pattern 没有匹配到任何模型 */
+  modelScopeWarnings?: string[];
+}
+
+// ---------- 自定义模型 Provider ----------
+
+// models.json 的顶层结构 与 pi CLI 共享同一份文件
+export interface ModelsConfigFile {
+  providers?: Record<string, CustomProviderConfig>;
+}
+
+export interface CustomModelCost {
+  input?: number;
+  output?: number;
+  cacheRead?: number;
+  cacheWrite?: number;
+  [key: string]: unknown;
+}
+
+// 已知字段之外 models.json 还允许 compat tiers 等任意键 保存时必须原样保留
+export interface CustomModelConfig {
+  id: string;
+  name?: string;
+  api?: string;
+  reasoning?: boolean;
+  thinkingLevelMap?: Record<string, string | null>;
+  input?: string[];
+  contextWindow?: number;
+  maxTokens?: number;
+  cost?: CustomModelCost;
+  headers?: Record<string, string>;
+  compat?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export interface CustomProviderConfig {
+  baseUrl?: string;
+  api?: string;
+  apiKey?: string;
+  headers?: Record<string, string>;
+  compat?: Record<string, unknown>;
+  models?: CustomModelConfig[];
+  [key: string]: unknown;
+}
+
+export interface ModelsConfigTestRequest {
+  providerName: string;
+  provider: CustomProviderConfig;
+  model: CustomModelConfig;
+}
+
+export interface ModelsConfigTestResult {
+  ok: boolean;
+  latencyMs?: number;
+  status?: number;
+  responseText?: string;
+  error?: string;
 }
 
 // ---------- 输入附件 ----------

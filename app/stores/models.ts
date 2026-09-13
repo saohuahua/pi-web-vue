@@ -8,6 +8,7 @@ export const useModelsStore = defineStore("models", () => {
   const modelList = ref<ModelsResponse["modelList"]>([]);
   const defaultModel = ref<ModelsResponse["defaultModel"]>(null);
   const thinkingLevels = ref<Record<string, string[]>>({});
+  const modelScopeWarnings = ref<string[]>([]);
   const modelError = ref("");
   const loading = ref(false);
 
@@ -16,7 +17,7 @@ export const useModelsStore = defineStore("models", () => {
     loading.value = true;
     try {
       const res = await fetch(`/api/models?cwd=${encodeURIComponent(cwd)}`);
-      const body = await res.json() as ModelsResponse & { error?: string };
+      const body = (await res.json()) as ModelsResponse & { error?: string };
       if (!res.ok || body.error) {
         modelError.value = body.error ?? `HTTP ${res.status}`;
         return;
@@ -24,6 +25,7 @@ export const useModelsStore = defineStore("models", () => {
       modelList.value = body.modelList ?? [];
       defaultModel.value = body.defaultModel ?? null;
       thinkingLevels.value = body.thinkingLevels ?? {};
+      modelScopeWarnings.value = body.modelScopeWarnings ?? [];
       modelError.value = body.modelError ?? "";
     } catch (e) {
       modelError.value = e instanceof Error ? e.message : String(e);
@@ -32,7 +34,11 @@ export const useModelsStore = defineStore("models", () => {
     }
   }
 
-  async function setDefault(cwd: string | null, provider: string, modelId: string): Promise<boolean> {
+  async function setDefault(
+    cwd: string | null,
+    provider: string,
+    modelId: string,
+  ): Promise<boolean> {
     if (!cwd) {
       modelError.value = "先在左侧选择项目";
       return false;
@@ -43,7 +49,7 @@ export const useModelsStore = defineStore("models", () => {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ cwd, provider, modelId }),
       });
-      const body = await res.json().catch(() => ({})) as { error?: string };
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok || body.error) {
         modelError.value = body.error ?? `HTTP ${res.status}`;
         return false;
@@ -57,5 +63,14 @@ export const useModelsStore = defineStore("models", () => {
     }
   }
 
-  return { modelList, defaultModel, thinkingLevels, modelError, loading, load, setDefault };
+  return {
+    modelList,
+    defaultModel,
+    thinkingLevels,
+    modelScopeWarnings,
+    modelError,
+    loading,
+    load,
+    setDefault,
+  };
 });
