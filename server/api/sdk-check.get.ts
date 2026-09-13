@@ -1,4 +1,5 @@
-import { createAgentSessionServices, getAgentDir, SettingsManager } from "@earendil-works/pi-coding-agent";
+import { getAgentDir, SettingsManager } from "@earendil-works/pi-coding-agent";
+import { createAgentServicesWithRetry } from "../utils/agent-services";
 
 // ?cwd=<一个真实目录> 验证 pi SDK 能在 Nitro 服务端正常加载与初始化
 // 这是全项目唯一的技术风险点 提前到脚手架阶段排除
@@ -11,6 +12,6 @@ export default defineEventHandler(async (event) => {
   }
   const agentDir = getAgentDir();
   const settingsManager = SettingsManager.create(cwd, agentDir);
-  const services = await createAgentSessionServices({ cwd, agentDir, settingsManager });
+  const services = await createAgentServicesWithRetry({ cwd, settingsManager });
   return { ok: true, agentDir };
 });

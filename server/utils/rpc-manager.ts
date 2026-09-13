@@ -6,7 +6,6 @@
 import { randomUUID } from "node:crypto";
 import {
   createAgentSessionFromServices,
-  createAgentSessionServices,
   getAgentDir,
   initTheme,
   SessionManager,
@@ -14,6 +13,7 @@ import {
 } from "@earendil-works/pi-coding-agent";
 import type { AgentEventLike } from "#shared/lib/agent-event-wire";
 import { validateAgentImages } from "#shared/lib/image-attachments";
+import { createAgentServicesWithRetry } from "./agent-services";
 import { invalidateSessionListCache } from "./session-reader";
 
 interface ContextUsage {
@@ -57,11 +57,14 @@ interface AgentSessionInner {
     };
   };
   subscribe(listener: (event: AgentEventLike) => void): () => void;
-  prompt(text: string, options?: {
-    images?: Array<{ type: "image"; data: string; mimeType: string }>;
-    source?: "interactive" | "rpc";
-    preflightResult?: (success: boolean) => void;
-  }): Promise<void>;
+  prompt(
+    text: string,
+    options?: {
+      images?: Array<{ type: "image"; data: string; mimeType: string }>;
+      source?: "interactive" | "rpc";
+      preflightResult?: (success: boolean) => void;
+    },
+  ): Promise<void>;
   abort(): Promise<void>;
   dispose(): void;
   navigateTree(targetId: string, options?: { summarize?: boolean }): Promise<unknown>;
@@ -88,12 +91,24 @@ export class AgentSessionWrapper {
 
   constructor(public readonly inner: AgentSessionInner) {}
 
-  get sessionId() { return this.inner.sessionId; }
-  get sessionFile() { return this.inner.sessionFile ?? ""; }
-  get isStreaming() { return this.inner.isStreaming; }
-  get streamingMessage() { return this.inner.agent.state?.streamingMessage; }
-  isAlive() { return this._alive; }
-  isRunning() { return this._alive && (this.pendingPromptCount > 0 || this.inner.isStreaming); }
+  get sessionId() {
+    return this.inner.sessionId;
+  }
+  get sessionFile() {
+    return this.inner.sessionFile ?? "";
+  }
+  get isStreaming() {
+    return this.inner.isStreaming;
+  }
+  get streamingMessage() {
+    return this.inner.agent.state?.streamingMessage;
+  }
+  isAlive() {
+    return this._alive;
+  }
+  isRunning() {
+    return this._alive && (this.pendingPromptCount > 0 || this.inner.isStreaming);
+  }
 
   onEvent(listener: EventListener) {
     this.listeners.add(listener);
@@ -134,7 +149,11 @@ export class AgentSessionWrapper {
     this._alive = false;
     if (this.idleTimer !== null) clearTimeout(this.idleTimer);
     this.unsubscribe?.();
-    try { this.inner.dispose(); } catch { /* 已销毁时忽略 */ }
+    try {
+      this.inner.dispose();
+    } catch {
+      /* 已销毁时忽略 */
+    }
     registry.delete(this.sessionId);
   }
 
@@ -167,7 +186,11 @@ export class AgentSessionWrapper {
           thinkingLevel: this.inner.agent.state?.thinkingLevel ?? "off",
           systemPrompt: this.inner.agent.state?.systemPrompt ?? "",
           contextUsage: contextUsage
-            ? { percent: contextUsage.percent, contextWindow: contextUsage.contextWindow, tokens: contextUsage.tokens }
+            ? {
+                percent: contextUsage.percent,
+                contextWindow: contextUsage.contextWindow,
+                tokens: contextUsage.tokens,
+              }
             : null,
         };
       }
@@ -195,9 +218,11 @@ export class AgentSessionWrapper {
         // deepseek 的 reasoningEffortMap 需要 xhigh 原值 强制写回让兼容层正确使用
         // SDK 的 compat 是多提供商联合类型 这里只关心 deepseek 一种 收窄读取
         const compat = this.inner.model as { compat?: { thinkingFormat?: string } } | undefined;
-        if (level === "xhigh"
-          && compat?.compat?.thinkingFormat === "deepseek"
-          && this.inner.agent.state) {
+        if (
+          level === "xhigh" &&
+          compat?.compat?.thinkingFormat === "deepseek" &&
+          this.inner.agent.state
+        ) {
           this.inner.agent.state.thinkingLevel = "xhigh";
         }
         invalidateSessionListCache();
@@ -272,15 +297,22 @@ export class AgentSessionWrapper {
     let accept!: () => void;
     let rejectFn!: (e: unknown) => void;
     const preflight = new Promise<void>((resolve, reject) => {
-      accept = () => { accepted = true; resolve(); };
+      accept = () => {
+        accepted = true;
+        resolve();
+      };
       rejectFn = reject;
     });
     let prompt: Promise<void>;
     try {
       prompt = this.inner.prompt(String(command.message), {
-        ...(Array.isArray(command.images) ? { images: command.images as Array<{ type: "image"; data: string; mimeType: string }> } : {}),
+        ...(Array.isArray(command.images)
+          ? { images: command.images as Array<{ type: "image"; data: string; mimeType: string }> }
+          : {}),
         source: "rpc",
-        preflightResult: (ok: boolean) => { if (ok) accept(); },
+        preflightResult: (ok: boolean) => {
+          if (ok) accept();
+        },
       });
     } catch (e) {
       // 同步抛错也必须走 finishPrompt 否则 pendingPromptCount 泄漏 wrapper 永远显示运行中
@@ -334,7 +366,7 @@ export async function startRpcSession(
     const sessionCwd = sessionManager.getCwd();
     const agentDir = getAgentDir();
     const settingsManager = SettingsManager.create(sessionCwd, agentDir);
-    const services = await createAgentSessionServices({ cwd: sessionCwd, agentDir, settingsManager });
+    const services = await createAgentServicesWithRetry({ cwd: sessionCwd, settingsManager });
     const { session } = await createAgentSessionFromServices({ services, sessionManager });
     const wrapper = new AgentSessionWrapper(session);
     wrapper.start();
@@ -353,9 +385,13 @@ export function newSessionTempKey(): string {
   return `__new__${randomUUID()}`;
 }
 
-export function getRpcSession(id: string) { return registry.get(id); }
+export function getRpcSession(id: string) {
+  return registry.get(id);
+}
 
-export function listRpcSessions(): AgentSessionWrapper[] { return [...registry.values()]; }
+export function listRpcSessions(): AgentSessionWrapper[] {
+  return [...registry.values()];
+}
 
 export function destroyAllRpcSessions() {
   for (const w of [...registry.values()]) w.destroy();

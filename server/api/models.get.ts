@@ -1,7 +1,7 @@
 import { statSync } from "node:fs";
-import { createAgentSessionServices, getAgentDir } from "@earendil-works/pi-coding-agent";
 import { getSupportedThinkingLevels } from "@earendil-works/pi-ai";
 import type { ModelsResponse } from "#shared/lib/types";
+import { createAgentServicesWithRetry } from "../utils/agent-services";
 import { resolveVisibleModels } from "../utils/model-scope";
 import { loadModelsWithCache } from "../utils/models-cache";
 
@@ -19,8 +19,7 @@ function compareModels(
 }
 
 async function loadModels(cwd: string): Promise<ModelsResponse> {
-  const agentDir = getAgentDir();
-  const services = await createAgentSessionServices({ cwd, agentDir });
+  const services = await createAgentServicesWithRetry({ cwd });
   const modelError = services.modelRuntime.getError();
   const settings = services.settingsManager;
 

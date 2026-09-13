@@ -1,4 +1,5 @@
-import { createAgentSessionServices, getAgentDir } from "@earendil-works/pi-coding-agent";
+import { getAgentDir } from "@earendil-works/pi-coding-agent";
+import { createAgentServicesWithRetry } from "../../../utils/agent-services";
 import { invalidateModelsCache } from "../../../utils/models-cache";
 import { getAllowedFileRoots, isExistingFilePathAllowed } from "../../../utils/file-access";
 
@@ -18,7 +19,7 @@ export default defineEventHandler(async (event) => {
       return { error: "Access denied" };
     }
 
-    const services = await createAgentSessionServices({ cwd, agentDir: getAgentDir() });
+    const services = await createAgentServicesWithRetry({ cwd });
     if (!services.modelRuntime.getModel(provider, modelId)) {
       setResponseStatus(event, 400);
       return { error: `Model not found: ${provider}/${modelId}` };

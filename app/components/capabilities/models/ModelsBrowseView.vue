@@ -125,6 +125,7 @@ import ResourceSearchInput from "~/components/capabilities/ResourceSearchInput.v
 import { useChatStore } from "~/stores/chat";
 import { useModelsStore } from "~/stores/models";
 import { useWorkspaceStore } from "~/stores/workspace";
+import { friendlyAgentError } from "~/utils/pi-error";
 import type { ModelListEntry } from "#shared/lib/types";
 
 const emit = defineEmits<{ manage: [] }>();
@@ -137,11 +138,7 @@ const selectedKey = ref("");
 const switching = ref(false);
 const savingDefault = ref(false);
 
-const modelError = computed(() => {
-  if (/auth\.json\.lock|EPERM/i.test(models.modelError))
-    return "模型配置正被其他 pi 进程占用 请稍后刷新";
-  return models.modelError;
-});
+const modelError = computed(() => friendlyAgentError(models.modelError));
 const filteredModels = computed(() => {
   const text = query.value.trim().toLocaleLowerCase();
   if (!text) return models.modelList;

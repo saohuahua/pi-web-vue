@@ -5,8 +5,20 @@ import { AgentEventConnection } from "#shared/lib/agent-event-connection";
 import type { AgentEventLike, ClientAssistantMessageEvent } from "#shared/lib/agent-event-wire";
 import { extractTextBlocks } from "#shared/lib/message-text";
 import { normalizeToolCalls } from "#shared/lib/normalize";
-import { INITIAL_STREAMING_STATE, streamReducer, type StreamingState } from "#shared/lib/streaming-message";
-import type { AgentMessage, AttachedImage, SessionContext, SessionInfo, SessionStatsInfo, ToolResultMessage } from "#shared/lib/types";
+import {
+  INITIAL_STREAMING_STATE,
+  streamReducer,
+  type StreamingState,
+} from "#shared/lib/streaming-message";
+import type {
+  AgentMessage,
+  AttachedImage,
+  SessionContext,
+  SessionInfo,
+  SessionStatsInfo,
+  ToolResultMessage,
+} from "#shared/lib/types";
+import { friendlyAgentError } from "~/utils/pi-error";
 import { getToolExecutionProgress } from "~/utils/tool-progress";
 import { useSessionsStore } from "./sessions";
 import { useWorkspaceStore } from "./workspace";
@@ -34,40 +46,51 @@ export const useChatStore = defineStore("chat", () => {
   const workspaceStore = useWorkspaceStore();
 
   const sessionId = ref<string | null>(null);
-  const messages = ref<AgentMessage[]>([]);      // 已定稿消息
-  const entryIds = ref<string[]>([]);            // 与 messages 平行 分支操作要 entryId
-  const draft = ref("");                         // 输入框草稿 文件树 @ 引用从外部写入
+  const messages = ref<AgentMessage[]>([]); // 已定稿消息
+  const entryIds = ref<string[]>([]); // 与 messages 平行 分支操作要 entryId
+  const draft = ref(""); // 输入框草稿 文件树 @ 引用从外部写入
   const attachedImages = ref<AttachedImage[]>([]); // 待发送图片 previewUrl 仅浏览器使用
   // reactive 包装的 reducer 状态 每次整体 Object.assign 写回
   // AgentEventConnection 不能进 reactive EventSource 被代理会出诡异问题 所以放闭包
   const stream = reactive<StreamingState>({ ...INITIAL_STREAMING_STATE });
-  const isRunning = ref(false);                  // run 进行中的 UI 总开关
+  const isRunning = ref(false); // run 进行中的 UI 总开关
   const sessionLoading = ref(false);
   const isCompacting = ref(false);
   const model = ref<{ provider: string; id: string } | null>(null);
   const thinkingLevel = ref("off");
-  const contextUsage = ref<{ percent: number | null; contextWindow: number; tokens: number | null } | null>(null);
+  const contextUsage = ref<{
+    percent: number | null;
+    contextWindow: number;
+    tokens: number | null;
+  } | null>(null);
   const systemPrompt = ref("");
   const toolDefinitions = ref<Array<{ name: string; description: string; active: boolean }>>([]);
   const slashCommands = ref<Array<{ name: string; description: string; source: string }>>([]);
-  const stats = ref<SessionStatsInfo | null>(null);      // 文件累计 usage 与运行态 context 是两项指标
-  const sessionName = ref<string | null>(null);          // 当前会话名 顶栏展示与重命名入口
+  const stats = ref<SessionStatsInfo | null>(null); // 文件累计 usage 与运行态 context 是两项指标
+  const sessionName = ref<string | null>(null); // 当前会话名 顶栏展示与重命名入口
   const notices = ref<Notice[]>([]);
   // 活跃工具执行 tool_execution_start 到 end 之间的实时状态
   // reactive Map 的 set delete 天然触发视图更新
   const activeTools = reactive(new Map<string, { name: string; progress: string | null }>());
-  const retryInfo = ref<{ attempt: number; maxAttempts: number; errorMessage?: string } | null>(null);
-  const queuedMessages = ref<{ steering: string[]; followUp: string[] }>({ steering: [], followUp: [] });
+  const retryInfo = ref<{ attempt: number; maxAttempts: number; errorMessage?: string } | null>(
+    null,
+  );
+  const queuedMessages = ref<{ steering: string[]; followUp: string[] }>({
+    steering: [],
+    followUp: [],
+  });
 
   // 非响应式内部状态
-  let optimisticKey: string | null = null;       // 指向乐观追加的用户消息
-  let sdkAgentActive = false;                    // SDK agent 是否升起 prompt_done 据此判断是否落定
+  let optimisticKey: string | null = null; // 指向乐观追加的用户消息
+  let sdkAgentActive = false; // SDK agent 是否升起 prompt_done 据此判断是否落定
   let noticeSeq = 0;
-  let stopFallbackTimer: number | null = null;   // 停止后的兜底定时器
+  let stopFallbackTimer: number | null = null; // 停止后的兜底定时器
   let runtimeInfoLoadedFor: string | null = null; // 命令与工具信息已拉取的会话
 
   function addNotice(type: Notice["type"], message: string) {
-    notices.value.push({ id: (noticeSeq += 1), type, message });
+    // error 提示统一过一遍锁竞争映射 裸 EPERM 对用户没有可行动信息
+    const text = type === "error" ? friendlyAgentError(message) : message;
+    notices.value.push({ id: (noticeSeq += 1), type, message: text });
   }
 
   function dismissNotice(id: number) {
@@ -96,7 +119,7 @@ export const useChatStore = defineStore("chat", () => {
     if (!id) return null;
     const res = await fetch(`/api/sessions/${encodeURIComponent(id)}`).catch(() => null);
     if (!res || !res.ok) return null;
-    const body = await res.json() as { context?: SessionContext; info?: SessionInfo };
+    const body = (await res.json()) as { context?: SessionContext; info?: SessionInfo };
     // 请求期间会话已切换 丢弃过期响应
     if (sessionId.value !== id) return null;
     messages.value = body.context?.messages ?? [];
@@ -209,12 +232,18 @@ export const useChatStore = defineStore("chat", () => {
         break;
 
       case "prompt_error":
-        addNotice("error", typeof event.errorMessage === "string" ? event.errorMessage : "命令失败");
+        addNotice(
+          "error",
+          typeof event.errorMessage === "string" ? event.errorMessage : "命令失败",
+        );
         isRunning.value = false;
         break;
 
       case "startup_error":
-        addNotice("error", typeof event.errorMessage === "string" ? event.errorMessage : "会话启动失败");
+        addNotice(
+          "error",
+          typeof event.errorMessage === "string" ? event.errorMessage : "会话启动失败",
+        );
         break;
 
       case "compaction_start":
@@ -333,7 +362,11 @@ export const useChatStore = defineStore("chat", () => {
         thinkingLevel?: string;
         isCompacting?: boolean;
         systemPrompt?: string;
-        contextUsage?: { percent: number | null; contextWindow: number; tokens: number | null } | null;
+        contextUsage?: {
+          percent: number | null;
+          contextWindow: number;
+          tokens: number | null;
+        } | null;
       }>(id, { type: "get_state" });
       if (sessionId.value !== id) return;
       if (state.model) model.value = { provider: state.model.provider, id: state.model.id };
@@ -352,8 +385,12 @@ export const useChatStore = defineStore("chat", () => {
     if (!id || runtimeInfoLoadedFor === id) return;
     try {
       const [commands, tools] = await Promise.all([
-        sendAgentCommand<{ commands: Array<{ name: string; description: string; source: string }> }>(id, { type: "get_commands" }),
-        sendAgentCommand<Array<{ name: string; description: string; active: boolean }>>(id, { type: "get_tools" }),
+        sendAgentCommand<{
+          commands: Array<{ name: string; description: string; source: string }>;
+        }>(id, { type: "get_commands" }),
+        sendAgentCommand<Array<{ name: string; description: string; active: boolean }>>(id, {
+          type: "get_tools",
+        }),
       ]);
       if (sessionId.value !== id) return;
       slashCommands.value = commands.commands ?? [];
@@ -443,7 +480,7 @@ export const useChatStore = defineStore("chat", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ cwd }),
     });
-    const body = await res.json() as { sessionId?: string; error?: string };
+    const body = (await res.json()) as { sessionId?: string; error?: string };
     if (!res.ok || !body.sessionId) {
       throw new Error(body.error ?? `HTTP ${res.status}`);
     }
@@ -461,7 +498,11 @@ export const useChatStore = defineStore("chat", () => {
     }
     if (isRunning.value) return false;
     const trimmed = text.trim();
-    const images = attachedImages.value.map(({ data, mimeType }) => ({ type: "image" as const, data, mimeType }));
+    const images = attachedImages.value.map(({ data, mimeType }) => ({
+      type: "image" as const,
+      data,
+      mimeType,
+    }));
     if (!trimmed && images.length === 0) return false;
     // 先等 SSE 握手完成再发 prompt 短回复的事件才不会丢
     // 连接超时直接提示并中止 此时还没有乐观消息要撤
@@ -476,7 +517,7 @@ export const useChatStore = defineStore("chat", () => {
     const optimistic: AgentMessage = { role: "user", content: trimmed, timestamp: Date.now() };
     optimisticKey = userMessageKey(optimistic);
     messages.value.push(optimistic);
-    entryIds.value.push("");                     // 占位 reload 后被真实 entryId 替换
+    entryIds.value.push(""); // 占位 reload 后被真实 entryId 替换
     isRunning.value = true;
     applyStream({ type: "start" });
 
@@ -520,12 +561,41 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   return {
-    sessionId, messages, entryIds, draft, attachedImages, stream, isRunning, sessionLoading, isCompacting,
-    model, thinkingLevel, contextUsage, systemPrompt, toolDefinitions, slashCommands,
-    stats, sessionName,
-    notices, activeTools, retryInfo, queuedMessages,
+    sessionId,
+    messages,
+    entryIds,
+    draft,
+    attachedImages,
+    stream,
+    isRunning,
+    sessionLoading,
+    isCompacting,
+    model,
+    thinkingLevel,
+    contextUsage,
+    systemPrompt,
+    toolDefinitions,
+    slashCommands,
+    stats,
+    sessionName,
+    notices,
+    activeTools,
+    retryInfo,
+    queuedMessages,
     toolResultsByCallId,
-    openSession, newSession, sendPrompt, stop, close, closeIfCurrent, reload, dismissNotice,
-    setModel, setThinkingLevel, compact, abortCompaction, refreshRuntimeState, fetchRuntimeInfo,
+    openSession,
+    newSession,
+    sendPrompt,
+    stop,
+    close,
+    closeIfCurrent,
+    reload,
+    dismissNotice,
+    setModel,
+    setThinkingLevel,
+    compact,
+    abortCompaction,
+    refreshRuntimeState,
+    fetchRuntimeInfo,
   };
 });
