@@ -1,4 +1,5 @@
 import MarkdownIt from "markdown-it";
+import type { Env } from "markdown-it";
 // lib/common 只含常用语言 全量 highlight.js 约 1MB 没必要进浏览器包
 import hljs from "highlight.js/lib/common";
 import { resolveLocalFileHref } from "#shared/lib/file-links";
@@ -62,16 +63,19 @@ md.renderer.rules.table_open = (tokens, idx, options, env, self) =>
 md.renderer.rules.table_close = (tokens, idx, options, env, self) =>
   `${self.renderToken(tokens, idx, options)}</div>`;
 
+// env.filePath 由调用方注入 Env 索引签名是 unknown 先收窄再用
+const filePathFromEnv = (env: Env | undefined): string | undefined =>
+  typeof env?.filePath === "string" ? env.filePath : undefined;
+
 // 链接分流 外链新窗口打开 本地文件链接带 data-md-file 交给容器事件委托在应用内打开
 md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
   const token = tokens[idx];
   if (!token) return self.renderToken(tokens, idx, options);
-  const href = token.attrGet("href") ?? "";
+  const href = String(token.attrGet("href") ?? "");
 
   // 页内锚点保持原样 落到外链分支会开新窗口跳同页 很怪
   if (!href.startsWith("#")) {
-    const filePath: string | undefined = env?.filePath;
-    const resolved = filePath ? resolveLocalFileHref(href, getDirName(filePath)) : null;
+    const resolved = resolveLocalFileHref(href, getDirName(filePathFromEnv(env) ?? ""));
     if (resolved) {
       token.attrSet("data-md-file", resolved);
     } else {
@@ -83,16 +87,15 @@ md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
 };
 
 // 图片相对路径改写为 /api/files 读取 无 filePath 的 chat 场景保持不动
-const defaultImage = md.renderer.rules.image!;
 md.renderer.rules.image = (tokens, idx, options, env, self) => {
   const token = tokens[idx];
   if (!token) return "";
-  const filePath: string | undefined = env?.filePath;
-  if (filePath) {
-    const resolved = resolveLocalFileHref(token.attrGet("src"), getDirName(filePath));
-    if (resolved) token.attrSet("src", `/api/files/${encodeFilePathForApi(resolved)}?type=read`);
-  }
-  return defaultImage(tokens, idx, options, env, self);
+  const resolved = resolveLocalFileHref(
+    token.attrGet("src") === null ? undefined : String(token.attrGet("src")),
+    getDirName(filePathFromEnv(env) ?? ""),
+  );
+  if (resolved) token.attrSet("src", `/api/files/${encodeFilePathForApi(resolved)}?type=read`);
+  return self.renderToken(tokens, idx, options);
 };
 
 // GFM 任务列表 markdown-it 15 不自带 手写轻量规则
@@ -125,11 +128,19 @@ md.core.ruler.after("inline", "task_lists", (state) => {
 
       // 同一 list 下多个任务项会重复命中 类名只补一次
       const listToken = tokens[listStack.at(-1)!]!;
-      if (!listToken.attrGet("class")?.split(/\s+/).includes("contains-task-list")) {
+      if (
+        !String(listToken.attrGet("class") ?? "")
+          .split(/\s+/)
+          .includes("contains-task-list")
+      ) {
         listToken.attrJoin("class", "contains-task-list");
       }
       const itemToken = tokens[itemStack.at(-1)!]!;
-      if (!itemToken.attrGet("class")?.split(/\s+/).includes("task-list-item")) {
+      if (
+        !String(itemToken.attrGet("class") ?? "")
+          .split(/\s+/)
+          .includes("task-list-item")
+      ) {
         itemToken.attrJoin("class", "task-list-item");
       }
       first.content = first.content.replace(TASK_ITEM_RE, "");

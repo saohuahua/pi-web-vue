@@ -177,6 +177,33 @@
     font-family: var(--ds-font-mono);
   }
 
+  /* md 预览模式切换 分段小按钮 常态浅底 选中 primary-soft */
+  .file-mode-switch {
+    display: flex;
+    flex-shrink: 0;
+    gap: 2px;
+    padding: 2px;
+    background: var(--ds-surface);
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-radius-sm);
+  }
+
+  .file-mode-button {
+    padding: 1px 8px;
+    color: var(--ds-ink-muted);
+    background: transparent;
+    border: 0;
+    border-radius: var(--ds-radius-xs);
+    cursor: pointer;
+    font-size: var(--ds-font-size-caption);
+    line-height: 1.4;
+  }
+
+  .file-mode-button.active {
+    color: var(--ds-ink);
+    background: var(--ds-primary-soft);
+  }
+
   .file-viewer-body {
     min-height: 0;
     flex: 1;
@@ -187,6 +214,11 @@
     padding: var(--ds-space-4);
     color: var(--ds-ink-muted);
     font-size: var(--ds-font-size-caption);
+  }
+
+  /* md 渲染预览的内边距 由文件查看器容器负责 markdown 样式本身不带留白 */
+  .file-viewer-markdown {
+    padding: var(--ds-space-4) var(--ds-space-5);
   }
 
   .file-viewer-error {

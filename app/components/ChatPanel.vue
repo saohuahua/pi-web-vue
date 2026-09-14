@@ -128,8 +128,8 @@
       </div>
     </div>
 
-    <!-- 消息区 -->
-    <div ref="scrollEl" class="messages" @scroll="onScroll">
+    <!-- 消息区 一次挂 v-html 交互委托 代码块复制与应用内开文件都在这里分发 -->
+    <div ref="scrollEl" class="messages" @scroll="onScroll" @click="onMessagesClick">
       <Transition name="session-view" mode="out-in">
         <div :key="chat.sessionId ?? 'empty-session'" class="messages-inner">
           <div v-if="chat.sessionLoading" class="session-loading" aria-busy="true">
@@ -231,9 +231,11 @@ import { useAutoScroll } from "~/composables/useAutoScroll";
 import { ArrowDown, CircleHelp, Menu, Pencil, Settings2, Sparkles, X } from "lucide-vue-next";
 import PiIconButton from "~/components/pi/PiIconButton/index.vue";
 import { useChatStore } from "~/stores/chat";
+import { useFileViewerStore } from "~/stores/file-viewer";
 import { useSessionsStore } from "~/stores/sessions";
 import { useUiStore } from "~/stores/ui";
 import { formatCost, formatTokenCount } from "~/utils/usage-format";
+import { handleMarkdownClick } from "~/utils/markdown-interaction";
 import ChatComposer from "~/components/ChatComposer.vue";
 import MessageItem from "~/components/MessageItem.vue";
 import PiIndicator from "~/components/PiIndicator.vue";
@@ -244,10 +246,15 @@ import { playCompletionChime } from "~/utils/chime";
 const chat = useChatStore();
 const sessionsStore = useSessionsStore();
 const ui = useUiStore();
+const viewer = useFileViewerStore();
 const settings = useSettingsStore();
 const center = useCapabilityCenterStore();
 const scrollEl = ref<HTMLElement | null>(null);
 const usageOpen = ref(false);
+
+// chat 里渲染的 md 只需复制能力 本地文件链接不带 data-md-file 回调仅兜底
+const onMessagesClick = (event: MouseEvent) =>
+  handleMarkdownClick(event, { onOpenFile: (path) => viewer.open(path) });
 
 // 运行结束时按偏好播放提示音
 watch(
