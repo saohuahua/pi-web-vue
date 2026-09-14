@@ -87,7 +87,6 @@
   --ds-duration-fast: 150ms;
   --ds-duration-standard: 200ms;
   --ds-duration-pulse: 1200ms;
-  --ds-duration-caret: 1000ms;
   --ds-ease-linear: linear;
   --ds-ease: cubic-bezier(0.2, 0, 0, 1);
   --ds-disabled-opacity: 0.56;

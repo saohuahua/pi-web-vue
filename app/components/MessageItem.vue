@@ -11,7 +11,10 @@
       :aria-expanded="userExpanded"
       :aria-label="userExpanded ? '收起长消息' : '展开长消息'"
       @click="userExpanded = !userExpanded"
-    ><span>{{ userExpanded ? "收起" : "展开" }}</span><ChevronDown :size="13" :class="{ 'rotate-180': userExpanded }" aria-hidden="true" /></button>
+    >
+      <span>{{ userExpanded ? "收起" : "展开" }}</span
+      ><ChevronDown :size="13" :class="{ 'rotate-180': userExpanded }" aria-hidden="true" />
+    </button>
   </div>
 
   <!-- toolResult 不再独立渲染 配对进 ToolCallCard 的下半区 -->
@@ -24,13 +27,17 @@
         <span class="fold-mark" aria-hidden="true"></span>
         <span class="tool-name">bash</span>
       </summary>
-      <pre class="tool-output"><template v-if="bashExecution">{{ bashExecution.command }}&#10;&#10;{{ bashExecution.output }}</template></pre>
+      <pre
+        class="tool-output"
+      ><template v-if="bashExecution">{{ bashExecution.command }}&#10;&#10;{{ bashExecution.output }}</template></pre>
     </details>
   </div>
 
   <!-- assistant 文档 严格按 content 块顺序渲染 空 content 的 abort 占位不渲染 -->
   <article v-else-if="assistantMessage && !isEmptyAssistant" class="msg msg-assistant">
-    <header v-if="streaming" class="message-meta"><span class="message-streaming">生成中</span></header>
+    <header v-if="streaming" class="message-meta">
+      <span class="message-streaming">生成中</span>
+    </header>
     <template v-for="(block, i) in assistantMessage.content" :key="i">
       <div
         v-if="block.type === 'text'"
@@ -61,8 +68,6 @@
         alt="消息图片"
       />
     </template>
-    <!-- 流式光标 只在气泡仍在生长时出现 -->
-    <span v-if="streaming" class="stream-caret" aria-hidden="true"></span>
   </article>
 </template>
 
@@ -99,8 +104,12 @@ function userText(m: AgentMessage): string {
 }
 
 // 模板里 v-else-if 不会窄化联合类型 用 computed 收窄后安全取字段
-const assistantMessage = computed(() => (props.message.role === "assistant" ? props.message : null));
-const bashExecution = computed(() => (props.message.role === "bashExecution" ? props.message : null));
+const assistantMessage = computed(() =>
+  props.message.role === "assistant" ? props.message : null,
+);
+const bashExecution = computed(() =>
+  props.message.role === "bashExecution" ? props.message : null,
+);
 
 // 思考时长 本条消息时间戳减前一条的间隔即生成耗时
 // 不维护流式计时器 流式期间 ThinkingBlock 自己显示思考中

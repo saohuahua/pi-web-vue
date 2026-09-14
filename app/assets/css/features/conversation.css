@@ -264,7 +264,8 @@
     width: min(100%, 860px);
     min-height: 100%;
     margin: 0 auto;
-    padding: var(--ds-space-5) var(--ds-space-4) 160px;
+    /* 底部 padding 收紧 长对话滚到底时内容贴合输入框 短对话仍从顶部往下排 */
+    padding: var(--ds-space-5) var(--ds-space-4) var(--ds-space-4);
   }
 
   .session-view-enter-active,
@@ -377,15 +378,6 @@
     margin-bottom: var(--ds-space-2);
     color: var(--ds-accent-text);
     font-size: var(--ds-font-size-caption);
-  }
-
-  .stream-caret {
-    display: inline-block;
-    width: var(--ds-space-2);
-    height: var(--ds-font-size-body);
-    margin-left: var(--ds-space-1);
-    background: var(--ds-primary);
-    animation: stream-caret-blink var(--ds-duration-caret) steps(1) infinite;
   }
 
   .msg-image,
@@ -810,11 +802,6 @@
     border-color: var(--ds-warning-line);
   }
 
-  .composer-menu-control {
-    position: relative;
-    z-index: 40;
-  }
-
   .composer-popup {
     position: absolute;
     z-index: 40;
@@ -983,12 +970,6 @@
     }
   }
 
-  @keyframes stream-caret-blink {
-    50% {
-      opacity: 0;
-    }
-  }
-
   @keyframes session-loading-pulse {
     to {
       opacity: var(--ds-loading-opacity);
@@ -1008,7 +989,7 @@
     }
 
     .messages-inner {
-      padding: var(--ds-space-4) var(--ds-space-3) 148px;
+      padding: var(--ds-space-4) var(--ds-space-3) var(--ds-space-4);
     }
 
     .composer {

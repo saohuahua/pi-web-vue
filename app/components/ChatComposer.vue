@@ -133,19 +133,28 @@
         </div>
       </PiPopover>
 
-      <!-- 思考等级 无推理能力的模型整块隐藏 -->
-      <div v-if="thinkingLevels.length > 1" class="composer-menu-control">
-        <button
-          class="composer-tool"
-          type="button"
-          title="思考等级"
-          aria-label="选择思考等级"
-          @click="thinkingOpen = !thinkingOpen"
-        >
-          <span class="font-mono">思考·{{ chat.thinkingLevel }}</span>
-          <ChevronDown :size="13" class="text-muted" aria-hidden="true" />
-        </button>
-        <div v-if="thinkingOpen" class="composer-dropdown">
+      <!-- 思考等级 无推理能力的模型整块隐藏 下拉与模型选择同一套 PiPopover -->
+      <PiPopover
+        v-if="thinkingLevels.length > 1"
+        v-model:open="thinkingOpen"
+        label="思考等级"
+        placement="top-start"
+      >
+        <template #trigger="{ toggle }">
+          <button
+            class="composer-tool"
+            type="button"
+            title="思考等级"
+            aria-label="选择思考等级"
+            :aria-expanded="thinkingOpen"
+            @click="toggle"
+          >
+            <span class="font-mono">思考·{{ chat.thinkingLevel }}</span>
+            <ChevronDown :size="13" class="text-muted" aria-hidden="true" />
+          </button>
+        </template>
+
+        <div class="composer-dropdown">
           <button
             v-for="level in thinkingLevels"
             :key="level"
@@ -157,7 +166,7 @@
             <span class="font-mono">{{ level }}</span>
           </button>
         </div>
-      </div>
+      </PiPopover>
 
       <!-- 快捷提示词菜单 从设置里读 用户可自行管理 -->
       <div class="composer-quick-popover">
@@ -236,9 +245,6 @@
         压缩
       </button>
     </div>
-
-    <!-- 透明遮罩 点击输入区外关闭所有下拉 -->
-    <div v-if="thinkingOpen" class="fixed inset-0 z-30" @click="thinkingOpen = false"></div>
   </footer>
 </template>
 
