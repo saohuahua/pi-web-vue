@@ -31,7 +31,9 @@ function createWrapper(
 describe("AgentSessionWrapper prompt", () => {
   it("preflight 接受后先确认 HTTP 并在运行结束时发送 prompt_done", async () => {
     let finishPrompt: () => void = () => {};
-    const completion = new Promise<void>((resolve) => { finishPrompt = resolve; });
+    const completion = new Promise<void>((resolve) => {
+      finishPrompt = resolve;
+    });
     const wrapper = createWrapper((_text, options) => {
       options?.preflightResult?.(true);
       return completion;
@@ -52,7 +54,9 @@ describe("AgentSessionWrapper prompt", () => {
       throw new Error("preflight failed");
     });
 
-    await expect(wrapper.send({ type: "prompt", message: "hello" })).rejects.toThrow("preflight failed");
+    await expect(wrapper.send({ type: "prompt", message: "hello" })).rejects.toThrow(
+      "preflight failed",
+    );
     expect(wrapper.isRunning()).toBe(false);
   });
 
@@ -65,10 +69,12 @@ describe("AgentSessionWrapper prompt", () => {
     wrapper.onEvent((event) => events.push(event));
 
     await expect(wrapper.send({ type: "prompt", message: "hello" })).resolves.toBeNull();
-    await vi.waitFor(() => expect(events).toEqual([
-      { type: "prompt_error", errorMessage: "model failed" },
-      { type: "prompt_done" },
-    ]));
+    await vi.waitFor(() =>
+      expect(events).toEqual([
+        { type: "prompt_error", errorMessage: "model failed" },
+        { type: "prompt_done" },
+      ]),
+    );
     expect(wrapper.isRunning()).toBe(false);
   });
 
@@ -76,11 +82,13 @@ describe("AgentSessionWrapper prompt", () => {
     const prompt = vi.fn(async () => {});
     const wrapper = createWrapper(prompt);
 
-    await expect(wrapper.send({
-      type: "prompt",
-      message: "看图",
-      images: [{ type: "image", data: "!!!不是base64!!!", mimeType: "image/png" }],
-    })).rejects.toThrow(/base64/);
+    await expect(
+      wrapper.send({
+        type: "prompt",
+        message: "看图",
+        images: [{ type: "image", data: "!!!不是base64!!!", mimeType: "image/png" }],
+      }),
+    ).rejects.toThrow(/base64/);
     expect(prompt).not.toHaveBeenCalled();
   });
 
@@ -91,11 +99,13 @@ describe("AgentSessionWrapper prompt", () => {
     });
     const wrapper = createWrapper(prompt);
 
-    await expect(wrapper.send({
-      type: "prompt",
-      message: "看图",
-      images: [{ type: "image", data: "aGVsbG8=", mimeType: "image/png" }],
-    })).resolves.toBeNull();
+    await expect(
+      wrapper.send({
+        type: "prompt",
+        message: "看图",
+        images: [{ type: "image", data: "aGVsbG8=", mimeType: "image/png" }],
+      }),
+    ).resolves.toBeNull();
     expect(prompt.mock.calls[0]?.[1]).toMatchObject({
       images: [{ type: "image", data: "aGVsbG8=", mimeType: "image/png" }],
     });
@@ -104,7 +114,8 @@ describe("AgentSessionWrapper prompt", () => {
 
 describe("AgentSessionWrapper 运行控制命令", () => {
   it("set_model 未命中时刷新一次 runtime 命中后切换", async () => {
-    const getModel = vi.fn()
+    const getModel = vi
+      .fn()
       .mockReturnValueOnce(undefined)
       .mockReturnValueOnce({ id: "m2", provider: "p" });
     const refresh = vi.fn(async () => {});
@@ -114,8 +125,9 @@ describe("AgentSessionWrapper 运行控制命令", () => {
       setModel,
     });
 
-    await expect(wrapper.send({ type: "set_model", provider: "p", modelId: "m2" }))
-      .resolves.toEqual({ id: "m2", provider: "p" });
+    await expect(
+      wrapper.send({ type: "set_model", provider: "p", modelId: "m2" }),
+    ).resolves.toEqual({ id: "m2", provider: "p" });
     expect(getModel).toHaveBeenCalledTimes(2);
     expect(refresh).toHaveBeenCalledWith({ allowNetwork: false });
     expect(setModel).toHaveBeenCalledWith({ id: "m2", provider: "p" });
@@ -129,8 +141,9 @@ describe("AgentSessionWrapper 运行控制命令", () => {
       setModel,
     });
 
-    await expect(wrapper.send({ type: "set_model", provider: "p", modelId: "nope" }))
-      .rejects.toThrow("Model not found: p/nope");
+    await expect(
+      wrapper.send({ type: "set_model", provider: "p", modelId: "nope" }),
+    ).rejects.toThrow("Model not found: p/nope");
     expect(setModel).not.toHaveBeenCalled();
   });
 
@@ -146,14 +159,17 @@ describe("AgentSessionWrapper 运行控制命令", () => {
     const compact = vi.fn(async () => ({ ok: true }));
     const wrapper = createWrapper(async () => {}, { compact });
 
-    await expect(wrapper.send({ type: "compact", customInstructions: "保留要点" }))
-      .resolves.toEqual({ ok: true });
+    await expect(
+      wrapper.send({ type: "compact", customInstructions: "保留要点" }),
+    ).resolves.toEqual({ ok: true });
     expect(compact).toHaveBeenCalledWith("保留要点");
   });
 
   it("compact 抛错时不吞异常", async () => {
     const wrapper = createWrapper(async () => {}, {
-      compact: async () => { throw new Error("busy"); },
+      compact: async () => {
+        throw new Error("busy");
+      },
     });
 
     await expect(wrapper.send({ type: "compact" })).rejects.toThrow("busy");
@@ -167,6 +183,45 @@ describe("AgentSessionWrapper 运行控制命令", () => {
     await expect(wrapper.send({ type: "abort_compaction" })).resolves.toBeNull();
     expect(abortCompaction).toHaveBeenCalled();
     expect(abort).not.toHaveBeenCalled();
+  });
+});
+
+describe("AgentSessionWrapper 空闲回收与 SSE 挂接", () => {
+  it("SSE 监听者在场时跳过空闲回收 前端流不变成孤儿", () => {
+    vi.useFakeTimers();
+    try {
+      const dispose = vi.fn();
+      const wrapper = createWrapper(async () => {}, {
+        subscribe: () => () => {},
+        dispose,
+      });
+      wrapper.start();
+      const unsubscribe = wrapper.onEvent(() => {});
+
+      // 浏览器还连着 空闲回收不应销毁 wrapper
+      // 销毁会让流继续心跳 前端以为连接健康 新提问的事件发进无监听的死 wrapper
+      vi.advanceTimersByTime(10 * 60_000 + 1_000);
+      expect(wrapper.isAlive()).toBe(true);
+      expect(dispose).not.toHaveBeenCalled();
+
+      // 浏览器断开后 下一次计时触发才真正回收
+      unsubscribe();
+      vi.advanceTimersByTime(10 * 60_000 + 1_000);
+      expect(wrapper.isAlive()).toBe(false);
+      expect(dispose).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("销毁时通知挂接方 让已连接的 SSE 流主动关闭", () => {
+    const onDispose = vi.fn();
+    const wrapper = createWrapper(async () => {});
+    const off = wrapper.onDispose(onDispose);
+
+    wrapper.destroy();
+    expect(onDispose).toHaveBeenCalledTimes(1);
+    off();
   });
 });
 
@@ -186,7 +241,9 @@ describe("AgentSessionWrapper 只读信息命令", () => {
   it("get_commands 返回模板与技能命令的名称 说明 来源", async () => {
     const wrapper = createWrapper(async () => {}, {
       promptTemplates: [{ name: "review", description: "审查代码" }],
-      resourceLoader: { getSkills: () => ({ skills: [{ name: "psd2code", description: "转页面" }] }) },
+      resourceLoader: {
+        getSkills: () => ({ skills: [{ name: "psd2code", description: "转页面" }] }),
+      },
     });
 
     await expect(wrapper.send({ type: "get_commands" })).resolves.toEqual({

@@ -84,6 +84,7 @@ const IDLE_RECYCLE_MS = 10 * 60_000;
 
 export class AgentSessionWrapper {
   private listeners = new Set<EventListener>();
+  private disposeListeners = new Set<() => void>();
   private idleTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingPromptCount = 0;
   private _alive = true;
@@ -115,6 +116,12 @@ export class AgentSessionWrapper {
     return () => this.listeners.delete(listener);
   }
 
+  // 销毁时回调 供 SSE 流注册 流关掉后前端 onerror 会重连到重建的 wrapper
+  onDispose(listener: () => void) {
+    this.disposeListeners.add(listener);
+    return () => this.disposeListeners.delete(listener);
+  }
+
   private emit(event: AgentEventLike) {
     for (const l of this.listeners) l(event);
   }
@@ -134,8 +141,15 @@ export class AgentSessionWrapper {
 
   private resetIdleTimer() {
     if (this.idleTimer !== null) clearTimeout(this.idleTimer);
-    // 10 分钟无活动销毁 wrapper 再次请求会从文件重建 天然的资源回收
-    this.idleTimer = setTimeout(() => this.destroy(), IDLE_RECYCLE_MS);
+    // 有 SSE 监听者说明浏览器还开着这个会话 不是空闲 跳过本次回收重新计时
+    // 不跳过会出现 流还连着但 wrapper 已销毁 新提问的事件无人接 前端卡在正在思考
+    this.idleTimer = setTimeout(() => {
+      if (this.listeners.size > 0) {
+        this.resetIdleTimer();
+        return;
+      }
+      this.destroy();
+    }, IDLE_RECYCLE_MS);
   }
 
   private finishPrompt() {
@@ -149,6 +163,10 @@ export class AgentSessionWrapper {
     this._alive = false;
     if (this.idleTimer !== null) clearTimeout(this.idleTimer);
     this.unsubscribe?.();
+    // 先通知挂接方关流再销毁 inner 挂接方通常是 SSE 流
+    // 不通知则流继续心跳 前端以为连接健康 后续请求的事件发进无监听的死 wrapper
+    for (const listener of this.disposeListeners) listener();
+    this.disposeListeners.clear();
     try {
       this.inner.dispose();
     } catch {

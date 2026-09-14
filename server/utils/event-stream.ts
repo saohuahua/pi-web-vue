@@ -16,6 +16,8 @@ export interface AgentEventStreamSession {
   readonly isStreaming: boolean;
   readonly streamingMessage: unknown;
   onEvent(listener: (event: AgentEventLike) => void): () => void;
+  // wrapper 销毁时回调 流必须随之关闭 让前端 onerror 重连到重建的 wrapper
+  onDispose(listener: () => void): () => void;
 }
 
 const HEARTBEAT_INTERVAL_MS = 30_000;
@@ -37,6 +39,7 @@ export function createAgentEventStream(
       let closed = false;
       let heartbeat: ReturnType<typeof setInterval> | null = null;
       let unsubscribe: (() => void) | null = null;
+      let unsubscribeDispose: (() => void) | null = null;
       let abortHandler: (() => void) | null = null;
 
       const cleanup = (closeController: boolean) => {
@@ -45,9 +48,15 @@ export function createAgentEventStream(
         if (heartbeat !== null) clearInterval(heartbeat);
         unsubscribe?.();
         unsubscribe = null;
+        unsubscribeDispose?.();
+        unsubscribeDispose = null;
         if (abortHandler) signal.removeEventListener("abort", abortHandler);
         if (closeController) {
-          try { controller.close(); } catch { /* 流已关闭 */ }
+          try {
+            controller.close();
+          } catch {
+            /* 流已关闭 */
+          }
         }
       };
       cancelStream = cleanup;
@@ -84,6 +93,13 @@ export function createAgentEventStream(
             }
             forwardEvent(event, snapshot);
           };
+
+          const stopDisposeListening = session.onDispose(() => cleanup(true));
+          if (closed) {
+            stopDisposeListening();
+            return;
+          }
+          unsubscribeDispose = stopDisposeListening;
 
           const stopListening = session.onEvent(handleEvent);
           if (closed) {
