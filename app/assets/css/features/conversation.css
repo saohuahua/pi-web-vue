@@ -668,7 +668,7 @@
 
   /* 阅读进度环 遮罩抠出外圈环带 阅读到一半填充一半 环带同心由遮罩保证 亚像素下也不会偏心 */
   .scroll-bottom-ring {
-    --scroll-ring-width: 1.5px;
+    --scroll-ring-width: 2px;
     position: absolute;
     inset: calc(-1 * var(--scroll-ring-width));
     border-radius: var(--ds-radius-circle);
