@@ -666,17 +666,39 @@
     transform: translateX(-50%);
   }
 
+  /* 阅读进度环 遮罩抠出外圈环带 阅读到一半填充一半 环带同心由遮罩保证 亚像素下也不会偏心 */
+  .scroll-bottom-ring {
+    --scroll-ring-width: 1.5px;
+    position: absolute;
+    inset: calc(-1 * var(--scroll-ring-width));
+    border-radius: var(--ds-radius-circle);
+    background: conic-gradient(
+      var(--ds-primary) 0 var(--scroll-progress, 0%),
+      var(--ds-line) var(--scroll-progress, 0%) 100%
+    );
+    -webkit-mask: radial-gradient(
+      farthest-side,
+      transparent calc(100% - var(--scroll-ring-width)),
+      #000 calc(100% - var(--scroll-ring-width))
+    );
+    mask: radial-gradient(
+      farthest-side,
+      transparent calc(100% - var(--scroll-ring-width)),
+      #000 calc(100% - var(--scroll-ring-width))
+    );
+  }
+
+  /* 按钮阴影会糊住外圈环带 环带本身已承担轮廓 不再加阴影 */
   .scroll-bottom-button {
+    position: relative;
     display: inline-flex;
-    width: var(--ds-control-height);
-    height: var(--ds-control-height);
+    width: var(--ds-control-height-compact);
+    height: var(--ds-control-height-compact);
     align-items: center;
     justify-content: center;
     color: var(--ds-accent-text);
     background: var(--ds-surface);
-    border: 1px solid var(--ds-primary-border);
     border-radius: var(--ds-radius-circle);
-    box-shadow: var(--ds-shadow-floating);
   }
 
   .scroll-bottom-button:hover {

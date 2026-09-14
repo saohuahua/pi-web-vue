@@ -181,6 +181,7 @@
     </div>
 
     <div v-if="!nearBottom" class="scroll-bottom-control">
+      <div ref="scrollRingEl" class="scroll-bottom-ring" aria-hidden="true"></div>
       <button
         class="scroll-bottom-button"
         type="button"
@@ -188,7 +189,7 @@
         aria-label="回到最新消息"
         @click="scrollToBottom(true)"
       >
-        <ArrowDown :size="17" aria-hidden="true" />
+        <ArrowDown :size="14" aria-hidden="true" />
       </button>
     </div>
 
@@ -257,11 +258,29 @@ watch(
 );
 
 // 依赖含流式消息内容长度 流式每增长一帧评估一次跟随 isRunning 翻转时占位行出现或消失也要跟随
-const { onScroll, scrollToBottom, nearBottom } = useAutoScroll(scrollEl, () => [
+const {
+  onScroll,
+  scrollToBottom,
+  nearBottom,
+  progress: scrollProgress,
+} = useAutoScroll(scrollEl, () => [
   chat.messages.length,
   chat.isRunning,
   chat.stream.streamingMessage?.content.length ?? 0,
 ]);
+
+// 进度环 CSS 变量直写 DOM 滚动时进度每个像素都在变 避免触发整树重渲染
+const scrollRingEl = ref<HTMLElement | null>(null);
+watch(
+  [scrollProgress, nearBottom] as const,
+  ([p]) => {
+    const apply = () =>
+      scrollRingEl.value?.style.setProperty("--scroll-progress", `${Math.round(p * 100)}%`);
+    // 按钮刚由 nearBottom 翻转为显示时 环元素要等一拍才挂载
+    scrollRingEl.value ? apply() : nextTick(apply);
+  },
+  { immediate: true },
+);
 
 // 排队消息总数 composer 上方提示
 const queuedCount = computed(
