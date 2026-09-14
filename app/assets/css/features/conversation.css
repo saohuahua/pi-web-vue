@@ -698,6 +698,8 @@
     gap: var(--ds-space-2);
     padding: var(--ds-space-3);
     background: var(--ds-surface);
+    border: 1px solid var(--ds-line);
+    border-bottom: 0;
     border-radius: var(--ds-radius-md) var(--ds-radius-md) var(--ds-radius-zero)
       var(--ds-radius-zero);
     box-shadow: var(--ds-shadow-composer);
