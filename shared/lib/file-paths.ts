@@ -23,6 +23,13 @@ export function getFileName(filePath: string): string {
   return normalized.split("/").pop() ?? normalized;
 }
 
+// 取目录部分 即末段前的全部内容 用于解析 md 内的相对链接
+export function getDirName(filePath: string): string {
+  const normalized = normalizeFilePathSlashes(filePath);
+  const index = normalized.lastIndexOf("/");
+  return index > 0 ? normalized.slice(0, index) : "";
+}
+
 // 相对 cwd 的路径 不在 cwd 下时原样返回
 export function getRelativeFilePath(filePath: string, cwd?: string): string {
   if (!cwd) return filePath;

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   encodeFilePathForApi,
   filePathFromApiSegments,
+  getDirName,
   getFileName,
   getRelativeFilePath,
   normalizeFilePathSlashes,
@@ -40,5 +41,13 @@ describe("getFileName 与 getRelativeFilePath", () => {
     expect(getRelativeFilePath("D:/other/a.ts", "D:/repo")).toBe("D:/other/a.ts");
     // Windows 反斜杠 cwd 也能对上
     expect(getRelativeFilePath("D:/repo/a.ts", "D:\\repo")).toBe("a.ts");
+  });
+});
+
+describe("getDirName", () => {
+  it("取末段前的目录部分", () => {
+    expect(getDirName("D:/repo/docs/plan.md")).toBe("D:/repo/docs");
+    expect(getDirName("/home/u/plan.md")).toBe("/home/u");
+    expect(getDirName("plan.md")).toBe("");
   });
 });
