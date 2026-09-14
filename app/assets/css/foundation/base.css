@@ -16,7 +16,7 @@
 
   ::selection {
     color: var(--ds-ink);
-    background: var(--ds-primary-soft);
+    background: var(--ds-selection-bg);
   }
 
   * {

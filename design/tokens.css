@@ -21,6 +21,7 @@
   --ds-primary-soft: #e4edff;
   --ds-primary-line: #bfd2ff;
   --ds-primary-border: #c9d9ff;
+  --ds-selection-bg: #bfd2ff;
   --ds-ink: #17212b;
   --ds-ink-muted: #536271;
   --ds-line: #d1dbe4;
@@ -108,6 +109,7 @@
   --ds-primary-soft: #1e3a8a;
   --ds-primary-line: #2d5ca8;
   --ds-primary-border: #365f9d;
+  --ds-selection-bg: #2d5ca8;
   --ds-ink: #e5e7eb;
   --ds-ink-muted: #94a3b8;
   --ds-line: #2d3947;
