@@ -662,7 +662,7 @@
     position: absolute;
     bottom: var(--ds-scroll-bottom-offset);
     left: 50%;
-    z-index: 12;
+    z-index: 9;
     transform: translateX(-50%);
   }
 
