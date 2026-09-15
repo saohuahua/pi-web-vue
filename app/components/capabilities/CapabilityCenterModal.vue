@@ -218,6 +218,9 @@ watch(
     document.body.style.overflow = previousBodyOverflow;
     if (dialog.value?.open) dialog.value.close();
   },
+  // immediate 支持延迟挂载 壳层用 everOpened 门控后组件首次挂载时 open 已为 true
+  // close 分支在挂载前触发时 dialog ref 还是 null 可选链兜底
+  { immediate: true },
 );
 
 onBeforeUnmount(() => {
