@@ -116,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import {
   BrainCircuit,
   Cable,
@@ -203,25 +203,33 @@ const moveTab = (event: KeyboardEvent) => {
   nextTick(() => document.getElementById(`${center.activeTab}-tab`)?.focus());
 };
 
+// 打开 锁定滚动 记录触发控件 展示 dialog 并聚焦当前 tab
+const openDialog = () => {
+  trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  previousBodyOverflow = document.body.style.overflow;
+  document.body.style.overflow = "hidden";
+  if (!dialog.value?.open) dialog.value?.showModal();
+  document.getElementById(`${center.activeTab}-tab`)?.focus();
+};
+
 watch(
   () => center.open,
   async (open) => {
     if (open) {
-      trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      previousBodyOverflow = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
       await nextTick();
-      if (!dialog.value?.open) dialog.value?.showModal();
-      document.getElementById(`${center.activeTab}-tab`)?.focus();
+      openDialog();
       return;
     }
     document.body.style.overflow = previousBodyOverflow;
     if (dialog.value?.open) dialog.value.close();
   },
-  // immediate 支持延迟挂载 壳层用 everOpened 门控后组件首次挂载时 open 已为 true
-  // close 分支在挂载前触发时 dialog ref 还是 null 可选链兜底
-  { immediate: true },
 );
+
+// 延迟挂载下 show() 在首帧渲染前就把 open 置 true 普通 watch 监听不到这次变化
+// onMounted 里 ref 已就绪 补一次打开 后续开关仍走上面的 watch
+onMounted(() => {
+  if (center.open) openDialog();
+});
 
 onBeforeUnmount(() => {
   document.body.style.overflow = previousBodyOverflow;
