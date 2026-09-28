@@ -21,7 +21,7 @@ web
 1. **Agent 工程**：AgentSession 生命周期、`.jsonl` 会话持久化与树状分支模型、SSE 事件流、流式增量渲染、断线状态对账
 2. **前端工程**：Vue 3 Composition API、Pinia、vue-router、SSE 长连接管理、Markdown/代码高亮、复杂列表性能
 
-成功 = 核心闭环无可致命 bug（里程碑 A，已达成）+ 会话分支差异化（里程碑 B，进行中）+ 经得起阅读的代码与测试。
+成功 = 核心闭环无致命 bug + 会话分支与运行中指令可用 + 经得起阅读的代码与测试。分支和队列代码及自动测试已完成 真实模型下的最终验收待配置凭证。
 
 ## Positioning
 
@@ -56,7 +56,8 @@ web
 
 待办与未决：
 
-- 下一步：Step B 会话内分支（`vue-agent-plan/06-history-branching.md`，里程碑 B）
+- 会话内分支 编辑重发 文字草稿失败恢复和运行中队列已实现 已通过类型检查及自动测试
+- 本机缺少可用模型凭证 真实模型下的分支往返与队列消费仍待手工验收
 - 可选加分项清单见 `vue-agent-plan/07-optional.md` 与 `10-feature-candidates-research.md`
 - 仓库将公开到 GitHub 作为作品集（已确认）；具体发布时间未定
 

@@ -88,7 +88,7 @@
 - 项目说明不预设个人贡献；面试中的经历、职责和指标需要真实材料支持。
 - 架构图表示逻辑关系，不把应用内模块画成已经独立部署的服务。
 - UI 设计规范仍以 [DESIGN.md](../DESIGN.md) 和 [design](../design/) 内的契约为准。
-- 尚未实施的功能方案保留在 [功能改进实施规格](../vue-agent-plan/14-feature-improvement-spec.md)。
+- 分支 草稿和运行中队列的原始规格及当前验收边界见 [功能改进实施规格](../vue-agent-plan/14-feature-improvement-spec.md)。
 - 旧文档保留在 [历史归档](../vue-agent-plan/archive/docs-before-rewrite/README.md)，不再作为当前阅读入口。
 
 本次文档整理日期：2026-09-27。发送附件快照、会话代次、代理回滚与模型缓存身份守卫已按当前源码更新。后续功能变动时，应同步更新总览中的功能状态和对应模块说明。
