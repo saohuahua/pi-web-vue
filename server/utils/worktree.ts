@@ -34,10 +34,6 @@ export interface RawWorktree {
 const PROJECT_CACHE_TTL_MS = 60_000;
 const projectCache = new Map<string, { info: ProjectInfo; expiresAt: number }>();
 
-export function invalidateProjectCache(): void {
-  projectCache.clear();
-}
-
 // LC_ALL 固定 C 让错误文本匹配不受系统语言影响
 async function git(cwd: string, args: string[]): Promise<string> {
   const { stdout } = await execFileAsync("git", ["-C", cwd, ...args], {

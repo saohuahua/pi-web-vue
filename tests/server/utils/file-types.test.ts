@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getFileExt, getImageMime, getLanguage, isImagePath } from "#server/utils/file-types";
+import { getFileExt, getImageMime, getLanguage } from "#server/utils/file-types";
 
 describe("file-types", () => {
   it("扩展名小写取自路径末段", () => {
@@ -12,8 +12,6 @@ describe("file-types", () => {
     expect(getImageMime("b.jpeg")).toBe("image/jpeg");
     expect(getImageMime("c.svg")).toBe("image/svg+xml");
     expect(getImageMime("d.ts")).toBeNull();
-    expect(isImagePath("a.png")).toBe(true);
-    expect(isImagePath("a.ts")).toBe(false);
   });
 
   it("语言推导覆盖全名匹配与扩展名", () => {

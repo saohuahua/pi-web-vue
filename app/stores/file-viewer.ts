@@ -1,11 +1,10 @@
 import { defineStore } from "pinia";
-import { computed, ref } from "vue";
+import { ref } from "vue";
 
 // 文件查看器保存多个标签 当前文件只由 activePath 决定
 export const useFileViewerStore = defineStore("fileViewer", () => {
   const tabs = ref<string[]>([]);
   const activePath = ref<string | null>(null);
-  const currentPath = computed(() => activePath.value);
   // 首开后保持 true 组件据此延迟挂载 chunk 不进首屏 关闭全部标签时保留挂载避免重置预览模式
   const everOpened = ref(false);
 
@@ -33,5 +32,5 @@ export const useFileViewerStore = defineStore("fileViewer", () => {
     activePath.value = null;
   }
 
-  return { tabs, activePath, currentPath, everOpened, open, activate, close, closeAll };
+  return { tabs, activePath, everOpened, open, activate, close, closeAll };
 });

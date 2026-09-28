@@ -28,10 +28,6 @@ export function getImageMime(filePath: string): string | null {
   return IMAGE_EXT_TO_MIME[getFileExt(filePath)] ?? null;
 }
 
-export function isImagePath(filePath: string): boolean {
-  return getImageMime(filePath) !== null;
-}
-
 const EXT_TO_LANGUAGE: Record<string, string> = {
   ts: "typescript", tsx: "typescript", js: "javascript", jsx: "javascript",
   mjs: "javascript", cjs: "javascript", vue: "xml", py: "python", rb: "ruby",

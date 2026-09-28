@@ -62,7 +62,7 @@
               class="file-row-main"
               type="button"
               :title="file"
-              @click="viewer.open(joinPath(workspace.selectedCwd!, file))"
+              @click="openFile(joinPath(workspace.selectedCwd!, file))"
             >
               <FileKindIcon :name="file" :size="15" /><span
                 class="min-w-0 flex-1 truncate font-mono text-[12px]"
@@ -94,7 +94,7 @@
             :depth="0"
             :expanded-paths="expandedPaths"
             @toggle="toggleNode"
-            @open="viewer.open"
+            @open="openFile"
             @mention="insertMention"
           />
         </template>
@@ -131,6 +131,12 @@ const loading = ref(false);
 const error = ref("");
 const search = ref("");
 const searchResults = ref<FileIndexResponse | null>(null);
+
+function openFile(path: string) {
+  viewer.open(path);
+  // 文件抽屉打开后收起侧栏 避免遮罩截获关闭操作
+  ui.closeSidebarDrawer();
+}
 
 async function fetchEntries(dirPath: string): Promise<FileEntry[]> {
   const res = await fetch(`/api/files/${encodeFilePathForApi(dirPath)}`);

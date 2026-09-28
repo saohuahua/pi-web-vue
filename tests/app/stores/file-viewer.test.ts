@@ -14,7 +14,7 @@ describe("file viewer store", () => {
     viewer.activate("D:\\project\\a.ts");
 
     expect(viewer.tabs).toEqual(["D:\\project\\a.ts", "D:\\project\\b.ts"]);
-    expect(viewer.currentPath).toBe("D:\\project\\a.ts");
+    expect(viewer.activePath).toBe("D:\\project\\a.ts");
   });
 
   it("关闭当前标签时选择相邻文件 关闭全部后清空", () => {
@@ -23,9 +23,9 @@ describe("file viewer store", () => {
     viewer.open("D:\\project\\b.ts");
     viewer.close("D:\\project\\b.ts");
 
-    expect(viewer.currentPath).toBe("D:\\project\\a.ts");
+    expect(viewer.activePath).toBe("D:\\project\\a.ts");
     viewer.closeAll();
     expect(viewer.tabs).toEqual([]);
-    expect(viewer.currentPath).toBeNull();
+    expect(viewer.activePath).toBeNull();
   });
 });

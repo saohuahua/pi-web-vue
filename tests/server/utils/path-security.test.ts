@@ -1,8 +1,7 @@
-import { mkdtempSync, mkdirSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach } from "vitest";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { isExistingPathWithinRoots, isPathWithinRoots, isWindowsAbsolutePath } from "#server/utils/path-security";
 
 const tempDirs: string[] = [];
@@ -14,8 +13,7 @@ function makeTempDir(): string {
 }
 
 afterEach(() => {
-  // Windows 上未打开的句柄不影响 rmdir 保持简单留给系统临时目录清理
-  vi.restoreAllMocks();
+  for (const dir of tempDirs.splice(0)) rmSync(dir, { recursive: true, force: true });
 });
 
 describe("isWindowsAbsolutePath", () => {
@@ -77,20 +75,14 @@ describe("isExistingPathWithinRoots", () => {
     const dir = makeTempDir();
     const root = join(dir, "allowed");
     mkdirSync(root);
-    const secret = join(dir, "secret.txt");
-    writeFileSync(secret, "x");
-    const link = join(root, "link.txt");
-
-    let linked = true;
-    try {
-      symlinkSync(secret, link);
-    } catch {
-      // Windows 未开开发者模式时无法创建符号链接 跳过该用例
-      linked = false;
-    }
-    if (linked) {
-      expect(isExistingPathWithinRoots(link, new Set([root]))).toBe(false);
-    }
+    const outside = join(dir, "outside");
+    mkdirSync(outside);
+    writeFileSync(join(outside, "secret.txt"), "x");
+    const link = join(root, "link");
+    // Windows 使用无需开发者模式的目录联接
+    symlinkSync(outside, link, process.platform === "win32" ? "junction" : "dir");
+    expect(isPathWithinRoots(join(link, "secret.txt"), new Set([root]))).toBe(true);
+    expect(isExistingPathWithinRoots(join(link, "secret.txt"), new Set([root]))).toBe(false);
   });
 
   it("失效的根被忽略 不影响其他根的判断", () => {

@@ -14,6 +14,7 @@ const additionalRoots = new Set<string>();
 
 export function allowFileRoot(path: string): void {
   additionalRoots.add(toNativePath(path));
+  invalidateAllowedRootsCache();
 }
 
 let rootsCache: { roots: Set<string>; expiresAt: number } | null = null;
@@ -21,8 +22,10 @@ let rootsCache: { roots: Set<string>; expiresAt: number } | null = null;
 export async function getAllowedFileRoots(): Promise<Set<string>> {
   if (rootsCache && rootsCache.expiresAt > Date.now()) return rootsCache.roots;
 
+  const sessions = await listSessions();
+  // 扫描期间的新授权也必须进入本次缓存
   const roots = new Set<string>(additionalRoots);
-  for (const session of await listSessions()) {
+  for (const session of sessions) {
     if (session.cwd) roots.add(session.cwd);
     // 项目根 主仓库被全部 worktree 共享 无会话的 worktree 也要能浏览
     if (session.projectRoot) roots.add(session.projectRoot);
