@@ -7,7 +7,6 @@
       :label="label"
       clearable
       @update:model-value="emit('update:modelValue', $event)"
-      @clear="emit('update:modelValue', '')"
     >
       <template #leading><Search :size="15" aria-hidden="true" /></template>
     </PiInput>

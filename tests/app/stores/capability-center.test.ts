@@ -23,7 +23,7 @@ describe("capability center store", () => {
     expect(center.dirty).toBe(false);
   });
 
-  it("快捷提示词属于能力中心页签而非侧栏入口", () => {
+  it("快捷提示词可作为能力中心页签打开", () => {
     const center = useCapabilityCenterStore();
 
     center.show("prompts");

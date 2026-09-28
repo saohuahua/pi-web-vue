@@ -41,7 +41,6 @@
   .cap-prompt-actions,
   .cap-action-row,
   .cap-detail-title-row,
-  .cap-unavailable,
   .cap-extension-row,
   .cap-trust-note {
     display: flex;
@@ -127,26 +126,6 @@
     font-size: var(--ds-font-size-caption);
   }
 
-  .cap-icon-button {
-    display: inline-flex;
-    width: var(--ds-control-height);
-    height: var(--ds-control-height);
-    align-items: center;
-    justify-content: center;
-    color: var(--ds-ink-muted);
-    background: transparent;
-    border-radius: var(--ds-radius-sm);
-  }
-
-  .cap-icon-button:hover:not(:disabled) {
-    color: var(--ds-accent-text);
-    background: var(--ds-primary-soft);
-  }
-
-  .cap-icon-button:disabled {
-    opacity: var(--ds-disabled-opacity);
-  }
-
   .cap-tabs {
     display: flex;
     min-width: 0;
@@ -213,8 +192,7 @@
     border-top: 1px solid var(--ds-line);
   }
 
-  .cap-section h3,
-  .cap-unavailable h3 {
+  .cap-section h3 {
     margin: 0;
     color: var(--ds-ink);
     font-size: var(--ds-font-size-body);
@@ -358,22 +336,6 @@
     gap: var(--ds-space-1);
   }
 
-  .cap-prompt-actions button {
-    display: inline-flex;
-    width: var(--ds-control-height-compact);
-    height: var(--ds-control-height-compact);
-    align-items: center;
-    justify-content: center;
-    color: var(--ds-ink-muted);
-    background: transparent;
-    border-radius: var(--ds-radius-xs);
-  }
-
-  .cap-prompt-actions button:hover:not(:disabled) {
-    color: var(--ds-accent-text);
-    background: var(--ds-primary-soft);
-  }
-
   .cap-prompt-fields {
     display: grid;
     gap: var(--ds-space-2);
@@ -406,61 +368,6 @@
   .cap-prompt-fields textarea:focus {
     border-color: var(--ds-primary);
     box-shadow: var(--ds-focus-ring);
-  }
-
-  .cap-action-button,
-  .cap-primary-button,
-  .cap-secondary-button,
-  .cap-danger-button {
-    display: inline-flex;
-    min-height: var(--ds-control-height);
-    align-items: center;
-    justify-content: center;
-    gap: var(--ds-space-2);
-    padding: 0 var(--ds-space-3);
-    border: 1px solid transparent;
-    border-radius: var(--ds-radius-sm);
-    font-size: var(--ds-font-size-body);
-    font-weight: 600;
-  }
-
-  .cap-action-button,
-  .cap-primary-button {
-    color: var(--ds-primary-ink);
-    background: var(--ds-primary);
-  }
-
-  .cap-action-button:hover:not(:disabled),
-  .cap-primary-button:hover:not(:disabled) {
-    background: var(--ds-primary-hover);
-  }
-
-  .cap-secondary-button {
-    color: var(--ds-ink);
-    background: var(--ds-surface);
-    border-color: var(--ds-line);
-  }
-
-  .cap-secondary-button:hover:not(:disabled) {
-    background: var(--ds-surface-subtle);
-  }
-
-  .cap-danger-button {
-    color: var(--ds-danger);
-    background: var(--ds-danger-soft);
-    border-color: var(--ds-danger-border);
-  }
-
-  .cap-danger-button:hover:not(:disabled) {
-    color: var(--ds-primary-ink);
-    background: var(--ds-danger);
-  }
-
-  .cap-action-button:disabled,
-  .cap-primary-button:disabled,
-  .cap-secondary-button:disabled,
-  .cap-danger-button:disabled {
-    opacity: var(--ds-disabled-opacity);
   }
 
   .cap-split {
@@ -567,24 +474,6 @@
     white-space: nowrap;
   }
 
-  .cap-status {
-    display: inline-flex;
-    min-height: var(--ds-control-height-compact);
-    align-items: center;
-    padding: 0 var(--ds-space-2);
-    color: var(--ds-ink-muted);
-    background: var(--ds-surface-subtle);
-    border: 1px solid var(--ds-line);
-    border-radius: var(--ds-radius-pill);
-    font-size: var(--ds-font-size-caption);
-    white-space: nowrap;
-  }
-
-  .cap-status.active {
-    color: var(--ds-success);
-    background: var(--ds-success-soft);
-  }
-
   .cap-tag-list {
     display: flex;
     flex-wrap: wrap;
@@ -630,18 +519,12 @@
     font-size: var(--ds-font-size-caption);
   }
 
-  .cap-empty,
   .cap-empty-detail,
   .cap-readonly,
   .cap-limit {
     color: var(--ds-ink-muted);
     font-size: var(--ds-font-size-caption);
     line-height: var(--ds-line-height-caption);
-  }
-
-  .cap-empty {
-    margin: var(--ds-space-5) 0;
-    text-align: center;
   }
 
   .cap-empty-detail {
@@ -666,28 +549,6 @@
     background: var(--ds-line);
     border-radius: var(--ds-radius-sm);
     animation: cap-loading var(--ds-duration-standard) var(--ds-ease) infinite alternate;
-  }
-
-  .cap-unavailable {
-    align-items: flex-start;
-    gap: var(--ds-space-3);
-    margin-top: var(--ds-space-5);
-    padding: var(--ds-space-4);
-    color: var(--ds-ink-muted);
-    background: var(--ds-surface-subtle);
-    border: 1px solid var(--ds-line);
-    border-radius: var(--ds-radius-md);
-  }
-
-  .cap-unavailable > svg {
-    flex: 0 0 auto;
-    color: var(--ds-accent-text);
-  }
-
-  .cap-unavailable p {
-    margin: var(--ds-space-1) 0 0;
-    font-size: var(--ds-font-size-caption);
-    line-height: var(--ds-line-height-caption);
   }
 
   .cap-extension-list {

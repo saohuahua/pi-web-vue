@@ -3,7 +3,6 @@
     <dialog
       ref="dialog"
       class="cap-dialog"
-      :class="{ compact: compactTab, 'split-view': splitTab }"
       aria-labelledby="capability-title"
       @cancel.prevent="requestClose"
       @close="onClosed"
@@ -21,7 +20,12 @@
               <p>管理本机 Agent 的偏好 资源与可用能力</p>
             </div>
           </div>
-          <PiIconButton label="关闭能力中心" :tooltip="false" @click="requestClose">
+          <PiIconButton
+            label="关闭能力中心"
+            :tooltip="false"
+            :disabled="config.saving"
+            @click="requestClose"
+          >
             <X :size="18" aria-hidden="true" />
           </PiIconButton>
         </header>
@@ -106,7 +110,9 @@
             <p>关闭能力中心会丢弃当前草稿</p>
             <div class="cap-confirm-actions">
               <PiButton variant="secondary" @click="confirmDiscard = false">继续编辑</PiButton>
-              <PiButton variant="danger" @click="discardAndClose">放弃变更</PiButton>
+              <PiButton variant="danger" :disabled="config.saving" @click="discardAndClose"
+                >放弃变更</PiButton
+              >
             </div>
           </section>
         </div>
@@ -135,6 +141,7 @@ import {
   useCapabilityCenterStore,
 } from "~/stores/capability-center";
 import { useWorkspaceStore } from "~/stores/workspace";
+import { useModelsConfigStore } from "~/stores/models-config";
 import GeneralSettingsPanel from "~/components/capabilities/GeneralSettingsPanel.vue";
 import QuickPromptsPanel from "~/components/capabilities/QuickPromptsPanel.vue";
 import ModelsPanel from "~/components/capabilities/ModelsPanel.vue";
@@ -144,6 +151,7 @@ import McpPanel from "~/components/capabilities/McpPanel.vue";
 
 const center = useCapabilityCenterStore();
 const workspace = useWorkspaceStore();
+const config = useModelsConfigStore();
 const dialog = ref<HTMLDialogElement | null>(null);
 const confirmDiscard = ref(false);
 let trigger: HTMLElement | null = null;
@@ -158,13 +166,10 @@ const tabs = [
   { key: "mcp" as const, label: "MCP", icon: Cable },
 ];
 const scopeLabel = computed(() => (workspace.selectedCwd ? "当前项目" : "浏览器偏好"));
-const compactTab = computed(() =>
-  ["general", "prompts", "extensions", "mcp"].includes(center.activeTab),
-);
-const splitTab = computed(() => ["models", "skills"].includes(center.activeTab));
 
 const requestClose = () => {
-  if (center.dirty) {
+  if (config.saving) return;
+  if (center.dirty || config.dirty) {
     confirmDiscard.value = true;
     return;
   }
@@ -172,6 +177,8 @@ const requestClose = () => {
 };
 
 const discardAndClose = () => {
+  if (config.saving) return;
+  config.discard();
   confirmDiscard.value = false;
   center.hide();
 };
