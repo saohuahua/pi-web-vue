@@ -310,6 +310,23 @@ export function buildSessionContext(
   entries: SessionEntry[],
   leafId?: string | null,
 ): SessionContext {
+  if (leafId !== undefined && leafId !== null) {
+    const byId = new Map(entries.map((entry) => [entry.id, entry]));
+    if (byId.size !== entries.length || !byId.has(leafId)) {
+      throw new SessionLeafError("invalid_leaf", "Invalid session entry");
+    }
+    const visited = new Set<string>();
+    let current: SessionEntry | undefined = byId.get(leafId);
+    while (current) {
+      if (visited.has(current.id)) {
+        throw new SessionLeafError("invalid_leaf", "Session entry cycle");
+      }
+      visited.add(current.id);
+      if (!current.parentId) break;
+      current = byId.get(current.parentId);
+      if (!current) throw new SessionLeafError("invalid_leaf", "Session entry parent missing");
+    }
+  }
   const sliced = leafId === null ? [] : sliceActiveBranch(entries, leafId ?? null, entries.length);
 
   // messages 与 entryIds 平行生成 分支操作需要的是 entryId 不是消息下标
@@ -332,4 +349,10 @@ export function buildSessionContext(
     stats: computeSessionStats(entries),
     ...getSessionSettings(entries, leafId),
   };
+}
+
+export class SessionLeafError extends Error {
+  constructor(public readonly code: "invalid_leaf", message: string) {
+    super(message);
+  }
 }

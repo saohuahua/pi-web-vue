@@ -38,4 +38,13 @@ describe("会话上下文", () => {
     expect(context.stats.userMessages).toBe(3);
     expect(context.stats.totalMessages).toBe(4);
   });
+
+  it("显式非法叶子和断链不能回退到最新消息", () => {
+    expect(() => buildSessionContext(entries, "missing")).toThrow("Invalid session entry");
+    const broken = [
+      ...entries,
+      { type: "message", id: "broken", parentId: "missing", timestamp: "2026-01-01", message: { role: "user", content: "broken" } },
+    ] as SessionEntry[];
+    expect(() => buildSessionContext(broken, "broken")).toThrow("Session entry parent missing");
+  });
 });

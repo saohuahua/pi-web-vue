@@ -1,8 +1,8 @@
 import { existsSync, statSync } from "node:fs";
-import { SessionManager } from "@earendil-works/pi-coding-agent";
-import { getRpcSession } from "../../utils/rpc-manager";
 import { projectIdentityKey } from "../../utils/project-identity";
-import { buildSessionContext, readSessionHeader, resolveSessionPath } from "../../utils/session-reader";
+import { buildSessionContext, readSessionHeader } from "../../utils/session-reader";
+import { openSessionForRead } from "../../utils/session-read";
+import { projectSessionTree } from "../../utils/session-tree";
 import { resolveProject } from "../../utils/worktree";
 import { extractTextBlocks } from "#shared/lib/message-text";
 import type { AgentMessage, SessionEntry, SessionInfo } from "#shared/lib/types";
@@ -19,20 +19,12 @@ function firstUserMessageText(messages: AgentMessage[]): string {
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id")!;
   try {
-    const wrapper = getRpcSession(id);
-    let sessionManager: SessionManager;
-    let filePath: string;
-    if (wrapper?.isAlive()) {
-      sessionManager = wrapper.inner.sessionManager;
-      filePath = wrapper.sessionFile;
-    } else {
-      filePath = (await resolveSessionPath(id)) ?? "";
-      if (!filePath) {
-        setResponseStatus(event, 404);
-        return { error: "Session not found" };
-      }
-      sessionManager = SessionManager.open(filePath);
+    const opened = await openSessionForRead(id);
+    if (!opened) {
+      setResponseStatus(event, 404);
+      return { error: "Session not found", code: "session_not_found" };
     }
+    const { sessionManager, filePath } = opened;
 
     // 新建空会话在首条消息前 SDK 不落盘文件 header 与 mtime 都拿不到
     // wrapper 存活说明会话真实存在 用 sessionManager 的内存状态补全
@@ -60,7 +52,7 @@ export default defineEventHandler(async (event) => {
       ...(project.isWorktree ? { worktreePath: sessionCwd } : {}),
     };
 
-    return { info, context, activeLeafId: leafId };
+    return { info, context, activeLeafId: leafId, tree: projectSessionTree(sessionManager.getTree()) };
   } catch (error) {
     setResponseStatus(event, 500);
     return { error: error instanceof Error ? error.message : String(error) };

@@ -446,3 +446,18 @@ export interface SessionContext {
   /** 按完整 entry 列表累计 含未激活分支与被压缩历史 */
   stats: SessionStatsInfo;
 }
+
+export interface SessionTreeNode {
+  id: string;
+  parentId: string | null;
+  type: string;
+  preview?: string;
+  children: SessionTreeNode[];
+}
+
+export interface SessionBranch {
+  id: string;
+  leafId: string;
+  preview: string;
+  isActive: boolean;
+}
