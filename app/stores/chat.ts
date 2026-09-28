@@ -28,6 +28,8 @@ import type {
 import { friendlyAgentError } from "~/utils/pi-error";
 import { getToolExecutionProgress } from "~/utils/tool-progress";
 import { useSessionNavigation } from "~/composables/useSessionNavigation";
+import { usePromptQueue } from "~/composables/usePromptQueue";
+import { useSessionRuntime } from "~/composables/useSessionRuntime";
 import { useSessionsStore } from "./sessions";
 import { useWorkspaceStore } from "./workspace";
 
@@ -86,17 +88,12 @@ export const useChatStore = defineStore("chat", () => {
   const retryInfo = ref<{ attempt: number; maxAttempts: number; errorMessage?: string } | null>(
     null,
   );
-  const queuedMessages = ref<{ steering: string[]; followUp: string[] }>({
-    steering: [],
-    followUp: [],
-  });
 
   // 非响应式内部状态
   let optimisticKey: string | null = null; // 指向乐观追加的用户消息
   let sdkAgentActive = false; // SDK agent 是否升起 prompt_done 据此判断是否落定
   let noticeSeq = 0;
-  let stopFallbackTimer: number | null = null; // 停止后的兜底定时器
-  let runtimeInfoLoadedFor: string | null = null; // 命令信息已拉取的会话
+  let stopFallbackTimer: ReturnType<typeof setTimeout> | null = null; // 停止后的兜底定时器
   let sessionGeneration = 0;
   let reloadSequence = 0;
   let draftBeforeEdit = "";
@@ -143,6 +140,55 @@ export const useChatStore = defineStore("chat", () => {
   };
 
   watch([draft, editingMessageId], persistDraft, { flush: "sync" });
+
+  const queue = usePromptQueue({
+    sessionId,
+    isRunning,
+    positionUnknown,
+    draft,
+    attachedImages,
+    generation: () => sessionGeneration,
+    ensureConnected: (id) => connection.ensureConnected(id),
+    reserveDraft: (id, text) => {
+      if (pendingDraft) return false;
+      pendingDraft = { sessionId: id, text, editingMessageId: null };
+      draft.value = "";
+      persistDraft();
+      return true;
+    },
+    settleDraft: (id, text, accepted) => {
+      if (sessionId.value !== id) return;
+      pendingDraft = null;
+      if (!accepted) draft.value = mergeDraftText(text, draft.value);
+      persistDraft();
+    },
+    persistDraft,
+    notice: (message) => addNotice("error", message),
+    refreshRuntimeState: () => runtime.refreshRuntimeState(),
+  });
+  const { queuedMessages, queueSubmitting, queueActionPending, submitQueuedPrompt, recallQueue } =
+    queue;
+
+  const runtime = useSessionRuntime({
+    sessionId,
+    model,
+    thinkingLevel,
+    isCompacting,
+    contextUsage,
+    slashCommands,
+    generation: () => sessionGeneration,
+    queueVersion: queue.version,
+    applyQueueSnapshot: queue.applySnapshot,
+    notice: (message) => addNotice("error", message),
+  });
+  const {
+    refreshRuntimeState,
+    fetchRuntimeInfo,
+    setModel,
+    setThinkingLevel,
+    compact,
+    abortCompaction,
+  } = runtime;
 
   // toolCall 块与 toolResult 消息靠 toolCallId 配对
   // 流式中 result 还没到 卡片显示执行中 到了就升级成完成
@@ -246,6 +292,7 @@ export const useChatStore = defineStore("chat", () => {
         if (event.isStreaming === true) {
           isRunning.value = true;
           sdkAgentActive = true;
+          void refreshRuntimeState();
         }
         break;
 
@@ -324,7 +371,7 @@ export const useChatStore = defineStore("chat", () => {
         activeTools.clear();
         retryInfo.value = null;
         if (stopFallbackTimer !== null) {
-          window.clearTimeout(stopFallbackTimer);
+          clearTimeout(stopFallbackTimer);
           stopFallbackTimer = null;
         }
         void reload();
@@ -396,10 +443,10 @@ export const useChatStore = defineStore("chat", () => {
         break;
 
       case "queue_update":
-        queuedMessages.value = {
+        queue.applyUpdate({
           steering: [...((event.steering as string[] | undefined) ?? [])],
           followUp: [...((event.followUp as string[] | undefined) ?? [])],
-        };
+        });
         break;
 
       default:
@@ -443,12 +490,12 @@ export const useChatStore = defineStore("chat", () => {
     draftBeforeEdit = "";
     activeTools.clear();
     retryInfo.value = null;
-    queuedMessages.value = { steering: [], followUp: [] };
+    queue.reset();
     optimisticKey = null;
     sdkAgentActive = false;
-    runtimeInfoLoadedFor = null;
+    runtime.reset();
     if (stopFallbackTimer !== null) {
-      window.clearTimeout(stopFallbackTimer);
+      clearTimeout(stopFallbackTimer);
       stopFallbackTimer = null;
     }
   }
@@ -459,101 +506,6 @@ export const useChatStore = defineStore("chat", () => {
   function closeIfCurrent(id: string | null | undefined) {
     if (id && sessionId.value !== id) return;
     close();
-  }
-
-  // 运行态查询 模型 思考等级 context usage
-  // 权威来源是 get_state 文件推导的值只在 reload 时做初始展示
-  async function refreshRuntimeState() {
-    const id = sessionId.value;
-    if (!id) return;
-    try {
-      const state = await sendAgentCommand<{
-        model?: { id: string; provider: string };
-        thinkingLevel?: string;
-        isCompacting?: boolean;
-        contextUsage?: {
-          percent: number | null;
-          contextWindow: number;
-          tokens: number | null;
-        } | null;
-      }>(id, { type: "get_state" });
-      if (sessionId.value !== id) return;
-      if (state.model) model.value = { provider: state.model.provider, id: state.model.id };
-      if (typeof state.thinkingLevel === "string") thinkingLevel.value = state.thinkingLevel;
-      if (typeof state.isCompacting === "boolean") isCompacting.value = state.isCompacting;
-      contextUsage.value = state.contextUsage ?? null;
-    } catch {
-      // wrapper 未起或刚被回收 忽略 下次事件会再拉
-    }
-  }
-
-  // 斜杠命令面板信息 每个会话拉一次
-  async function fetchRuntimeInfo() {
-    const id = sessionId.value;
-    if (!id || runtimeInfoLoadedFor === id) return;
-    try {
-      const commands = await sendAgentCommand<{
-        commands: Array<{ name: string; description: string; source: string }>;
-      }>(id, { type: "get_commands" });
-      if (sessionId.value !== id) return;
-      slashCommands.value = commands.commands ?? [];
-      runtimeInfoLoadedFor = id;
-    } catch {
-      // 命令面板非关键路径 失败静默
-    }
-  }
-
-  // 模型切换 命令成功才更新 store 失败保留原选择
-  async function setModel(provider: string, modelId: string): Promise<boolean> {
-    const id = sessionId.value;
-    if (!id) return false;
-    try {
-      await sendAgentCommand(id, { type: "set_model", provider, modelId });
-      model.value = { provider, id: modelId };
-      void refreshRuntimeState();
-      return true;
-    } catch (e) {
-      addNotice("error", e instanceof Error ? e.message : String(e));
-      return false;
-    }
-  }
-
-  async function setThinkingLevel(level: string): Promise<boolean> {
-    const id = sessionId.value;
-    if (!id) return false;
-    try {
-      await sendAgentCommand(id, { type: "set_thinking_level", level });
-      thinkingLevel.value = level;
-      return true;
-    } catch (e) {
-      addNotice("error", e instanceof Error ? e.message : String(e));
-      return false;
-    }
-  }
-
-  // 上下文压缩 与 agent 停止是两个动作 结束后刷新运行态与统计
-  async function compact() {
-    const id = sessionId.value;
-    if (!id || isCompacting.value) return;
-    isCompacting.value = true;
-    try {
-      await sendAgentCommand(id, { type: "compact" });
-    } catch (e) {
-      isCompacting.value = false;
-      addNotice("error", e instanceof Error ? e.message : String(e));
-      return;
-    }
-    // 成功路径等 compaction_end 事件驱动 不在这里复位
-  }
-
-  async function abortCompaction() {
-    const id = sessionId.value;
-    if (!id) return;
-    try {
-      await sendAgentCommand(id, { type: "abort_compaction" });
-    } catch (e) {
-      addNotice("error", e instanceof Error ? e.message : String(e));
-    }
   }
 
   async function openSession(id: string) {
@@ -685,15 +637,27 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   async function stop() {
-    if (!sessionId.value) return;
-    // abort 失败也要让 UI 可恢复 事件流会带来 agent_end
-    await sendAgentCommand(sessionId.value, { type: "abort" }).catch(() => {});
+    const id = sessionId.value;
+    const generation = sessionGeneration;
+    if (!id) return;
+    // Pi 在 abort 后可能继续尚存的队列 因此必须先撤回再停止
+    if (!(await recallQueue())) {
+      addNotice("error", "队列未确认 当前任务仍在运行");
+      return;
+    }
+    if (sessionId.value !== id || generation !== sessionGeneration) return;
+    try {
+      await sendAgentCommand(id, { type: "abort" });
+    } catch (error) {
+      addNotice("error", error instanceof Error ? error.message : String(error));
+      return;
+    }
     // abort 的 POST resolve 与 agent_settled 可能乱序或丢失
     // 3 秒兜底强制落定并 reload 一次对账 settled 先到则取消
-    if (stopFallbackTimer !== null) window.clearTimeout(stopFallbackTimer);
-    stopFallbackTimer = window.setTimeout(() => {
+    if (stopFallbackTimer !== null) clearTimeout(stopFallbackTimer);
+    stopFallbackTimer = setTimeout(() => {
       stopFallbackTimer = null;
-      if (sessionId.value && isRunning.value) {
+      if (sessionId.value === id && generation === sessionGeneration && isRunning.value) {
         isRunning.value = false;
         activeTools.clear();
         void reload();
@@ -728,10 +692,14 @@ export const useChatStore = defineStore("chat", () => {
     activeTools,
     retryInfo,
     queuedMessages,
+    queueSubmitting,
+    queueActionPending,
     toolResultsByCallId,
     openSession,
     newSession,
     sendPrompt,
+    submitQueuedPrompt,
+    recallQueue,
     submitPrompt,
     navigateToLeaf,
     beginEditMessage,

@@ -67,10 +67,22 @@
       <!-- 运行中发送变停止 输入保持可用但不提交 -->
       <button
         v-if="chat.isRunning"
+        class="composer-btn send"
+        type="button"
+        :disabled="!queueMode || !canSend || chat.queueSubmitting"
+        :title="queueMode ? '发送运行中指令' : '先选择运行中指令模式'"
+        aria-label="发送运行中指令"
+        @click="submit"
+      >
+        <CircleArrowUp :size="19" aria-hidden="true" />
+      </button>
+      <button
+        v-if="chat.isRunning"
         class="composer-btn stop"
         type="button"
+        :disabled="chat.queueSubmitting || chat.queueActionPending"
         aria-label="停止"
-        title="停止生成"
+        title="停止并撤回队列"
         @click="chat.stop()"
       >
         <Square :size="14" fill="currentColor" aria-hidden="true" />
@@ -101,6 +113,30 @@
         <Paperclip :size="15" aria-hidden="true" />
       </button>
       <input ref="fileInput" type="file" accept="image/*" multiple hidden @change="onFileChange" />
+
+      <div
+        v-if="chat.isRunning"
+        class="composer-queue-mode"
+        role="group"
+        aria-label="运行中指令模式"
+      >
+        <button
+          type="button"
+          :aria-pressed="queueMode === 'steer'"
+          :class="{ active: queueMode === 'steer' }"
+          @click="queueMode = 'steer'"
+        >
+          立即纠偏
+        </button>
+        <button
+          type="button"
+          :aria-pressed="queueMode === 'followUp'"
+          :class="{ active: queueMode === 'followUp' }"
+          @click="queueMode = 'followUp'"
+        >
+          本轮后继续
+        </button>
+      </div>
 
       <!-- 模型选择 下拉 -->
       <PiPopover v-model:open="modelOpen" label="选择模型" placement="top-start">
@@ -279,6 +315,7 @@ const textareaEl = ref<HTMLTextAreaElement | null>(null);
 const modelOpen = ref(false);
 const thinkingOpen = ref(false);
 const quickPromptsOpen = ref(false);
+const queueMode = ref<"steer" | "followUp" | null>(null);
 
 // 图片附件的选取 校验 拦截独立成 composable 这里只取行为
 const {
@@ -576,13 +613,21 @@ const onInput = () => {
 // 发送当前草稿 失败回填输入 成功进输入历史
 const submit = async () => {
   const text = chat.draft;
-  if (!canSend.value || chat.isRunning) return;
+  if (!canSend.value) return;
+  if (chat.isRunning && !queueMode.value) return;
 
   // 附加后模型可能被切到纯文本模型 发送前再拦一次
   if (chat.attachedImages.length && warnUnsupportedImages()) return;
 
   closePopup();
   const images = [...chat.attachedImages];
+  if (chat.isRunning) {
+    const mode = queueMode.value;
+    if (!mode) return;
+    const sent = await chat.submitQueuedPrompt(text, mode, images);
+    if (sent === true && text.trim()) history = pushInputHistory(history, text);
+    return;
+  }
   // 提交先绑定当前会话代次 再等待视图刷新
   const pending = chat.submitPrompt(text, images);
   await nextTick();
@@ -611,6 +656,13 @@ const chooseThinking = async (level: string) => {
 watch(
   () => chat.draft,
   () => nextTick(autosize),
+);
+
+watch(
+  () => chat.isRunning,
+  (running) => {
+    if (!running) queueMode.value = null;
+  },
 );
 
 // 模型列表跟随工作区 cwd 换项目即换配置 @ 索引缓存同时失效

@@ -813,6 +813,26 @@
     box-shadow: var(--ds-shadow-composer);
   }
 
+  .composer-queue-mode {
+    display: inline-flex;
+    flex: none;
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-radius-sm);
+    overflow: hidden;
+  }
+
+  .composer-queue-mode button {
+    min-height: var(--ds-control-height-touch);
+    padding: 0 var(--ds-space-2);
+    color: var(--ds-ink-muted);
+    font-size: var(--ds-font-size-caption);
+  }
+
+  .composer-queue-mode button.active {
+    color: var(--ds-primary);
+    background: var(--ds-primary-soft);
+  }
+
   .composer-tool {
     width: auto;
     min-width: var(--ds-control-height);

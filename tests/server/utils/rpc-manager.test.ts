@@ -3,6 +3,7 @@ import { AgentSessionWrapper } from "#server/utils/rpc-manager";
 
 type PromptOptions = {
   preflightResult?: (success: boolean) => void;
+  streamingBehavior?: "steer" | "followUp";
 };
 
 // 命令分支用到的成员差异很大 默认给最小可用实现 用例按需覆盖
@@ -24,6 +25,9 @@ function createWrapper(
     navigateTree: async () => null,
     setSessionName: () => {},
     getContextUsage: () => undefined,
+    getSteeringMessages: () => [],
+    getFollowUpMessages: () => [],
+    clearQueue: () => ({ steering: [], followUp: [] }),
     ...extra,
   } as never);
 }
@@ -109,6 +113,79 @@ describe("AgentSessionWrapper prompt", () => {
     expect(prompt.mock.calls[0]?.[1]).toMatchObject({
       images: [{ type: "image", data: "aGVsbG8=", mimeType: "image/png" }],
     });
+  });
+
+  it("运行中追加指令透传模式且不发送普通 prompt_done", async () => {
+    const prompt = vi.fn((_text: string, options?: PromptOptions) => {
+      options?.preflightResult?.(true);
+      return Promise.resolve();
+    });
+    const wrapper = createWrapper(prompt);
+    const events: string[] = [];
+    wrapper.onEvent((event) => events.push(event.type));
+    await wrapper.send({ type: "prompt", message: "纠偏", streamingBehavior: "steer" });
+    await Promise.resolve();
+    expect(prompt.mock.calls[0]?.[1]?.streamingBehavior).toBe("steer");
+    expect(events).not.toContain("prompt_done");
+  });
+
+  it("第二条 prompt 等第一条接纳后再进入 SDK", async () => {
+    let acceptFirst!: () => void;
+    const prompt = vi.fn((_text: string, options?: PromptOptions) => {
+      if (!acceptFirst) {
+        acceptFirst = () => options?.preflightResult?.(true);
+        return new Promise<void>(() => {});
+      }
+      options?.preflightResult?.(true);
+      return Promise.resolve();
+    });
+    const wrapper = createWrapper(prompt);
+    const first = wrapper.send({ type: "prompt", message: "第一条" });
+    const second = wrapper.send({
+      type: "prompt",
+      message: "第二条",
+      streamingBehavior: "followUp",
+    });
+    await vi.waitFor(() => expect(prompt).toHaveBeenCalledTimes(1));
+    acceptFirst();
+    await Promise.all([first, second]);
+    expect(prompt).toHaveBeenCalledTimes(2);
+    wrapper.destroy();
+  });
+
+  it("撤回队列等待正在接纳的 prompt", async () => {
+    let accept!: () => void;
+    const clearQueue = vi.fn(() => ({ steering: ["待撤回"], followUp: [] }));
+    const wrapper = createWrapper((_text, options) => {
+      accept = () => options?.preflightResult?.(true);
+      return new Promise<void>(() => {});
+    }, { clearQueue });
+    const submission = wrapper.send({ type: "prompt", message: "待撤回", streamingBehavior: "steer" });
+    await vi.waitFor(() => expect(accept).toBeTypeOf("function"));
+    const recall = wrapper.send({ type: "clear_queue" });
+    await Promise.resolve();
+    expect(clearQueue).not.toHaveBeenCalled();
+    accept();
+    await submission;
+    expect(await recall).toEqual({ steering: ["待撤回"], followUp: [] });
+    wrapper.destroy();
+  });
+
+  it("状态快照和撤回返回 SDK 当前队列", async () => {
+    const clearQueue = vi.fn(() => ({ steering: ["纠偏"], followUp: ["收尾"] }));
+    const wrapper = createWrapper(async () => {}, {
+      getSteeringMessages: () => ["纠偏"],
+      getFollowUpMessages: () => ["收尾"],
+      clearQueue,
+    });
+    expect(await wrapper.send({ type: "get_state" })).toMatchObject({
+      queuedMessages: { steering: ["纠偏"], followUp: ["收尾"] },
+    });
+    expect(await wrapper.send({ type: "clear_queue" })).toEqual({
+      steering: ["纠偏"],
+      followUp: ["收尾"],
+    });
+    expect(clearQueue).toHaveBeenCalledTimes(1);
   });
 });
 

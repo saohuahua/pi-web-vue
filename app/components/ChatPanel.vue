@@ -233,9 +233,7 @@
     </div>
 
     <!-- 排队消息提示 -->
-    <div v-if="queuedCount > 0" class="queued-strip">
-      已排队 {{ queuedCount }} 条消息 agent 空闲后继续
-    </div>
+    <QueueStrip v-if="queuedCount > 0" />
 
     <ChatComposer />
   </div>
@@ -254,6 +252,7 @@ import { formatCost, formatTokenCount } from "~/utils/usage-format";
 import { handleMarkdownClick } from "~/utils/markdown-interaction";
 import ChatComposer from "~/components/ChatComposer.vue";
 import BranchNavigator from "~/components/BranchNavigator.vue";
+import QueueStrip from "~/components/QueueStrip.vue";
 import MessageItem from "~/components/MessageItem.vue";
 import PiIndicator from "~/components/PiIndicator.vue";
 import { useSettingsStore } from "~/stores/settings";
@@ -328,7 +327,9 @@ const titleText = computed(
   () => chat.sessionName ?? (chat.messages.length ? "未命名会话" : "空会话"),
 );
 const hasMessages = computed(() => chat.messages.some((m) => m.role === "user"));
-const firstUserIndex = computed(() => chat.messages.findIndex((message) => message.role === "user"));
+const firstUserIndex = computed(() =>
+  chat.messages.findIndex((message) => message.role === "user"),
+);
 
 const renaming = ref(false);
 const renameValue = ref("");

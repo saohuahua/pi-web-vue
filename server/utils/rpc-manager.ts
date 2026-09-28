@@ -62,6 +62,7 @@ interface AgentSessionInner {
     options?: {
       images?: Array<{ type: "image"; data: string; mimeType: string }>;
       source?: "interactive" | "rpc";
+      streamingBehavior?: "steer" | "followUp";
       preflightResult?: (success: boolean) => void;
     },
   ): Promise<void>;
@@ -79,6 +80,9 @@ interface AgentSessionInner {
   getAllTools(): ToolInfoLike[];
   getActiveToolNames(): string[];
   getContextUsage(): ContextUsage | undefined;
+  getSteeringMessages(): readonly string[];
+  getFollowUpMessages(): readonly string[];
+  clearQueue(): { steering: string[]; followUp: string[] };
 }
 
 type EventListener = (event: AgentEventLike) => void;
@@ -90,6 +94,7 @@ export class AgentSessionWrapper {
   private disposeListeners = new Set<() => void>();
   private idleTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingPromptCount = 0;
+  private promptAdmissionTail: Promise<void> = Promise.resolve();
   private _alive = true;
   private unsubscribe: (() => void) | null = null;
 
@@ -188,6 +193,14 @@ export class AgentSessionWrapper {
         // 图片先过服务端边界校验 前端压缩只是体验优化 不是安全边界
         const imageError = validateAgentImages(command.images);
         if (imageError) throw new Error(imageError);
+        if (typeof command.message !== "string") throw new Error("Prompt message is required");
+        if (
+          command.streamingBehavior !== undefined &&
+          command.streamingBehavior !== "steer" &&
+          command.streamingBehavior !== "followUp"
+        ) {
+          throw new Error("Invalid streaming behavior");
+        }
         return this.sendPrompt(command);
       }
 
@@ -203,6 +216,10 @@ export class AgentSessionWrapper {
           sessionFile: this.inner.sessionFile ?? "",
           isStreaming: this.inner.isStreaming,
           isCompacting: this.inner.isCompacting,
+          queuedMessages: {
+            steering: [...this.inner.getSteeringMessages()],
+            followUp: [...this.inner.getFollowUpMessages()],
+          },
           model: model ? { id: model.id, provider: model.provider } : undefined,
           thinkingLevel: this.inner.agent.state?.thinkingLevel ?? "off",
           systemPrompt: this.inner.agent.state?.systemPrompt ?? "",
@@ -307,6 +324,11 @@ export class AgentSessionWrapper {
         return result;
       }
 
+      case "clear_queue":
+        // 等当前 prompt 完成接纳判断 再取 SDK 实际尚未消费的队列
+        await this.promptAdmissionTail;
+        return this.inner.clearQueue();
+
       case "set_session_name": {
         const name = command.name as string;
         this.inner.setSessionName(name);
@@ -325,56 +347,73 @@ export class AgentSessionWrapper {
   // prompt 的 RPC 契约 prompt 的 Promise 在整轮 run 结束才 resolve
   // 而 preflightResult true 在同步校验与扩展预检通过时回调
   // HTTP 响应在 preflight 通过后就返回 先 ack 剩余进度全部走 SSE
-  private async sendPrompt(command: Record<string, unknown>): Promise<unknown> {
-    this.pendingPromptCount += 1;
-    let accepted = false;
-    let accept!: () => void;
-    let rejectFn!: (e: unknown) => void;
-    const preflight = new Promise<void>((resolve, reject) => {
-      accept = () => {
-        accepted = true;
-        resolve();
-      };
-      rejectFn = reject;
+  private async acquirePromptAdmission(): Promise<() => void> {
+    const previous = this.promptAdmissionTail;
+    let release!: () => void;
+    this.promptAdmissionTail = new Promise<void>((resolve) => {
+      release = resolve;
     });
-    let prompt: Promise<void>;
+    await previous;
+    return release;
+  }
+
+  private async sendPrompt(command: Record<string, unknown>): Promise<unknown> {
+    const releaseAdmission = await this.acquirePromptAdmission();
     try {
-      prompt = this.inner.prompt(String(command.message), {
-        ...(Array.isArray(command.images)
-          ? { images: command.images as Array<{ type: "image"; data: string; mimeType: string }> }
-          : {}),
-        source: "rpc",
-        preflightResult: (ok: boolean) => {
-          if (ok) accept();
-        },
+      this.pendingPromptCount += 1;
+      const streamingBehavior = command.streamingBehavior as "steer" | "followUp" | undefined;
+      let accepted = false;
+      let accept!: () => void;
+      let rejectFn!: (e: unknown) => void;
+      const preflight = new Promise<void>((resolve, reject) => {
+        accept = () => {
+          accepted = true;
+          resolve();
+        };
+        rejectFn = reject;
       });
-    } catch (e) {
-      // 同步抛错也必须走 finishPrompt 否则 pendingPromptCount 泄漏 wrapper 永远显示运行中
-      this.finishPrompt();
-      throw e;
+      let prompt: Promise<void>;
+      try {
+        prompt = this.inner.prompt(String(command.message), {
+          ...(Array.isArray(command.images)
+            ? { images: command.images as Array<{ type: "image"; data: string; mimeType: string }> }
+            : {}),
+          source: "rpc",
+          ...(streamingBehavior ? { streamingBehavior } : {}),
+          preflightResult: (ok: boolean) => {
+            if (ok) accept();
+          },
+        });
+      } catch (e) {
+        // 同步抛错也必须走 finishPrompt 否则 pendingPromptCount 泄漏 wrapper 永远显示运行中
+        this.finishPrompt();
+        throw e;
+      }
+
+      void prompt.then(
+        () => {
+          accept();
+          this.finishPrompt();
+          // prompt_done 是 wrapper 自己 emit 的 SDK 不发
+          // 前端靠它区分 POST 返回了 和 run 结束了
+          if (!streamingBehavior) this.emit({ type: "prompt_done" });
+        },
+        (e) => {
+          rejectFn(e);
+          this.finishPrompt();
+          // preflight 阶段的拒绝由 POST 本身返回 只有接受后的意外失败才走异步事件
+          if (accepted) {
+            this.emit({ type: "prompt_error", errorMessage: String((e as Error)?.message ?? e) });
+            if (!streamingBehavior) this.emit({ type: "prompt_done" });
+          }
+        },
+      );
+
+      await preflight;
+      return null;
+    } finally {
+      releaseAdmission();
     }
-
-    void prompt.then(
-      () => {
-        accept();
-        this.finishPrompt();
-        // prompt_done 是 wrapper 自己 emit 的 SDK 不发
-        // 前端靠它区分 POST 返回了 和 run 结束了
-        this.emit({ type: "prompt_done" });
-      },
-      (e) => {
-        rejectFn(e);
-        this.finishPrompt();
-        // preflight 阶段的拒绝由 POST 本身返回 只有接受后的意外失败才走异步事件
-        if (accepted) {
-          this.emit({ type: "prompt_error", errorMessage: String((e as Error)?.message ?? e) });
-          this.emit({ type: "prompt_done" });
-        }
-      },
-    );
-
-    await preflight;
-    return null;
   }
 }
 
