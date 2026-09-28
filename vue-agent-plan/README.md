@@ -1,5 +1,7 @@
 # pi-agent-vue 执行计划（总览）
 
+当前项目说明与面试准备见 [docs 目录](../docs/README.md)。本目录保留研发计划，计划中的目标不等于当前已实现功能。后续分支、草稿与失败恢复方案见 [功能改进实施规格](14-feature-improvement-spec.md)，旧学习文档见 [历史归档](archive/docs-before-rewrite/README.md)。
+
 > 本文件夹是为「用 Vue 3 从零实现 pi-agent 的 Web UI」项目编写的完整执行计划。
 > 参考项目（架构蓝本）：`D:\project\pi-web`（下文简称 **pi-web**）。
 > 本文件夹只是规划文档，不属于 pi-web 上游代码。
