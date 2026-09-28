@@ -1,7 +1,11 @@
 import { compressImageFile } from "~/utils/image-compress";
 import { useChatStore } from "~/stores/chat";
 import { useModelsStore } from "~/stores/models";
-import { MAX_ATTACHED_IMAGES, getBase64DecodedByteLength } from "#shared/lib/image-attachments";
+import {
+  MAX_ATTACHED_IMAGE_BYTES,
+  MAX_ATTACHED_IMAGES,
+  getBase64DecodedByteLength,
+} from "#shared/lib/image-attachments";
 import type { AttachedImage } from "#shared/lib/types";
 
 // 图片操作独立于输入补全 减少 Composer 的状态负担
@@ -37,8 +41,12 @@ export function useComposerImages() {
       try {
         const { data, mimeType } = await compressImageFile(file);
         const bytes = getBase64DecodedByteLength(data);
-        if (bytes === null || bytes > 10 * 1024 * 1024) {
-          chat.notices.push({ id: Date.now(), type: "error", message: `${file.name} 超过 10MB 上限` });
+        if (bytes === null || bytes > MAX_ATTACHED_IMAGE_BYTES) {
+          chat.notices.push({
+            id: Date.now(),
+            type: "error",
+            message: `${file.name} 超过 ${MAX_ATTACHED_IMAGE_BYTES / (1024 * 1024)}MB 上限`,
+          });
           continue;
         }
         const image: AttachedImage = { data, mimeType, previewUrl: `data:${mimeType};base64,${data}` };

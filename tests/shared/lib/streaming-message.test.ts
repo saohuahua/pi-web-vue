@@ -14,6 +14,9 @@ describe("streamReducer", () => {
     state = streamReducer(state, { type: "snapshot", message: snapshot });
     state = streamReducer(state, { type: "delta", event: { type: "text_start", contentIndex: 0 } });
     state = streamReducer(state, { type: "delta", event: { type: "text_delta", contentIndex: 0, delta: "你" } });
+    expect(state.streamingMessage?.content).toEqual([{ type: "text", text: "你" }]);
+    state = streamReducer(state, { type: "delta", event: { type: "text_delta", contentIndex: 0, delta: "好" } });
+    expect(state.streamingMessage?.content).toEqual([{ type: "text", text: "你好" }]);
     state = streamReducer(state, { type: "delta", event: { type: "text_end", contentIndex: 0, content: "你好" } });
     state = streamReducer(state, { type: "delta", event: { type: "thinking_start", contentIndex: 1 } });
     state = streamReducer(state, { type: "delta", event: { type: "thinking_end", contentIndex: 1, content: "分析" } });

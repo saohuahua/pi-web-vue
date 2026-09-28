@@ -34,7 +34,10 @@ describe("createAgentServicesWithRetry", () => {
     createMock.mockRejectedValue(new Error(LOCK_ERROR));
 
     const pending = createAgentServicesWithRetry({ cwd: "C:/proj" });
-    await expect(vi.runAllTimersAsync().then(() => pending)).rejects.toThrow(LOCK_ERROR);
+    // 先监听拒绝再推进时间 避免测试制造未处理拒绝
+    const assertion = expect(pending).rejects.toThrow(LOCK_ERROR);
+    await vi.runAllTimersAsync();
+    await assertion;
   });
 
   it("非锁错误不重试 直接抛出", async () => {

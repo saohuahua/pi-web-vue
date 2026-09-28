@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createPinia, setActivePinia } from "pinia";
 
 // sendAgentCommand 走网络 按用例分别 mock
@@ -7,9 +7,32 @@ vi.mock("#shared/lib/agent-client", () => ({
 }));
 
 import { sendAgentCommand } from "#shared/lib/agent-client";
+import type { AttachedImage } from "#shared/lib/types";
 import { useChatStore } from "~/stores/chat";
 
 const command = vi.mocked(sendAgentCommand);
+
+function createImage(name: string): AttachedImage {
+  return { data: `data-${name}`, mimeType: "image/png", previewUrl: `preview-${name}` };
+}
+
+function stubConnectedEventSource(event: { type: string; errorMessage?: string } = { type: "connected" }) {
+  class ConnectedEventSource {
+    readonly readyState = 1;
+    onmessage: ((event: MessageEvent<string>) => void) | null = null;
+    onerror: ((event: Event) => void) | null = null;
+
+    constructor() {
+      queueMicrotask(() =>
+        this.onmessage?.({ data: JSON.stringify(event) } as MessageEvent<string>),
+      );
+    }
+
+    close() {}
+  }
+
+  vi.stubGlobal("EventSource", ConnectedEventSource);
+}
 
 function sessionBody(id: string, firstMessage: string) {
   return {
@@ -39,11 +62,16 @@ beforeEach(() => {
   setActivePinia(createPinia());
   command.mockReset();
   command.mockResolvedValue({});
+  stubConnectedEventSource();
   vi.stubGlobal("localStorage", {
     getItem: () => null,
     setItem: () => {},
     removeItem: () => {},
   });
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 describe("chat store 会话选择", () => {
@@ -116,5 +144,146 @@ describe("chat store 模型与思考等级切换", () => {
     command.mockResolvedValueOnce(null);
     await expect(chat.setThinkingLevel("high")).resolves.toBe(true);
     expect(chat.thinkingLevel).toBe("high");
+  });
+});
+
+describe("chat store prompt 附件", () => {
+  it("初始连接启动失败也显示错误提示", async () => {
+    stubConnectedEventSource({ type: "startup_error", errorMessage: "启动失败" });
+    stubFetchByDelay(new Map());
+    const chat = useChatStore();
+    await chat.openSession("s1");
+    await Promise.resolve();
+    expect(chat.notices.map((notice) => notice.message)).toEqual(["启动失败"]);
+    chat.close();
+  });
+
+  it("发送握手启动失败仅提示一次且撤回乐观消息", async () => {
+    stubConnectedEventSource({ type: "startup_error", errorMessage: "启动失败" });
+    const chat = useChatStore();
+    chat.sessionId = "s1";
+    const image = createImage("failed-start");
+    chat.attachedImages.push(image);
+    expect(await chat.sendPrompt("待发送", [image])).toBe(false);
+    expect(chat.notices.map((notice) => notice.message)).toEqual(["启动失败"]);
+    expect(chat.messages).toEqual([]);
+    expect(chat.entryIds).toEqual([]);
+    expect(chat.attachedImages).toEqual([image]);
+    expect(chat.isRunning).toBe(false);
+    expect(command).not.toHaveBeenCalled();
+  });
+
+  it("只发送本批附件 成功后保留发送期间新增附件", async () => {
+    const chat = useChatStore();
+    chat.sessionId = "s1";
+    const first = createImage("first");
+    const second = createImage("second");
+    chat.attachedImages.push(first);
+
+    const pending = chat.sendPrompt("带图", [first]);
+    chat.attachedImages.push(second);
+
+    await expect(pending).resolves.toBe(true);
+    expect(command).toHaveBeenCalledWith("s1", {
+      type: "prompt",
+      message: "带图",
+      images: [{ type: "image", data: "data-first", mimeType: "image/png" }],
+    });
+    expect(chat.attachedImages).toEqual([second]);
+  });
+
+  it("提交失败时撤回乐观消息并保留附件草稿", async () => {
+    const chat = useChatStore();
+    chat.sessionId = "s1";
+    const image = createImage("failed");
+    chat.attachedImages.push(image);
+    command.mockRejectedValueOnce(new Error("HTTP 500"));
+
+    await expect(chat.sendPrompt("失败消息", [image])).resolves.toBe(false);
+
+    expect(chat.messages).toEqual([]);
+    expect(chat.entryIds).toEqual([]);
+    expect(chat.attachedImages).toEqual([image]);
+  });
+
+  it("切换会话后旧提交不修改新会话状态", async () => {
+    const chat = useChatStore();
+    chat.sessionId = "old";
+    const oldImage = createImage("old");
+    const newImage = createImage("new");
+    chat.attachedImages.push(oldImage);
+    let resolveCommand!: (value: unknown) => void;
+    command.mockImplementationOnce(() => new Promise((resolve) => { resolveCommand = resolve; }));
+
+    const pending = chat.sendPrompt("旧消息", [oldImage]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(command).toHaveBeenCalledTimes(1);
+
+    chat.close();
+    chat.sessionId = "new";
+    chat.attachedImages.push(newImage);
+    resolveCommand({});
+
+    await expect(pending).resolves.toBeNull();
+    expect(chat.sessionId).toBe("new");
+    expect(chat.isRunning).toBe(false);
+    expect(chat.attachedImages).toEqual([newImage]);
+  });
+
+  it("切走再回到同一会话时旧失败不能清除新一轮运行状态", async () => {
+    const old = Promise.withResolvers<unknown>();
+    command.mockImplementationOnce(() => old.promise);
+    const chat = useChatStore();
+    chat.sessionId = "same";
+    const pending = chat.sendPrompt("旧请求");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    chat.close();
+    chat.sessionId = "other";
+    chat.close();
+    chat.sessionId = "same";
+    expect(await chat.sendPrompt("新请求")).toBe(true);
+    old.reject(new Error("旧请求失败"));
+    expect(await pending).toBeNull();
+    expect(chat.isRunning).toBe(true);
+    expect(chat.messages).toHaveLength(1);
+    expect(chat.messages[0]).toMatchObject({ role: "user", content: "新请求" });
+    expect(chat.entryIds).toHaveLength(1);
+    expect(chat.notices).toEqual([]);
+    chat.close();
+  });
+
+  it("同名会话重入时旧握手等待者不能提交旧消息", async () => {
+    const chat = useChatStore();
+    chat.sessionId = "same";
+    const old = chat.sendPrompt("旧握手消息");
+    chat.close();
+    chat.sessionId = "same";
+    const fresh = chat.sendPrompt("新握手消息");
+    expect(await old).toBeNull();
+    expect(await fresh).toBe(true);
+    expect(command).toHaveBeenCalledTimes(1);
+    expect(command).toHaveBeenCalledWith("same", { type: "prompt", message: "新握手消息" });
+    expect(chat.isRunning).toBe(true);
+    expect(chat.notices).toEqual([]);
+    chat.close();
+  });
+});
+
+describe("chat store slash commands", () => {
+  it("只拉取并缓存 get_commands", async () => {
+    const chat = useChatStore();
+    chat.sessionId = "s1";
+    command.mockResolvedValueOnce({
+      commands: [{ name: "review", description: "审查代码", source: "prompt" }],
+    });
+
+    await chat.fetchRuntimeInfo();
+    await chat.fetchRuntimeInfo();
+
+    expect(chat.slashCommands).toEqual([
+      { name: "review", description: "审查代码", source: "prompt" },
+    ]);
+    expect(command).toHaveBeenCalledTimes(1);
+    expect(command).toHaveBeenCalledWith("s1", { type: "get_commands" });
   });
 });

@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, toRaw } from "vue";
 import { sendAgentCommand } from "#shared/lib/agent-client";
-import { AgentEventConnection } from "#shared/lib/agent-event-connection";
+import { AgentEventConnection, AgentEventConnectionError } from "#shared/lib/agent-event-connection";
 import type { AgentEventLike, ClientAssistantMessageEvent } from "#shared/lib/agent-event-wire";
 import { extractTextBlocks } from "#shared/lib/message-text";
 import { normalizeToolCalls } from "#shared/lib/normalize";
@@ -63,8 +63,6 @@ export const useChatStore = defineStore("chat", () => {
     contextWindow: number;
     tokens: number | null;
   } | null>(null);
-  const systemPrompt = ref("");
-  const toolDefinitions = ref<Array<{ name: string; description: string; active: boolean }>>([]);
   const slashCommands = ref<Array<{ name: string; description: string; source: string }>>([]);
   const stats = ref<SessionStatsInfo | null>(null); // 文件累计 usage 与运行态 context 是两项指标
   const sessionName = ref<string | null>(null); // 当前会话名 顶栏展示与重命名入口
@@ -85,7 +83,8 @@ export const useChatStore = defineStore("chat", () => {
   let sdkAgentActive = false; // SDK agent 是否升起 prompt_done 据此判断是否落定
   let noticeSeq = 0;
   let stopFallbackTimer: number | null = null; // 停止后的兜底定时器
-  let runtimeInfoLoadedFor: string | null = null; // 命令与工具信息已拉取的会话
+  let runtimeInfoLoadedFor: string | null = null; // 命令信息已拉取的会话
+  let sessionGeneration = 0;
 
   function addNotice(type: Notice["type"], message: string) {
     // error 提示统一过一遍锁竞争映射 裸 EPERM 对用户没有可行动信息
@@ -316,6 +315,7 @@ export const useChatStore = defineStore("chat", () => {
   });
 
   function close() {
+    sessionGeneration += 1;
     connection.close();
     sessionId.value = null;
     messages.value = [];
@@ -326,8 +326,6 @@ export const useChatStore = defineStore("chat", () => {
     sessionLoading.value = false;
     isCompacting.value = false;
     contextUsage.value = null;
-    systemPrompt.value = "";
-    toolDefinitions.value = [];
     slashCommands.value = [];
     stats.value = null;
     sessionName.value = null;
@@ -351,7 +349,7 @@ export const useChatStore = defineStore("chat", () => {
     close();
   }
 
-  // 运行态查询 模型 思考等级 context usage 系统提示词
+  // 运行态查询 模型 思考等级 context usage
   // 权威来源是 get_state 文件推导的值只在 reload 时做初始展示
   async function refreshRuntimeState() {
     const id = sessionId.value;
@@ -361,7 +359,6 @@ export const useChatStore = defineStore("chat", () => {
         model?: { id: string; provider: string };
         thinkingLevel?: string;
         isCompacting?: boolean;
-        systemPrompt?: string;
         contextUsage?: {
           percent: number | null;
           contextWindow: number;
@@ -372,29 +369,22 @@ export const useChatStore = defineStore("chat", () => {
       if (state.model) model.value = { provider: state.model.provider, id: state.model.id };
       if (typeof state.thinkingLevel === "string") thinkingLevel.value = state.thinkingLevel;
       if (typeof state.isCompacting === "boolean") isCompacting.value = state.isCompacting;
-      if (typeof state.systemPrompt === "string") systemPrompt.value = state.systemPrompt;
       contextUsage.value = state.contextUsage ?? null;
     } catch {
       // wrapper 未起或刚被回收 忽略 下次事件会再拉
     }
   }
 
-  // / 命令面板与工具只读信息 每个会话拉一次
+  // 斜杠命令面板信息 每个会话拉一次
   async function fetchRuntimeInfo() {
     const id = sessionId.value;
     if (!id || runtimeInfoLoadedFor === id) return;
     try {
-      const [commands, tools] = await Promise.all([
-        sendAgentCommand<{
-          commands: Array<{ name: string; description: string; source: string }>;
-        }>(id, { type: "get_commands" }),
-        sendAgentCommand<Array<{ name: string; description: string; active: boolean }>>(id, {
-          type: "get_tools",
-        }),
-      ]);
+      const commands = await sendAgentCommand<{
+        commands: Array<{ name: string; description: string; source: string }>;
+      }>(id, { type: "get_commands" });
       if (sessionId.value !== id) return;
       slashCommands.value = commands.commands ?? [];
-      toolDefinitions.value = tools ?? [];
       runtimeInfoLoadedFor = id;
     } catch {
       // 命令面板非关键路径 失败静默
@@ -488,17 +478,19 @@ export const useChatStore = defineStore("chat", () => {
     await navigateTo(`/session/${body.sessionId}`);
   }
 
-  // 返回是否已提交成功 失败时 composer 据此恢复草稿
+  // 返回提交结果 会话代次失效时返回空值阻止旧草稿回填
   // 有图片无文字也允许发送 图片只传 data 与 mimeType previewUrl 留在浏览器
-  async function sendPrompt(text: string): Promise<boolean> {
+  async function sendPrompt(text: string, imageSnapshot = [...attachedImages.value]): Promise<boolean | null> {
+    const id = sessionId.value;
+    const generation = sessionGeneration;
     // sessionId 丢失说明会话状态异常 静默吞掉用户输入比报错更糟
-    if (!sessionId.value) {
+    if (!id) {
       addNotice("error", "会话未就绪 请刷新页面重试");
       return false;
     }
     if (isRunning.value) return false;
     const trimmed = text.trim();
-    const images = attachedImages.value.map(({ data, mimeType }) => ({
+    const images = imageSnapshot.map(({ data, mimeType }) => ({
       type: "image" as const,
       data,
       mimeType,
@@ -513,41 +505,47 @@ export const useChatStore = defineStore("chat", () => {
     entryIds.value.push(""); // 占位 reload 后被真实 entryId 替换
     isRunning.value = true;
     applyStream({ type: "start" });
-
-    // 先等 SSE 握手完成再发 prompt 短回复的事件才不会丢
-    try {
-      await connection.ensureConnected(sessionId.value);
-    } catch (e) {
-      // 握手失败撤回乐观消息与运行态 与提交失败同一套回滚
+    const rollbackOptimistic = () => {
       const last = messages.value[messages.value.length - 1];
-      if (last === optimistic) {
+      if (last && toRaw(last) === optimistic) {
         messages.value.pop();
         entryIds.value.pop();
       }
       optimisticKey = null;
       isRunning.value = false;
       applyStream({ type: "end" });
-      addNotice("error", e instanceof Error ? e.message : String(e));
+    };
+
+    // 先等 SSE 握手完成再发 prompt 短回复的事件才不会丢
+    try {
+      await connection.ensureConnected(id);
+      if (sessionId.value !== id || generation !== sessionGeneration) return null;
+    } catch (e) {
+      if (sessionId.value !== id || generation !== sessionGeneration) return null;
+      // 握手失败撤回乐观消息与运行态 与提交失败同一套回滚
+      rollbackOptimistic();
+      // 启动错误已由事件通道提示 发送等待者只负责回滚
+      if (!(e instanceof AgentEventConnectionError && e.status === "startup_error")) {
+        addNotice("error", e instanceof Error ? e.message : String(e));
+      }
       return false;
     }
 
     try {
-      await sendAgentCommand(sessionId.value, {
+      await sendAgentCommand(id, {
         type: "prompt",
         ...(trimmed ? { message: trimmed } : { message: "" }),
         ...(images.length ? { images } : {}),
       });
-      attachedImages.value = [];
+      if (sessionId.value !== id || generation !== sessionGeneration) return null;
+      const sentImages = imageSnapshot.map((image) => toRaw(image));
+      attachedImages.value = attachedImages.value.filter(
+        (image) => !sentImages.includes(toRaw(image)),
+      );
     } catch (e) {
+      if (sessionId.value !== id || generation !== sessionGeneration) return null;
       // 提交失败撤回乐观消息 只撤仍然在末尾的那条
-      const last = messages.value[messages.value.length - 1];
-      if (last === optimistic) {
-        messages.value.pop();
-        entryIds.value.pop();
-      }
-      optimisticKey = null;
-      isRunning.value = false;
-      applyStream({ type: "end" });
+      rollbackOptimistic();
       addNotice("error", e instanceof Error ? e.message : String(e));
       return false;
     }
@@ -584,8 +582,6 @@ export const useChatStore = defineStore("chat", () => {
     model,
     thinkingLevel,
     contextUsage,
-    systemPrompt,
-    toolDefinitions,
     slashCommands,
     stats,
     sessionName,

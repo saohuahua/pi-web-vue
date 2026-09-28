@@ -157,6 +157,7 @@ export class AgentEventConnection {
       } else if (event.type === "startup_error") {
         const message = typeof event.errorMessage === "string" ? event.errorMessage : undefined;
         this.fail(connection, new AgentEventConnectionError("startup_error", message));
+        this.options.onEvent(event);
         return;
       }
       this.options.onEvent(event);

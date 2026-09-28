@@ -21,7 +21,6 @@
           <span class="composer-popup-source">{{ entry.source }}</span>
         </template>
       </div>
-      <p v-if="popup.entries.length === 0" class="composer-popup-empty">没有匹配项</p>
     </div>
 
     <!-- 已选图片缩略图条 可逐个移除 右侧是数量上限提示 -->
@@ -580,18 +579,23 @@ const submit = async () => {
 
   closePopup();
   const images = [...chat.attachedImages];
+  const submitSessionId = chat.sessionId;
   chat.draft = "";
-  chat.attachedImages = [];
+  // 提交先绑定当前会话代次 再等待视图刷新
+  const pending = chat.sendPrompt(text, images);
   await nextTick();
   autosize();
 
   // 提交失败回填文字与图片草稿 用户输入不能无声消失
   // 用户已另起输入时保留现在的内容
-  if (!(await chat.sendPrompt(text)) && !chat.draft) {
-    chat.draft = text;
-    chat.attachedImages = images;
-    await nextTick();
-    autosize();
+  const sent = await pending;
+  if (sent === null) return;
+  if (!sent) {
+    if (chat.sessionId === submitSessionId && !chat.draft) {
+      chat.draft = text;
+      await nextTick();
+      autosize();
+    }
     return;
   }
 

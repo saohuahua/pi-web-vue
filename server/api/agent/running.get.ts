@@ -1,5 +1,3 @@
-import { getRpcSession } from "../../utils/rpc-manager";
-
 // 运行中的会话 id 列表 前端刷新时用于恢复 SSE 连接
 export default defineEventHandler(() => {
   const sessionIds: string[] = [];

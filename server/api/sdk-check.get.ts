@@ -12,6 +12,6 @@ export default defineEventHandler(async (event) => {
   }
   const agentDir = getAgentDir();
   const settingsManager = SettingsManager.create(cwd, agentDir);
-  const services = await createAgentServicesWithRetry({ cwd, settingsManager });
+  await createAgentServicesWithRetry({ cwd, settingsManager });
   return { ok: true, agentDir };
 });
