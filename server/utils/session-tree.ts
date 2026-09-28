@@ -5,23 +5,24 @@ import type { SessionTreeNode } from "#shared/lib/types";
 // 只投影分支导航所需字段 避免将未激活分支的完整消息和工具结果送到浏览器
 export const projectSessionTree = (roots: SdkTreeNode[]): SessionTreeNode[] => {
   const result: SessionTreeNode[] = [];
-  const pending = roots.slice().reverse().map((source) => ({ source, destination: result }));
+  const pending = roots.slice().reverse();
   while (pending.length) {
-    const item = pending.pop()!;
-    const { entry } = item.source;
-    const preview = entry.type === "message" && entry.message.role === "user"
-      ? extractTextBlocks(entry.message.content).join(" ").slice(0, 80)
-      : undefined;
+    const source = pending.pop()!;
+    const { entry } = source;
+    const preview =
+      entry.type === "message" && entry.message.role === "user"
+        ? extractTextBlocks(entry.message.content).join(" ").slice(0, 80)
+        : undefined;
     const node: SessionTreeNode = {
       id: entry.id,
       parentId: entry.parentId,
       type: entry.type,
       ...(preview ? { preview } : {}),
-      children: [],
+      children: source.children.map((child) => child.entry.id),
     };
-    item.destination.push(node);
-    for (let index = item.source.children.length - 1; index >= 0; index -= 1) {
-      pending.push({ source: item.source.children[index]!, destination: node.children });
+    result.push(node);
+    for (let index = source.children.length - 1; index >= 0; index -= 1) {
+      pending.push(source.children[index]!);
     }
   }
   return result;

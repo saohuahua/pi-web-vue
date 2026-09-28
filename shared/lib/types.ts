@@ -452,7 +452,7 @@ export interface SessionTreeNode {
   parentId: string | null;
   type: string;
   preview?: string;
-  children: SessionTreeNode[];
+  children: string[];
 }
 
 export interface SessionBranch {

@@ -330,23 +330,10 @@ describe("chat store 会话分支", () => {
     ...sessionBody("s1", "开头"),
     activeLeafId: leafId,
     tree: [
-      {
-        id: "first",
-        parentId: null,
-        type: "message",
-        preview: "开头",
-        children: [
-          {
-            id: "answer",
-            parentId: "first",
-            type: "message",
-            children: [
-              { id: "left", parentId: "answer", type: "message", preview: "方案甲", children: [] },
-              { id: "right", parentId: "answer", type: "message", preview: "方案乙", children: [] },
-            ],
-          },
-        ],
-      },
+      { id: "first", parentId: null, type: "message", preview: "开头", children: ["answer"] },
+      { id: "answer", parentId: "first", type: "message", children: ["left", "right"] },
+      { id: "left", parentId: "answer", type: "message", preview: "方案甲", children: [] },
+      { id: "right", parentId: "answer", type: "message", preview: "方案乙", children: [] },
     ],
   });
 
