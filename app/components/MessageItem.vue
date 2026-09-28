@@ -1,6 +1,17 @@
 <template>
   <!-- 用户消息 右对齐的紧凑气泡 -->
   <div v-if="isUser" class="msg msg-user">
+    <button
+      v-if="entryId && !streaming"
+      class="user-message-edit"
+      type="button"
+      :disabled="!editable"
+      :title="editable ? '编辑并创建分支' : '当前消息不可编辑'"
+      aria-label="编辑历史消息"
+      @click="emit('edit')"
+    >
+      <Pencil :size="14" aria-hidden="true" />
+    </button>
     <div ref="userChipEl" class="user-chip" :class="{ 'is-collapsed': userCollapsed }">
       <span ref="userTextEl" class="user-chip-text">{{ userMessageText }}</span>
     </div>
@@ -72,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import { ChevronDown } from "lucide-vue-next";
+import { ChevronDown, Pencil } from "lucide-vue-next";
 import { renderMarkdown } from "~/utils/markdown";
 import { useChatStore } from "~/stores/chat";
 import { imageDataUrl } from "#shared/lib/images";
@@ -87,7 +98,10 @@ const props = defineProps<{
   message: AgentMessage;
   streaming?: boolean;
   prevTimestamp?: number;
+  entryId?: string;
+  editable?: boolean;
 }>();
+const emit = defineEmits<{ edit: [] }>();
 
 const chat = useChatStore();
 const USER_COLLAPSE_LINE_LIMIT = 5;

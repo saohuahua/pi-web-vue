@@ -1,3 +1,4 @@
+// 参考 pi-web BranchNavigator 的首次分叉选择逻辑 改为精简 DTO 的迭代实现
 import type { SessionBranch, SessionTreeNode } from "./types";
 
 const newestLeaf = (node: SessionTreeNode): string => {
@@ -46,4 +47,14 @@ export const selectTopLevelBranches = (
     preview: branchPreview(node),
     isActive: includesEntry(node, activeLeafId),
   }));
+};
+
+export const findEntryParentId = (roots: SessionTreeNode[], id: string): string | null => {
+  const pending = [...roots];
+  while (pending.length) {
+    const current = pending.pop()!;
+    if (current.id === id) return current.parentId;
+    pending.push(...current.children);
+  }
+  return null;
 };

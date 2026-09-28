@@ -18,6 +18,7 @@
 | `shared/lib/agent-client.ts` | `lib/agent-client.ts` | 原样 |
 | `shared/lib/image-attachments.ts` | `lib/image-attachments.ts` | 原样 注释改写 |
 | `shared/lib/session-stats.ts` | `lib/session-stats.ts` | 只保留 computeSessionStats 省略为惰性加载准备的 mergeSessionStats 与 computeMessageStats 未移植 branch_summary 分支 本项目 SessionEntry 无该类型 |
+| `shared/lib/session-branches.ts` | `components/BranchNavigator.tsx` | 借鉴首次分叉与线性链压缩思路 改为精简树 DTO 的迭代选择 |
 | `shared/lib/file-paths.ts` | `lib/file-paths.ts` | 精简掉 upload 与 watch 相关辅助 |
 | `server/utils/path-security.ts` | `lib/path-security.ts` 与 `lib/paths.ts` 的 isWindowsAbsolutePath | 原样 注释改写 |
 | `server/utils/session-title.ts` | `lib/session-title.ts` | generateSessionTitle 改为直接接收 Agent 类型 跳过 AgentSession 包装 |

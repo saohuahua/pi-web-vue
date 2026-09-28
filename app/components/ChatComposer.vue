@@ -1,5 +1,9 @@
 <template>
   <footer class="composer">
+    <div v-if="chat.editingMessageId" class="composer-editing" role="status">
+      <span>编辑历史消息 发送后创建新分支</span>
+      <button type="button" @click="chat.cancelEdit()">取消编辑</button>
+    </div>
     <!-- @ 文件补全与 / 命令共用一个弹层 悬浮在输入框上方 打开时键盘事件优先归它 -->
     <div v-if="popup.entries.length" class="composer-popup" role="listbox">
       <div
@@ -582,7 +586,7 @@ const submit = async () => {
   const submitSessionId = chat.sessionId;
   chat.draft = "";
   // 提交先绑定当前会话代次 再等待视图刷新
-  const pending = chat.sendPrompt(text, images);
+  const pending = chat.submitPrompt(text, images);
   await nextTick();
   autosize();
 

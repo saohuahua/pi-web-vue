@@ -67,7 +67,10 @@ interface AgentSessionInner {
   ): Promise<void>;
   abort(): Promise<void>;
   dispose(): void;
-  navigateTree(targetId: string, options?: { summarize?: boolean }): Promise<unknown>;
+  navigateTree(
+    targetId: string,
+    options?: { summarize?: boolean },
+  ): Promise<{ cancelled: boolean; aborted?: boolean }>;
   setModel(model: ModelLike): Promise<void>;
   setThinkingLevel(level: string): void;
   compact(customInstructions?: string): Promise<unknown>;
@@ -287,8 +290,21 @@ export class AgentSessionWrapper {
       }
 
       case "navigate_tree": {
-        const targetId = command.targetId as string;
-        return await this.inner.navigateTree(targetId, {});
+        const targetId = command.targetId;
+        if (this.isRunning() || this.inner.isCompacting) {
+          throw new AgentSessionCommandError("session_busy", "Session is running", 409);
+        }
+        if (
+          typeof targetId !== "string" ||
+          !this.inner.sessionManager.getEntries().some((entry) => entry.id === targetId)
+        ) {
+          throw new AgentSessionCommandError("invalid_leaf", "Invalid session entry", 400);
+        }
+        const result = await this.inner.navigateTree(targetId, {});
+        if (result.cancelled || result.aborted) {
+          throw new AgentSessionCommandError("navigation_failed", "Navigation was cancelled", 409);
+        }
+        return result;
       }
 
       case "set_session_name": {
@@ -359,6 +375,16 @@ export class AgentSessionWrapper {
 
     await preflight;
     return null;
+  }
+}
+
+export class AgentSessionCommandError extends Error {
+  constructor(
+    public readonly code: "session_busy" | "invalid_leaf" | "navigation_failed",
+    message: string,
+    public readonly status: number,
+  ) {
+    super(message);
   }
 }
 

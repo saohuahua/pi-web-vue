@@ -16,7 +16,9 @@ function createImage(name: string): AttachedImage {
   return { data: `data-${name}`, mimeType: "image/png", previewUrl: `preview-${name}` };
 }
 
-function stubConnectedEventSource(event: { type: string; errorMessage?: string } = { type: "connected" }) {
+function stubConnectedEventSource(
+  event: { type: string; errorMessage?: string } = { type: "connected" },
+) {
   class ConnectedEventSource {
     readonly readyState = 1;
     onmessage: ((event: MessageEvent<string>) => void) | null = null;
@@ -50,12 +52,15 @@ function sessionBody(id: string, firstMessage: string) {
 
 // 不同会话返回不同延迟的响应 模拟慢请求竞态
 function stubFetchByDelay(responses: Map<string, { delay: number; body: unknown }>) {
-  vi.stubGlobal("fetch", vi.fn(async (url: string) => {
-    const id = /\/api\/sessions\/([^/?]+)/.exec(String(url))?.[1] ?? "";
-    const cfg = responses.get(id) ?? { delay: 0, body: { context: {}, info: null } };
-    await new Promise((r) => setTimeout(r, cfg.delay));
-    return { ok: true, json: async () => cfg.body } as Response;
-  }));
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) => {
+      const id = /\/api\/sessions\/([^/?]+)/.exec(String(url))?.[1] ?? "";
+      const cfg = responses.get(id) ?? { delay: 0, body: { context: {}, info: null } };
+      await new Promise((r) => setTimeout(r, cfg.delay));
+      return { ok: true, json: async () => cfg.body } as Response;
+    }),
+  );
 }
 
 beforeEach(() => {
@@ -76,10 +81,12 @@ afterEach(() => {
 
 describe("chat store 会话选择", () => {
   it("快速连续打开两个会话 慢的旧响应被丢弃 最终内容属于后选的会话", async () => {
-    stubFetchByDelay(new Map([
-      ["session-a", { delay: 80, body: sessionBody("session-a", "A 的消息") }],
-      ["session-b", { delay: 5, body: sessionBody("session-b", "B 的消息") }],
-    ]));
+    stubFetchByDelay(
+      new Map([
+        ["session-a", { delay: 80, body: sessionBody("session-a", "A 的消息") }],
+        ["session-b", { delay: 5, body: sessionBody("session-b", "B 的消息") }],
+      ]),
+    );
 
     const chat = useChatStore();
     const first = chat.openSession("session-a");
@@ -95,14 +102,38 @@ describe("chat store 会话选择", () => {
 
   it("切换会话立即清空旧统计 不短暂串会话", async () => {
     const statsOf = (total: number) => ({
-      userMessages: 0, assistantMessages: 0, toolCalls: 0, toolResults: 0, totalMessages: 0,
+      userMessages: 0,
+      assistantMessages: 0,
+      toolCalls: 0,
+      toolResults: 0,
+      totalMessages: 0,
       tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total },
       cost: 0,
     });
-    stubFetchByDelay(new Map([
-      ["session-a", { delay: 0, body: { ...sessionBody("session-a", "A"), context: { ...sessionBody("s", "A").context, stats: statsOf(999) } } }],
-      ["session-b", { delay: 0, body: { ...sessionBody("session-b", "B"), context: { ...sessionBody("s", "B").context, stats: statsOf(0) } } }],
-    ]));
+    stubFetchByDelay(
+      new Map([
+        [
+          "session-a",
+          {
+            delay: 0,
+            body: {
+              ...sessionBody("session-a", "A"),
+              context: { ...sessionBody("s", "A").context, stats: statsOf(999) },
+            },
+          },
+        ],
+        [
+          "session-b",
+          {
+            delay: 0,
+            body: {
+              ...sessionBody("session-b", "B"),
+              context: { ...sessionBody("s", "B").context, stats: statsOf(0) },
+            },
+          },
+        ],
+      ]),
+    );
 
     const chat = useChatStore();
     await chat.openSession("session-a");
@@ -213,7 +244,12 @@ describe("chat store prompt 附件", () => {
     const newImage = createImage("new");
     chat.attachedImages.push(oldImage);
     let resolveCommand!: (value: unknown) => void;
-    command.mockImplementationOnce(() => new Promise((resolve) => { resolveCommand = resolve; }));
+    command.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveCommand = resolve;
+        }),
+    );
 
     const pending = chat.sendPrompt("旧消息", [oldImage]);
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -285,5 +321,105 @@ describe("chat store slash commands", () => {
     ]);
     expect(command).toHaveBeenCalledTimes(1);
     expect(command).toHaveBeenCalledWith("s1", { type: "get_commands" });
+  });
+});
+
+describe("chat store 会话分支", () => {
+  const branchedBody = (leafId: string) => ({
+    ...sessionBody("s1", "开头"),
+    activeLeafId: leafId,
+    tree: [
+      {
+        id: "first",
+        parentId: null,
+        type: "message",
+        preview: "开头",
+        children: [
+          {
+            id: "answer",
+            parentId: "first",
+            type: "message",
+            children: [
+              { id: "left", parentId: "answer", type: "message", preview: "方案甲", children: [] },
+              { id: "right", parentId: "answer", type: "message", preview: "方案乙", children: [] },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+
+  it("先预览再导航 最后加载权威分支", async () => {
+    let serverLeaf = "left";
+    const order: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (String(url).includes("/context?")) {
+          order.push("preview");
+          return { ok: true, json: async () => ({ context: {} }) } as Response;
+        }
+        if (String(url).endsWith("/api/sessions/s1")) order.push("detail");
+        return { ok: true, json: async () => branchedBody(serverLeaf) } as Response;
+      }),
+    );
+    command.mockImplementation(async (_id, request) => {
+      if (request.type === "navigate_tree") {
+        order.push("navigate");
+        serverLeaf = String(request.targetId);
+      }
+      return {};
+    });
+    const chat = useChatStore();
+    await chat.openSession("s1");
+    order.length = 0;
+    expect(await chat.navigateToLeaf("right")).toBe(true);
+    expect(order).toEqual(["preview", "navigate", "detail"]);
+    expect(chat.activeLeafId).toBe("right");
+    expect(chat.branches[1]?.isActive).toBe(true);
+    chat.close();
+  });
+
+  it("导航拒绝后仍停留原分支", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) =>
+        String(url).includes("/context?")
+          ? ({ ok: true, json: async () => ({ context: {} }) } as Response)
+          : ({ ok: true, json: async () => branchedBody("left") } as Response),
+      ),
+    );
+    command.mockImplementation(async (_id, request) => {
+      if (request.type === "navigate_tree") throw new Error("拒绝导航");
+      return {};
+    });
+    const chat = useChatStore();
+    await chat.openSession("s1");
+    expect(await chat.navigateToLeaf("right")).toBe(false);
+    expect(chat.activeLeafId).toBe("left");
+    expect(chat.positionUnknown).toBe(false);
+    chat.close();
+  });
+
+  it("回退后仍无法读取权威状态则锁住发送", async () => {
+    let detailCalls = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (String(url).includes("/context?"))
+          return { ok: true, json: async () => ({ context: {} }) } as Response;
+        if (String(url).endsWith("/api/sessions/s1")) detailCalls += 1;
+        return detailCalls === 1
+          ? ({ ok: true, json: async () => branchedBody("left") } as Response)
+          : ({ ok: false, status: 503 } as Response);
+      }),
+    );
+    const chat = useChatStore();
+    await chat.openSession("s1");
+    expect(await chat.navigateToLeaf("right")).toBe(false);
+    expect(chat.positionUnknown).toBe(true);
+    expect(await chat.sendPrompt("不能发送")).toBe(false);
+    expect(command).not.toHaveBeenCalledWith("s1", { type: "prompt", message: "不能发送" });
+    chat.close();
   });
 });

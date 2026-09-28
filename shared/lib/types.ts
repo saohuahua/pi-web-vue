@@ -461,3 +461,10 @@ export interface SessionBranch {
   preview: string;
   isActive: boolean;
 }
+
+export interface SessionDetailResponse {
+  info: SessionInfo;
+  context: SessionContext;
+  activeLeafId: string | null;
+  tree: SessionTreeNode[];
+}

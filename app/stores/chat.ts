@@ -1,9 +1,14 @@
 import { defineStore } from "pinia";
 import { computed, reactive, ref, toRaw } from "vue";
 import { sendAgentCommand } from "#shared/lib/agent-client";
-import { AgentEventConnection, AgentEventConnectionError } from "#shared/lib/agent-event-connection";
+import {
+  AgentEventConnection,
+  AgentEventConnectionError,
+} from "#shared/lib/agent-event-connection";
 import type { AgentEventLike, ClientAssistantMessageEvent } from "#shared/lib/agent-event-wire";
 import { extractTextBlocks } from "#shared/lib/message-text";
+import { findEntryParentId, selectTopLevelBranches } from "#shared/lib/session-branches";
+import { fetchSessionDetail } from "#shared/lib/session-client";
 import { normalizeToolCalls } from "#shared/lib/normalize";
 import {
   INITIAL_STREAMING_STATE,
@@ -16,10 +21,12 @@ import type {
   SessionContext,
   SessionInfo,
   SessionStatsInfo,
+  SessionTreeNode,
   ToolResultMessage,
 } from "#shared/lib/types";
 import { friendlyAgentError } from "~/utils/pi-error";
 import { getToolExecutionProgress } from "~/utils/tool-progress";
+import { useSessionNavigation } from "~/composables/useSessionNavigation";
 import { useSessionsStore } from "./sessions";
 import { useWorkspaceStore } from "./workspace";
 
@@ -66,6 +73,11 @@ export const useChatStore = defineStore("chat", () => {
   const slashCommands = ref<Array<{ name: string; description: string; source: string }>>([]);
   const stats = ref<SessionStatsInfo | null>(null); // 文件累计 usage 与运行态 context 是两项指标
   const sessionName = ref<string | null>(null); // 当前会话名 顶栏展示与重命名入口
+  const tree = ref<SessionTreeNode[]>([]);
+  const activeLeafId = ref<string | null>(null);
+  const editingMessageId = ref<string | null>(null);
+  const editingTargetId = ref<string | null>(null);
+  const branches = computed(() => selectTopLevelBranches(tree.value, activeLeafId.value));
   const notices = ref<Notice[]>([]);
   // 活跃工具执行 tool_execution_start 到 end 之间的实时状态
   // reactive Map 的 set delete 天然触发视图更新
@@ -85,6 +97,22 @@ export const useChatStore = defineStore("chat", () => {
   let stopFallbackTimer: number | null = null; // 停止后的兜底定时器
   let runtimeInfoLoadedFor: string | null = null; // 命令信息已拉取的会话
   let sessionGeneration = 0;
+  let reloadSequence = 0;
+  let draftBeforeEdit = "";
+
+  const navigation = useSessionNavigation({
+    sessionId,
+    activeLeafId,
+    isRunning,
+    isCompacting,
+    generation: () => sessionGeneration,
+    invalidateReload: () => {
+      reloadSequence += 1;
+    },
+    reload: () => reload(true),
+    notice: (message) => addNotice("error", message),
+  });
+  const { isNavigating, positionUnknown, navigationError, navigateToLeaf } = navigation;
 
   function addNotice(type: Notice["type"], message: string) {
     // error 提示统一过一遍锁竞争映射 裸 EPERM 对用户没有可行动信息
@@ -113,16 +141,22 @@ export const useChatStore = defineStore("chat", () => {
 
   // 权威数据重载 entryIds 只能从文件来 增量事件里没有
   // 返回会话信息 openSession 用它同步工作区 事件触发的 reload 忽略返回值
-  async function reload(): Promise<SessionInfo | null> {
+  async function reload(force = false): Promise<SessionInfo | null> {
     const id = sessionId.value;
-    if (!id) return null;
-    const res = await fetch(`/api/sessions/${encodeURIComponent(id)}`).catch(() => null);
-    if (!res || !res.ok) return null;
-    const body = (await res.json()) as { context?: SessionContext; info?: SessionInfo };
+    if (!id || (isNavigating.value && !force)) return null;
+    const sequence = ++reloadSequence;
+    const generation = sessionGeneration;
+    const body = await fetchSessionDetail(id).catch(() => null);
+    if (!body) return null;
     // 请求期间会话已切换 丢弃过期响应
-    if (sessionId.value !== id) return null;
+    if (sessionId.value !== id || generation !== sessionGeneration || sequence !== reloadSequence)
+      return null;
     messages.value = body.context?.messages ?? [];
     entryIds.value = body.context?.entryIds ?? [];
+    tree.value = body.tree ?? [];
+    activeLeafId.value = body.activeLeafId ?? null;
+    positionUnknown.value = false;
+    if (!isNavigating.value) navigationError.value = null;
     // SessionContext 里叫 modelId 展示层统一成 id
     model.value = body.context?.model
       ? { provider: body.context.model.provider, id: body.context.model.modelId }
@@ -133,6 +167,45 @@ export const useChatStore = defineStore("chat", () => {
     // 侧栏时间戳与首条消息预览跟着变
     void sessionsStore.refresh();
     return body.info ?? null;
+  }
+
+  function beginEditMessage(index: number): boolean {
+    if (isRunning.value || isCompacting.value || isNavigating.value || positionUnknown.value)
+      return false;
+    if (!messages.value.slice(0, index).some((message) => message.role === "user")) return false;
+    const message = messages.value[index];
+    const messageId = entryIds.value[index];
+    if (message?.role !== "user" || !messageId) return false;
+    const parentId = findEntryParentId(tree.value, messageId);
+    if (!parentId) return false;
+    draftBeforeEdit = draft.value;
+    editingMessageId.value = messageId;
+    editingTargetId.value = parentId;
+    draft.value = extractTextBlocks(message.content).join("\n");
+    return true;
+  }
+
+  function cancelEdit() {
+    if (!editingMessageId.value) return;
+    draft.value = draftBeforeEdit;
+    editingMessageId.value = null;
+    editingTargetId.value = null;
+    draftBeforeEdit = "";
+  }
+
+  async function submitPrompt(
+    text: string,
+    images = [...attachedImages.value],
+  ): Promise<boolean | null> {
+    const target = editingTargetId.value;
+    if (target && !(await navigateToLeaf(target))) return false;
+    const result = await sendPrompt(text, images);
+    if (result === true && target) {
+      editingMessageId.value = null;
+      editingTargetId.value = null;
+      draftBeforeEdit = "";
+    }
+    return result;
   }
 
   // SSE 事件分发 语义对照 pi-web handleAgentEvent 的精简版
@@ -316,6 +389,7 @@ export const useChatStore = defineStore("chat", () => {
 
   function close() {
     sessionGeneration += 1;
+    reloadSequence += 1;
     connection.close();
     sessionId.value = null;
     messages.value = [];
@@ -329,6 +403,12 @@ export const useChatStore = defineStore("chat", () => {
     slashCommands.value = [];
     stats.value = null;
     sessionName.value = null;
+    tree.value = [];
+    activeLeafId.value = null;
+    navigation.reset();
+    editingMessageId.value = null;
+    editingTargetId.value = null;
+    draftBeforeEdit = "";
     activeTools.clear();
     retryInfo.value = null;
     queuedMessages.value = { steering: [], followUp: [] };
@@ -480,7 +560,10 @@ export const useChatStore = defineStore("chat", () => {
 
   // 返回提交结果 会话代次失效时返回空值阻止旧草稿回填
   // 有图片无文字也允许发送 图片只传 data 与 mimeType previewUrl 留在浏览器
-  async function sendPrompt(text: string, imageSnapshot = [...attachedImages.value]): Promise<boolean | null> {
+  async function sendPrompt(
+    text: string,
+    imageSnapshot = [...attachedImages.value],
+  ): Promise<boolean | null> {
     const id = sessionId.value;
     const generation = sessionGeneration;
     // sessionId 丢失说明会话状态异常 静默吞掉用户输入比报错更糟
@@ -488,7 +571,7 @@ export const useChatStore = defineStore("chat", () => {
       addNotice("error", "会话未就绪 请刷新页面重试");
       return false;
     }
-    if (isRunning.value) return false;
+    if (isRunning.value || isNavigating.value || positionUnknown.value) return false;
     const trimmed = text.trim();
     const images = imageSnapshot.map(({ data, mimeType }) => ({
       type: "image" as const,
@@ -585,6 +668,13 @@ export const useChatStore = defineStore("chat", () => {
     slashCommands,
     stats,
     sessionName,
+    tree,
+    branches,
+    activeLeafId,
+    isNavigating,
+    positionUnknown,
+    editingMessageId,
+    navigationError,
     notices,
     activeTools,
     retryInfo,
@@ -593,6 +683,10 @@ export const useChatStore = defineStore("chat", () => {
     openSession,
     newSession,
     sendPrompt,
+    submitPrompt,
+    navigateToLeaf,
+    beginEditMessage,
+    cancelEdit,
     stop,
     close,
     closeIfCurrent,

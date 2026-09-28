@@ -637,6 +637,25 @@
     font-size: var(--ds-font-size-caption);
   }
 
+  .branch-bar,
+  .composer-editing {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-3);
+    min-height: var(--ds-control-height);
+    padding: 0 var(--ds-space-4);
+    border-top: 1px solid var(--ds-line);
+    color: var(--ds-ink-muted);
+    font-size: var(--ds-font-size-caption);
+  }
+
+  .user-message-edit {
+    flex: none;
+    min-width: var(--ds-control-height-touch);
+    min-height: var(--ds-control-height-touch);
+    color: var(--ds-ink-muted);
+  }
+
   .run-strip {
     overflow-x: auto;
   }

@@ -128,6 +128,13 @@
       </div>
     </div>
 
+    <div v-if="chat.branches.length || chat.navigationError" class="branch-bar" role="status">
+      <BranchNavigator v-if="chat.branches.length" />
+      <span v-if="chat.isNavigating">正在切换分支</span>
+      <span v-if="chat.navigationError">{{ chat.navigationError }}</span>
+      <button v-if="chat.positionUnknown" type="button" @click="chat.reload()">重新加载</button>
+    </div>
+
     <!-- 消息区 一次挂 v-html 交互委托 代码块复制与应用内开文件都在这里分发 -->
     <div ref="scrollEl" class="messages" @scroll="onScroll" @click="onMessagesClick">
       <Transition name="session-view" mode="out-in">
@@ -140,7 +147,17 @@
               v-for="(m, i) in chat.messages"
               :key="chat.entryIds[i] || `local-${i}`"
               :message="m"
+              :entry-id="chat.entryIds[i]"
+              :editable="
+                i > firstUserIndex &&
+                !!chat.entryIds[i] &&
+                !chat.isRunning &&
+                !chat.isCompacting &&
+                !chat.isNavigating &&
+                !chat.positionUnknown
+              "
               :prev-timestamp="i > 0 ? chat.messages[i - 1]?.timestamp : undefined"
+              @edit="chat.beginEditMessage(i)"
             />
             <!-- 流式气泡 独立于已定稿列表 前一条时间戳取列表末尾 -->
             <MessageItem
@@ -236,6 +253,7 @@ import { useUiStore } from "~/stores/ui";
 import { formatCost, formatTokenCount } from "~/utils/usage-format";
 import { handleMarkdownClick } from "~/utils/markdown-interaction";
 import ChatComposer from "~/components/ChatComposer.vue";
+import BranchNavigator from "~/components/BranchNavigator.vue";
 import MessageItem from "~/components/MessageItem.vue";
 import PiIndicator from "~/components/PiIndicator.vue";
 import { useSettingsStore } from "~/stores/settings";
@@ -310,6 +328,7 @@ const titleText = computed(
   () => chat.sessionName ?? (chat.messages.length ? "未命名会话" : "空会话"),
 );
 const hasMessages = computed(() => chat.messages.some((m) => m.role === "user"));
+const firstUserIndex = computed(() => chat.messages.findIndex((message) => message.role === "user"));
 
 const renaming = ref(false);
 const renameValue = ref("");

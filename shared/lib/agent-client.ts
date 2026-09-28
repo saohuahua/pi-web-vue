@@ -6,6 +6,7 @@ export class AgentCommandError extends Error {
   constructor(
     message: string,
     public readonly status: number,
+    public readonly code?: string,
   ) {
     super(message);
     this.name = "AgentCommandError";
@@ -25,12 +26,10 @@ export async function sendAgentCommand<T = unknown>(
     success?: boolean;
     data?: T;
     error?: string;
+    code?: string;
   };
   if (!res.ok || body.error) {
-    throw new AgentCommandError(
-      body.error ?? `HTTP ${res.status}`,
-      res.status,
-    );
+    throw new AgentCommandError(body.error ?? `HTTP ${res.status}`, res.status, body.code);
   }
   return body.data as T;
 }

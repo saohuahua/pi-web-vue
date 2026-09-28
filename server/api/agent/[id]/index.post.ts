@@ -1,4 +1,8 @@
-import { getRpcSession, startRpcSession } from "../../../utils/rpc-manager";
+import {
+  AgentSessionCommandError,
+  getRpcSession,
+  startRpcSession,
+} from "../../../utils/rpc-manager";
 import { resolveSessionPath } from "../../../utils/session-reader";
 
 // 命令分发 body 的 type 字段决定命令 与 pi-web 的 RPC 契约同构
@@ -19,7 +23,10 @@ export default defineEventHandler(async (event) => {
     const { session } = await startRpcSession(id, filePath);
     return { success: true, data: await session.send(command) };
   } catch (error) {
-    setResponseStatus(event, 500);
-    return { error: error instanceof Error ? error.message : String(error) };
+    setResponseStatus(event, error instanceof AgentSessionCommandError ? error.status : 500);
+    return {
+      error: error instanceof Error ? error.message : String(error),
+      ...(error instanceof AgentSessionCommandError ? { code: error.code } : {}),
+    };
   }
 });
