@@ -7,6 +7,12 @@
           <p>{{ config.providerNames.length }} 个配置 来自 models.json</p>
         </div>
         <div class="cap-action-row">
+          <PiButton
+            size="compact"
+            :disabled="config.loading || config.saving"
+            @click="creating = true"
+            >新建 Provider</PiButton
+          >
           <PiButton size="compact" @click="emit('back')">返回模型列表</PiButton>
         </div>
       </div>
@@ -20,11 +26,16 @@
           aria-label="新 Provider 名称"
         />
         <div class="cap-action-row">
-          <PiButton variant="primary" size="compact" type="submit" :disabled="!newName.trim()"
+          <PiButton
+            variant="primary"
+            size="compact"
+            type="submit"
+            :disabled="!newName.trim() || nameExists"
             >创建</PiButton
           >
           <PiButton size="compact" type="button" @click="creating = false">取消</PiButton>
         </div>
+        <p v-if="nameExists" class="cap-error" role="status">该 Provider 名称已存在或不可用</p>
       </form>
 
       <p v-if="config.loadError" class="cap-error">{{ config.loadError }}</p>
@@ -146,6 +157,7 @@ const workspace = useWorkspaceStore();
 const selectedName = ref("");
 const creating = ref(false);
 const newName = ref("");
+const nameExists = computed(() => newName.value.trim() in config.providers);
 // null 表示在 provider 详情层 数字表示正在编辑该下标的模型
 const editingModelIndex = ref<number | null>(null);
 const justSaved = ref(false);
@@ -175,7 +187,7 @@ const selectProvider = (name: string) => {
 const confirmCreate = () => {
   const name = newName.value.trim();
   if (!name) return;
-  config.upsertProvider(name);
+  if (!config.upsertProvider(name)) return;
   selectProvider(name);
   newName.value = "";
   creating.value = false;
@@ -198,12 +210,16 @@ const saveAll = async () => {
   justSaved.value = true;
 };
 
-const discardDraft = async () => {
-  await config.load();
+const discardDraft = () => {
+  config.discard();
+  creating.value = false;
+  newName.value = "";
+  justSaved.value = false;
   selectProvider(selectedName.value);
 };
 
 onMounted(() => {
-  void config.load();
+  // 切回管理视图时保留尚未保存的草稿
+  if (!config.dirty) void config.load();
 });
 </script>

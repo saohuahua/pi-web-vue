@@ -54,13 +54,19 @@ describe("useModelsConfigStore 结构性修改与 dirty", () => {
     expect(store.dirty).toBe(true);
     expect(store.providers.p1?.models).toEqual([]);
 
+    store.dirty = false;
     store.addModel("p1");
+    expect(store.dirty).toBe(true);
     expect(store.providers.p1?.models?.[0]?.id).toBe("");
 
+    store.dirty = false;
     store.removeModel("p1", 0);
+    expect(store.dirty).toBe(true);
     expect(store.providers.p1?.models).toEqual([]);
 
+    store.dirty = false;
     store.removeProvider("p1");
+    expect(store.dirty).toBe(true);
     expect(store.providerNames).toEqual([]);
   });
 

@@ -25,7 +25,9 @@ export function loadModelsWithCache(cwd: string, loader: () => Promise<ModelsRes
   if (existing) return existing;
 
   const promise = loader().then((data) => {
-    if (inFlight.get(cwd) === promise) inFlight.delete(cwd);
+    // 已失效的请求仍可返回给原调用方但不能回写缓存
+    if (inFlight.get(cwd) !== promise) return data;
+    inFlight.delete(cwd);
     cache.set(cwd, { data, expiresAt: Date.now() + MODELS_CACHE_TTL_MS });
     if (cache.size > MAX_CACHE_ENTRIES) {
       const oldest = cache.keys().next().value;

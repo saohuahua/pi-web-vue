@@ -16,8 +16,8 @@ export default defineEventHandler(async (event) => {
       return { error: "请求体缺少 providers 对象" };
     }
 
-    writeModelsConfig(body);
-    return { success: true };
+    const config = writeModelsConfig(body);
+    return { success: true, config };
   } catch (error) {
     setResponseStatus(event, 500);
     return { error: error instanceof Error ? error.message : String(error) };

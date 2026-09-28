@@ -83,8 +83,9 @@ describe("readModelsConfig 与 writeModelsConfig", () => {
         },
       });
 
-      writeModelsConfig(config, path);
+      const saved = writeModelsConfig(config, path);
       const read = readModelsConfig(path);
+      expect(saved).toEqual(read);
       expect(read.providers?.pandada?.apiKey).toBe("sk-test");
       expect(read.providers?.pandada?.models?.length).toBe(1);
       // 表单未覆盖的未知字段必须原样保留

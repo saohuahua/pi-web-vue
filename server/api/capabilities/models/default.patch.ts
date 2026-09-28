@@ -1,4 +1,3 @@
-import { getAgentDir } from "@earendil-works/pi-coding-agent";
 import { createAgentServicesWithRetry } from "../../../utils/agent-services";
 import { invalidateModelsCache } from "../../../utils/models-cache";
 import { getAllowedFileRoots, isExistingFilePathAllowed } from "../../../utils/file-access";

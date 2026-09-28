@@ -126,6 +126,6 @@ const removeRow = (id: number) => {
   applyHeaders();
 };
 
-// 切换 provider 时按该 provider 的 headers 重建行 本地行状态不能跨 provider 串
-watch(() => props.name, syncRows, { immediate: true });
+// 切换或回滚替换对象时重建本地行 避免旧请求头再次写回
+watch(provider, syncRows, { immediate: true });
 </script>

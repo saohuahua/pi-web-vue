@@ -17,10 +17,14 @@ export const useModelsConfigStore = defineStore("models-config", () => {
   const loadError = ref("");
   const saveError = ref("");
   const dirty = ref(false);
+  let savedProviders: Record<string, CustomProviderConfig> = {};
+
+  const snapshotProviders = () =>
+    JSON.parse(JSON.stringify(providers.value)) as Record<string, CustomProviderConfig>;
 
   const providerNames = computed(() => Object.keys(providers.value));
 
-  // 远端配置是草稿的唯一可信来源 打开管理视图或放弃变更后都要重新 load
+  // 保留最近一次成功读取或保存的快照供放弃草稿使用
   const load = async () => {
     loading.value = true;
     try {
@@ -31,6 +35,7 @@ export const useModelsConfigStore = defineStore("models-config", () => {
         return;
       }
       providers.value = body.providers ?? {};
+      savedProviders = snapshotProviders();
       loadError.value = "";
       dirty.value = false;
     } catch (e) {
@@ -42,19 +47,32 @@ export const useModelsConfigStore = defineStore("models-config", () => {
 
   const save = async (): Promise<boolean> => {
     saving.value = true;
+    const submittedProviders = snapshotProviders();
     try {
       const res = await fetch("/api/models-config", {
         method: "PUT",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ providers: providers.value } satisfies ModelsConfigFile),
+        body: JSON.stringify({ providers: submittedProviders } satisfies ModelsConfigFile),
       });
-      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      const body = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        config?: ModelsConfigFile;
+      };
       if (!res.ok || body.error) {
         saveError.value = body.error ?? `HTTP ${res.status}`;
         return false;
       }
       saveError.value = "";
-      dirty.value = false;
+      const unchanged = JSON.stringify(providers.value) === JSON.stringify(submittedProviders);
+      savedProviders = body.config?.providers ?? submittedProviders;
+      if (unchanged) {
+        providers.value = JSON.parse(JSON.stringify(savedProviders)) as Record<
+          string,
+          CustomProviderConfig
+        >;
+      }
+      // 保存期间的新编辑不能被旧请求标为已保存
+      dirty.value = JSON.stringify(providers.value) !== JSON.stringify(savedProviders);
       return true;
     } catch (e) {
       saveError.value = e instanceof Error ? e.message : String(e);
@@ -83,8 +101,19 @@ export const useModelsConfigStore = defineStore("models-config", () => {
   };
 
   const upsertProvider = (name: string) => {
+    if (!name.trim() || name in providers.value) return false;
     providers.value[name] = { models: [] };
     dirty.value = true;
+    return true;
+  };
+
+  const discard = () => {
+    providers.value = JSON.parse(JSON.stringify(savedProviders)) as Record<
+      string,
+      CustomProviderConfig
+    >;
+    dirty.value = false;
+    saveError.value = "";
   };
 
   const removeProvider = (name: string) => {
@@ -122,6 +151,7 @@ export const useModelsConfigStore = defineStore("models-config", () => {
     dirty,
     load,
     save,
+    discard,
     testModel,
     upsertProvider,
     removeProvider,

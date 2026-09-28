@@ -86,10 +86,11 @@ export const readModelsConfig = (modelsPath = getModelsConfigPath()): ModelsConf
 export const writeModelsConfig = (
   data: ModelsConfigFile,
   modelsPath = getModelsConfigPath(),
-): void => {
+): ModelsConfigFile => {
   const dir = dirname(modelsPath);
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   const normalized = normalizeModelsConfigCosts(sanitizeModelsConfig(data));
   writePrivateFileAtomicSync(modelsPath, JSON.stringify(normalized, null, 2));
   invalidateModelsCache();
+  return normalized;
 };
