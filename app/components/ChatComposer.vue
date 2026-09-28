@@ -583,25 +583,15 @@ const submit = async () => {
 
   closePopup();
   const images = [...chat.attachedImages];
-  const submitSessionId = chat.sessionId;
-  chat.draft = "";
   // 提交先绑定当前会话代次 再等待视图刷新
   const pending = chat.submitPrompt(text, images);
   await nextTick();
   autosize();
 
-  // 提交失败回填文字与图片草稿 用户输入不能无声消失
-  // 用户已另起输入时保留现在的内容
+  // 失败合并和会话切换隔离由 chat store 处理
   const sent = await pending;
   if (sent === null) return;
-  if (!sent) {
-    if (chat.sessionId === submitSessionId && !chat.draft) {
-      chat.draft = text;
-      await nextTick();
-      autosize();
-    }
-    return;
-  }
+  if (!sent) return;
 
   // 成功提交进历史 只存文本
   if (text.trim()) history = pushInputHistory(history, text);

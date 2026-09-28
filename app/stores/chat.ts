@@ -1,12 +1,13 @@
 import { defineStore } from "pinia";
-import { computed, reactive, ref, toRaw } from "vue";
-import { sendAgentCommand } from "#shared/lib/agent-client";
+import { computed, reactive, ref, toRaw, watch } from "vue";
+import { AgentCommandError, sendAgentCommand } from "#shared/lib/agent-client";
 import {
   AgentEventConnection,
   AgentEventConnectionError,
 } from "#shared/lib/agent-event-connection";
 import type { AgentEventLike, ClientAssistantMessageEvent } from "#shared/lib/agent-event-wire";
 import { extractTextBlocks } from "#shared/lib/message-text";
+import { DraftStore, mergeDraftText } from "#shared/lib/draft-store";
 import { findEntryParentId, selectTopLevelBranches } from "#shared/lib/session-branches";
 import { fetchSessionDetail } from "#shared/lib/session-client";
 import { normalizeToolCalls } from "#shared/lib/normalize";
@@ -99,6 +100,12 @@ export const useChatStore = defineStore("chat", () => {
   let sessionGeneration = 0;
   let reloadSequence = 0;
   let draftBeforeEdit = "";
+  let pendingDraft: { sessionId: string; text: string; editingMessageId: string | null } | null =
+    null;
+  const draftStore = new DraftStore(
+    () => localStorage,
+    (message) => addNotice("info", message),
+  );
 
   const navigation = useSessionNavigation({
     sessionId,
@@ -123,6 +130,19 @@ export const useChatStore = defineStore("chat", () => {
   function dismissNotice(id: number) {
     notices.value = notices.value.filter((n) => n.id !== id);
   }
+
+  const persistDraft = () => {
+    const id = sessionId.value;
+    if (!id) return;
+    const pending = pendingDraft?.sessionId === id ? pendingDraft : null;
+    draftStore.set(
+      id,
+      pending ? mergeDraftText(pending.text, draft.value) : draft.value,
+      editingMessageId.value ?? pending?.editingMessageId ?? undefined,
+    );
+  };
+
+  watch([draft, editingMessageId], persistDraft, { flush: "sync" });
 
   // toolCall 块与 toolResult 消息靠 toolCallId 配对
   // 流式中 result 还没到 卡片显示执行中 到了就升级成完成
@@ -197,14 +217,23 @@ export const useChatStore = defineStore("chat", () => {
     text: string,
     images = [...attachedImages.value],
   ): Promise<boolean | null> {
+    const id = sessionId.value;
+    if (!id || pendingDraft) return false;
     const target = editingTargetId.value;
-    if (target && !(await navigateToLeaf(target))) return false;
-    const result = await sendPrompt(text, images);
+    pendingDraft = { sessionId: id, text, editingMessageId: editingMessageId.value };
+    draft.value = "";
+    persistDraft();
+    const navigated = !target || (await navigateToLeaf(target));
+    const result = navigated ? await sendPrompt(text, images) : false;
+    if (sessionId.value !== id) return null;
+    pendingDraft = null;
+    if (result === false) draft.value = mergeDraftText(text, draft.value);
     if (result === true && target) {
       editingMessageId.value = null;
       editingTargetId.value = null;
       draftBeforeEdit = "";
     }
+    persistDraft();
     return result;
   }
 
@@ -388,10 +417,13 @@ export const useChatStore = defineStore("chat", () => {
   });
 
   function close() {
+    persistDraft();
     sessionGeneration += 1;
     reloadSequence += 1;
     connection.close();
     sessionId.value = null;
+    pendingDraft = null;
+    draft.value = "";
     messages.value = [];
     entryIds.value = [];
     attachedImages.value = [];
@@ -528,9 +560,20 @@ export const useChatStore = defineStore("chat", () => {
     // 打开新会话前先关旧连接 否则旧事件还会流进新会话的视图
     close();
     sessionId.value = id;
+    // 先恢复文字再发异步详情请求 防止加载期间的新输入被晚到结果覆盖
+    const saved = draftStore.get(id);
+    draft.value = saved?.text ?? "";
     sessionLoading.value = true;
     try {
       const info = await reload();
+      if (sessionId.value === id) {
+        const messageId = saved?.editingMessageId;
+        const target = messageId ? findEntryParentId(tree.value, messageId) : null;
+        if (messageId && target) {
+          editingMessageId.value = messageId;
+          editingTargetId.value = target;
+        }
+      }
       // 工作区跟随会话的项目与 worktree 打开别的项目时选择器同步过去
       if (info?.cwd) void workspaceStore.syncFromSessionCwd(info.cwd);
     } finally {
@@ -629,7 +672,13 @@ export const useChatStore = defineStore("chat", () => {
       if (sessionId.value !== id || generation !== sessionGeneration) return null;
       // 提交失败撤回乐观消息 只撤仍然在末尾的那条
       rollbackOptimistic();
-      addNotice("error", e instanceof Error ? e.message : String(e));
+      if (e instanceof AgentCommandError) {
+        addNotice("error", e.message);
+      } else {
+        // 连接错误可能发生在服务端已接纳之后 保留输入但不能自动重试
+        addNotice("error", "提交结果未确认 请先核对会话再重试");
+        void reload();
+      }
       return false;
     }
     return true;

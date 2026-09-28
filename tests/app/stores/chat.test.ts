@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createPinia, setActivePinia } from "pinia";
 
 // sendAgentCommand 走网络 按用例分别 mock
-vi.mock("#shared/lib/agent-client", () => ({
+vi.mock("#shared/lib/agent-client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("#shared/lib/agent-client")>()),
   sendAgentCommand: vi.fn(),
 }));
 
@@ -420,6 +421,57 @@ describe("chat store 会话分支", () => {
     expect(chat.positionUnknown).toBe(true);
     expect(await chat.sendPrompt("不能发送")).toBe(false);
     expect(command).not.toHaveBeenCalledWith("s1", { type: "prompt", message: "不能发送" });
+    chat.close();
+  });
+});
+
+describe("chat store 草稿恢复", () => {
+  it("切换会话后恢复各自的文字", async () => {
+    const values = new Map<string, string>();
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+      removeItem: (key: string) => values.delete(key),
+    });
+    stubFetchByDelay(
+      new Map([
+        ["a", { delay: 0, body: sessionBody("a", "A") }],
+        ["b", { delay: 0, body: sessionBody("b", "B") }],
+      ]),
+    );
+    const chat = useChatStore();
+    await chat.openSession("a");
+    chat.draft = "草稿甲";
+    await chat.openSession("b");
+    chat.draft = "草稿乙";
+    await chat.openSession("a");
+    expect(chat.draft).toBe("草稿甲");
+    expect(values.get("pi-agent:drafts:v1")).not.toContain("previewUrl");
+    chat.close();
+  });
+
+  it("提交拒绝后合并期间输入并保留图片", async () => {
+    const chat = useChatStore();
+    chat.sessionId = "s1";
+    const image = createImage("retry");
+    chat.attachedImages.push(image);
+    command.mockImplementationOnce(async () => {
+      chat.draft = "期间输入";
+      throw new Error("提交失败");
+    });
+    expect(await chat.submitPrompt("原提交", [image])).toBe(false);
+    expect(chat.draft).toBe("原提交\n\n期间输入");
+    expect(chat.attachedImages).toEqual([image]);
+    chat.close();
+  });
+
+  it("连接结果不明时提示先核对且保留文字", async () => {
+    const chat = useChatStore();
+    chat.sessionId = "s1";
+    command.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    expect(await chat.submitPrompt("可能已提交")).toBe(false);
+    expect(chat.draft).toBe("可能已提交");
+    expect(chat.notices.at(-1)?.message).toContain("结果未确认");
     chat.close();
   });
 });
