@@ -85,7 +85,6 @@ import type { AgentMessage } from "#shared/lib/types";
 // assistant 是文档 块顺序即真实发生顺序 思考完就动手的过程感是演示价值
 const props = defineProps<{
   message: AgentMessage;
-  entryId?: string;
   streaming?: boolean;
   prevTimestamp?: number;
 }>();

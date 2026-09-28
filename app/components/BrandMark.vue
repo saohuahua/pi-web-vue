@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 withDefaults(defineProps<{
-  variant?: "sidebar" | "empty" | "hero" | "mobile";
+  variant?: "sidebar" | "hero" | "mobile";
 }>(), {
   variant: "sidebar",
 });

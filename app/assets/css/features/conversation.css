@@ -935,7 +935,6 @@
     color: var(--ds-ink-muted);
   }
 
-  .composer-popup-empty,
   .composer-dropdown-empty,
   .composer-quick-empty {
     padding: var(--ds-space-3);

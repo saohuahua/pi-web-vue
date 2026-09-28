@@ -1,11 +1,10 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 
-// 界面开关 侧栏收起与运行信息 顶栏和布局壳都要读写 放 store
+// 界面开关 侧栏收起与布局壳都要读写 放 store
 export const useUiStore = defineStore("ui", () => {
   const sidebarCollapsed = ref(false);
   const sidebarDrawerOpen = ref(false);
-  const runtimeInfoOpen = ref(false);
   const sidebarWidth = ref(256);
   const viewerWidth = ref(480);
   const fileExplorerHeight = ref(400);
@@ -76,7 +75,6 @@ export const useUiStore = defineStore("ui", () => {
   return {
     sidebarCollapsed,
     sidebarDrawerOpen,
-    runtimeInfoOpen,
     sidebarWidth,
     viewerWidth,
     fileExplorerHeight,

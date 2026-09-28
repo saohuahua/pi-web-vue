@@ -262,16 +262,4 @@
     font-size: var(--ds-font-size-caption);
     line-height: var(--ds-line-height-body);
   }
-
-  .runtime-drawer header {
-    min-height: var(--ds-control-height-touch);
-  }
-
-  .runtime-section {
-    border-color: var(--ds-line);
-  }
-
-  .runtime-tool {
-    border-radius: var(--ds-radius-sm);
-  }
 }

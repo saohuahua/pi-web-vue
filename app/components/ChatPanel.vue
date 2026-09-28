@@ -140,7 +140,6 @@
               v-for="(m, i) in chat.messages"
               :key="chat.entryIds[i] || `local-${i}`"
               :message="m"
-              :entry-id="chat.entryIds[i] ?? ''"
               :prev-timestamp="i > 0 ? chat.messages[i - 1]?.timestamp : undefined"
             />
             <!-- 流式气泡 独立于已定稿列表 前一条时间戳取列表末尾 -->

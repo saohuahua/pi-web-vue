@@ -18,7 +18,6 @@
             ><GitBranch :size="12" aria-hidden="true" />{{ currentBranch }}</span
           >
           <ChevronDown :size="14" class="shrink-0 text-muted" aria-hidden="true" />
-          <span class="workspace-switch-hint" aria-hidden="true">切换项目</span>
         </button>
       </template>
 

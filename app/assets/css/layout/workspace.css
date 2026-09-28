@@ -46,19 +46,12 @@
     display: none;
   }
 
-  .file-viewer,
-  .runtime-drawer {
+  .file-viewer {
     position: relative;
     z-index: 11;
     flex: 0 0 var(--viewer-w, 440px);
     min-width: 0;
     background: var(--ds-surface);
     border-left: 1px solid var(--ds-line);
-  }
-
-  .runtime-drawer {
-    display: flex;
-    min-height: 0;
-    flex-direction: column;
   }
 }

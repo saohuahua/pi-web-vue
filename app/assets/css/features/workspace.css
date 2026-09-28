@@ -23,12 +23,6 @@
     font-weight: 700;
   }
 
-  .brand-mark-empty {
-    width: 52px;
-    height: 52px;
-    font-size: var(--ds-font-size-title);
-  }
-
   .brand-mark-hero {
     width: var(--ds-control-height-touch);
     height: var(--ds-control-height-touch);
@@ -300,10 +294,6 @@
     font-family: var(--ds-font-mono);
     font-size: var(--ds-font-size-caption);
     line-height: var(--ds-line-height-caption);
-  }
-
-  .workspace-switch-hint {
-    display: none;
   }
 
   .workspace-worktrees {

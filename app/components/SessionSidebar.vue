@@ -119,7 +119,6 @@ import FileExplorer from "~/components/FileExplorer.vue";
 import SessionRow from "~/components/SessionRow.vue";
 import WorkspaceSelector from "~/components/WorkspaceSelector.vue";
 import PaneResizeHandle from "~/components/PaneResizeHandle.vue";
-import type { SessionInfo } from "#shared/lib/types";
 
 const emit = defineEmits<{ navigate: [] }>();
 

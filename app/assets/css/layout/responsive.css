@@ -1,7 +1,6 @@
 @layer layout {
   @media (max-width: 1099px) {
-    .file-viewer,
-    .runtime-drawer {
+    .file-viewer {
       position: absolute;
       top: 0;
       right: 0;
@@ -12,8 +11,7 @@
       box-shadow: var(--ds-shadow-floating);
     }
 
-    .file-viewer .pane-resize-handle,
-    .runtime-drawer .pane-resize-handle {
+    .file-viewer .pane-resize-handle {
       display: none;
     }
   }
@@ -66,8 +64,7 @@
       background: var(--ds-scrim);
     }
 
-    .file-viewer,
-    .runtime-drawer {
+    .file-viewer {
       width: 100%;
       max-width: none;
     }
