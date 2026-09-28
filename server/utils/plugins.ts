@@ -98,7 +98,7 @@ const setPackageDisabled = (
   source: string,
   scope: PluginScope,
   disabled: boolean,
-): boolean => {
+): void => {
   const current =
     scope === "project"
       ? (settingsManager.getProjectSettings().packages ?? [])
@@ -118,10 +118,9 @@ const setPackageDisabled = (
     }
     return getPackageSource(entry);
   });
-  if (!changed) return false;
+  if (!changed) return;
   if (scope === "project") settingsManager.setProjectPackages(next);
   else settingsManager.setPackages(next);
-  return true;
 };
 
 // skill.md 与 extension 的 index.ts 语义上属于所在目录 不用文件名

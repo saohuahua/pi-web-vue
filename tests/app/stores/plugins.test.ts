@@ -220,7 +220,7 @@ describe("plugins store", () => {
     expect(store.checkingKeys.size).toBe(0);
   });
 
-  it("清除提示信息", async () => {
+  it("清除提示信息", () => {
     const store = usePluginsStore();
     store.actionMessage = "x";
     store.actionError = "y";
