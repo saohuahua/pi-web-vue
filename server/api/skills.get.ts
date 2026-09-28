@@ -1,9 +1,8 @@
-import { DefaultResourceLoader, getAgentDir } from "@earendil-works/pi-coding-agent";
-import type { SkillEntry } from "#shared/lib/types";
 import { getAllowedFileRoots, isExistingFilePathAllowed } from "../utils/file-access";
+import { listSkills } from "../utils/skills";
 
 // GET /api/skills?cwd=  按 cwd 列出全局与项目技能
-// 用 DefaultResourceLoader 与 AgentSession 启动同一套加载逻辑
+// 读取清单不安装包也不执行扩展
 export default defineEventHandler(async (event) => {
   try {
     const cwd = getQuery(event).cwd;
@@ -18,19 +17,7 @@ export default defineEventHandler(async (event) => {
       return { error: "Access denied" };
     }
 
-    const agentDir = getAgentDir();
-    const loader = new DefaultResourceLoader({ cwd, agentDir });
-    await loader.reload();
-    const { skills } = loader.getSkills();
-    const entries: SkillEntry[] = skills.map((s) => ({
-      name: s.name,
-      description: s.description,
-      filePath: s.filePath,
-      baseDir: s.baseDir,
-      sourceInfo: s.sourceInfo,
-      disableModelInvocation: s.disableModelInvocation,
-    }));
-    return { skills: entries };
+    return { skills: await listSkills(cwd) };
   } catch (error) {
     setResponseStatus(event, 500);
     return { error: error instanceof Error ? error.message : String(error) };
