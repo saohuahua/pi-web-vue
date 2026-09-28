@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="1060" viewBox="0 0 1040 1060" role="img" aria-labelledby="title desc"><title id="title">会话创建与恢复：身份从哪里来</title><desc id="desc">左侧创建新任务，右侧回到已有任务 · 两条路径最终汇合到同一会话接入方式</desc><defs><marker id="blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#2563eb"/></marker><marker id="green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#15806b"/></marker></defs><style>text{font-family:'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#243248} .title{font-size:28px;font-weight:700}.sub{font-size:16px;fill:#52627a}.label{font-size:18px;font-weight:700}.body{font-size:16px}.small{font-size:15px;fill:#52627a}</style><rect width="1040" height="1060" fill="#f7f9fc"/>
+<text x="40" y="49" class="title">会话创建与恢复：身份从哪里来</text>
+<text x="40" y="80" class="sub">左侧创建新任务，右侧回到已有任务 · 两条路径最终汇合到同一会话接入方式</text>
+<rect x="40" y="120" width="450" height="115" rx="10" fill="#eef4ff" stroke="#cbd5e1"/>
+<text x="58" y="150" class="label">新建路径：用户选择目录</text>
+<text x="58" y="179" class="body">用户提供 cwd</text>
+<text x="58" y="204" class="body">服务端校验并解析项目身份</text>
+<rect x="550" y="120" width="450" height="115" rx="10" fill="#edf8f4" stroke="#cbd5e1"/>
+<text x="568" y="150" class="label">恢复路径：用户选择历史会话</text>
+<text x="568" y="179" class="body">用户提供 session ID</text>
+<text x="568" y="204" class="body">已有会话保留自己的 cwd</text>
+<path d="M265 235 L265 285" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<path d="M775 235 L775 285" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<rect x="40" y="285" width="450" height="135" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="58" y="315" class="label">POST /api/sessions</text>
+<text x="58" y="344" class="body">唯一临时 key 区分每次新建</text>
+<text x="58" y="369" class="body">SessionManager.create(cwd)</text>
+<text x="58" y="394" class="body">初始化后取得真实 session ID</text>
+<rect x="550" y="285" width="450" height="135" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="568" y="315" class="label">GET 会话详情 / 获取运行实例</text>
+<text x="568" y="344" class="body">优先使用存活 wrapper</text>
+<text x="568" y="369" class="body">需要重建时打开历史文件</text>
+<text x="568" y="394" class="body">SessionManager.open → getCwd</text>
+<path d="M265 420 L265 470" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<path d="M775 420 L775 470" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<rect x="40" y="470" width="450" height="125" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="58" y="500" class="label">进入 /session/:id</text>
+<text x="58" y="529" class="body">创建只取得会话身份</text>
+<text x="58" y="554" class="body">首条 prompt 另行提交</text>
+<rect x="550" y="470" width="450" height="125" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="568" y="500" class="label">恢复页面与工作区</text>
+<text x="568" y="529" class="body">读取 messages 与 entryIds</text>
+<text x="568" y="554" class="body">用会话 cwd 同步工作区选择</text>
+<path d="M265 595 L265 640 L520 640 L520 685" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<path d="M775 595 L775 640 L520 640" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<rect x="170" y="685" width="700" height="135" rx="10" fill="#eef4ff" stroke="#cbd5e1"/>
+<text x="188" y="715" class="label">共同接入：围绕 session ID 观察与控制</text>
+<text x="188" y="744" class="body">建立 SSE → 等 connected → 提交 prompt</text>
+<text x="188" y="769" class="body">命令与事件找到同一个 wrapper / AgentSession</text>
+<text x="188" y="794" class="body">查询运行信息，展示实际模型与工具能力</text>
+<rect x="40" y="870" width="960" height="135" rx="10" fill="#fff6e8" stroke="#cbd5e1"/>
+<text x="58" y="900" class="label">需要分开的身份与生命周期</text>
+<text x="58" y="929" class="body">项目身份用于分组，cwd 决定工具执行位置，session ID 定位会话</text>
+<text x="58" y="954" class="body">选择器变化不迁移旧会话；页面关闭不自动发送 abort</text>
+<text x="58" y="979" class="body">新建空会话可能尚未落盘，存活 SessionManager 仍可提供详情</text>
+</svg>

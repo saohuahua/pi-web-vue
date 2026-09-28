@@ -1,0 +1,193 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1660" height="2310" viewBox="0 0 1660 2310" role="img" aria-labelledby="title desc"><title id="title">服务端展开 · 一次任务如何找到实例并持续执行</title><desc id="desc">API、实例注册、SDK 依赖、模型工具循环、事件流和持久记录分别展开；图示模块均在同一 Node 应用中。</desc><defs><marker id="blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#2563eb"/></marker><marker id="green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#13836e"/></marker><marker id="purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#8651b7"/></marker><marker id="orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#b87018"/></marker><marker id="gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#64748b"/></marker></defs><style>text{font-family:'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#223047}.title{font-size:36px;font-weight:700}.heading{font-size:24px;font-weight:700}.node{font-size:21px;font-weight:650}.body{font-size:18px}.small{font-size:16px;fill:#607086}.mono{font-family:Consolas,'Microsoft YaHei',monospace;font-size:17px}.eyebrow{font-size:16px;fill:#607086;letter-spacing:2px}</style><rect width="1660" height="2310" fill="#f8fafc"/><text x="40" y="47" class="eyebrow" >PI WEB VUE  /  ARCHITECTURE</text>
+<text x="40" y="94" class="title" >服务端展开 · 一次任务如何找到实例并持续执行</text>
+<text x="40" y="132" class="body" >API、实例注册、SDK 依赖、模型工具循环、事件流和持久记录分别展开；图示模块均在同一 Node 应用中。</text>
+<rect x="40" y="190" width="1580" height="195" rx="16" fill="#eff5ff" stroke="#d4deea"/>
+<rect x="40" y="208" width="4" height="30" rx="2" fill="#2563eb"/>
+<text x="60" y="230" class="heading" >Nitro API 入口</text>
+<text x="60" y="256" class="small" >以下路径统一省略 /api 前缀</text>
+<rect x="60" y="275" width="370" height="90" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(76 293)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="116" y="312" class="node" >/sessions</text>
+<text x="78" y="342" class="small" >创建 / 历史 / 命名</text>
+<rect x="450" y="275" width="370" height="90" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(466 293)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="506" y="312" class="node" >/agent/:id</text>
+<text x="468" y="342" class="small" >命令 / 运行信息</text>
+<rect x="840" y="275" width="370" height="90" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(856 293)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="896" y="312" class="node" >/agent/:id/events</text>
+<text x="858" y="342" class="small" >SSE 订阅</text>
+<rect x="1230" y="275" width="370" height="90" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(1246 293)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="1286" y="312" class="node" >文件与能力 API</text>
+<text x="1248" y="342" class="small" >独立读取与配置</text>
+<rect x="40" y="455" width="750" height="265" rx="16" fill="#eff9f5" stroke="#d4deea"/>
+<rect x="40" y="473" width="4" height="30" rx="2" fill="#13836e"/>
+<text x="60" y="495" class="heading" >定位实例</text>
+<text x="60" y="521" class="small" >先复用，再初始化</text>
+<rect x="60" y="545" width="335" height="95" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(76 563)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="116" y="582" class="node" >registry</text>
+<text x="78" y="612" class="small" >ID → 存活 wrapper</text>
+<rect x="425" y="545" width="345" height="95" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(441 563)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="481" y="582" class="node" >locks</text>
+<text x="443" y="612" class="small" >ID → 启动 Promise</text>
+<text x="60" y="690" class="small" >命中：直接复用实例或等待原初始化；新建使用唯一临时 key。</text>
+<rect x="850" y="455" width="770" height="265" rx="16" fill="#f6f1fb" stroke="#d4deea"/>
+<rect x="850" y="473" width="4" height="30" rx="2" fill="#8651b7"/>
+<text x="870" y="495" class="heading" >准备依赖</text>
+<text x="870" y="521" class="small" >恢复时以记录里的 cwd 为准</text>
+<rect x="870" y="545" width="350" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="884" cy="564" r="4" fill="#8651b7"/>
+<text x="896" y="570" class="mono" >SessionManager.create / open</text>
+<rect x="1240" y="545" width="360" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="1254" cy="564" r="4" fill="#8651b7"/>
+<text x="1266" y="570" class="mono" >SettingsManager / agentDir</text>
+<rect x="870" y="605" width="350" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="884" cy="624" r="4" fill="#8651b7"/>
+<text x="896" y="630" class="mono" >services 初始化与锁错误重试</text>
+<rect x="1240" y="605" width="360" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="1254" cy="624" r="4" fill="#8651b7"/>
+<text x="1266" y="630" class="mono" >createAgentSessionFromServices</text>
+<text x="870" y="690" class="small" >初始化完成写 registry；finally 清理启动 Promise。</text>
+<path d="M250 365V455" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M790 585H850" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<text x="795" y="561" class="small" >未命中</text>
+<rect x="40" y="800" width="1580" height="230" rx="16" fill="#eff9f5" stroke="#d4deea"/>
+<rect x="40" y="818" width="4" height="30" rx="2" fill="#13836e"/>
+<text x="60" y="840" class="heading" >AgentSessionWrapper：共享接入点</text>
+<text x="60" y="866" class="small" >发送、订阅与查询都围绕同一 SDK 会话</text>
+<rect x="60" y="890" width="360" height="100" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(76 908)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="116" y="927" class="node" >send(type)</text>
+<text x="78" y="957" class="small" >prompt / abort / model / compact</text>
+<rect x="460" y="890" width="360" height="100" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(476 908)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="516" y="927" class="node" >preflight 与 prompt</text>
+<text x="478" y="957" class="small" >接受确认 / 完整调用</text>
+<rect x="860" y="890" width="350" height="100" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(876 908)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="916" y="927" class="node" >listeners</text>
+<text x="878" y="957" class="small" >订阅 SDK → 分发给 SSE</text>
+<rect x="1250" y="890" width="350" height="100" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(1266 908)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="1306" y="927" class="node" >运行与销毁</text>
+<text x="1268" y="957" class="small" >计数 / dispose / 移除实例</text>
+<path d="M420 720V800" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M1230 720V800" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<rect x="40" y="1110" width="1000" height="390" rx="16" fill="#eff9f5" stroke="#d4deea"/>
+<rect x="40" y="1128" width="4" height="30" rx="2" fill="#13836e"/>
+<text x="60" y="1150" class="heading" >SDK 执行循环</text>
+<text x="60" y="1176" class="small" >模型生成工具请求，工具结果进入下一次模型输入</text>
+<rect x="60" y="1200" width="280" height="110" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(76 1218)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M5 2h12l7 7v17H5z M17 2v8h7 M9 15h11 M9 20h8"/></g>
+<text x="116" y="1237" class="node" >模型上下文</text>
+<text x="78" y="1267" class="small" >历史 / 指令 / 工具定义</text>
+<rect x="390" y="1200" width="280" height="110" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(406 1218)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M7 22C-2 22-2 10 6 10C7 0 22 0 23 10C31 11 30 22 23 22Z"/></g>
+<text x="446" y="1237" class="node" >模型调用</text>
+<text x="408" y="1267" class="small" >正文或 toolCall</text>
+<rect x="720" y="1200" width="300" height="110" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(736 1218)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M9 5L2 13l7 8 M19 5l7 8-7 8 M16 2l-4 23"/></g>
+<text x="776" y="1237" class="node" >工具 execute</text>
+<text x="738" y="1267" class="small" >文件 / shell / 编辑</text>
+<path d="M340 1255H390" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M670 1255H720" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<rect x="390" y="1360" width="280" height="100" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(406 1378)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M5 2h12l7 7v17H5z M17 2v8h7 M9 15h11 M9 20h8"/></g>
+<text x="446" y="1397" class="node" >toolResult</text>
+<text x="408" y="1427" class="small" >关联原 toolCallId</text>
+<path d="M870 1310V1410H670" stroke="#13836e" stroke-width="2" fill="none"  marker-end="url(#green)"/>
+<path d="M390 1410H195V1310" stroke="#13836e" stroke-width="2" fill="none"  marker-end="url(#green)"/>
+<text x="715" y="1400" class="small" >无需工具时直接回答</text>
+<text x="715" y="1435" class="small" >需要更多材料时继续循环</text>
+<rect x="1100" y="1110" width="520" height="390" rx="16" fill="#f6f1fb" stroke="#d4deea"/>
+<rect x="1100" y="1128" width="4" height="30" rx="2" fill="#8651b7"/>
+<text x="1120" y="1150" class="heading" >SDK 运行依赖</text>
+<text x="1120" y="1176" class="small" >各对象的职责不同</text>
+<rect x="1120" y="1195" width="480" height="85" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(1136 1213)" fill="none" stroke="#8651b7" stroke-width="1.7" stroke-linejoin="round"><path d="M10 17a7 7 0 1 1 4-6L27 11v5h-5v4h-5l-5-4"/></g>
+<text x="1176" y="1232" class="node" >ModelRuntime</text>
+<text x="1138" y="1262" class="small" >模型与认证解析</text>
+<rect x="1120" y="1300" width="480" height="85" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(1136 1318)" fill="none" stroke="#8651b7" stroke-width="1.7" stroke-linejoin="round"><path d="M5 2h12l7 7v17H5z M17 2v8h7 M9 15h11 M9 20h8"/></g>
+<text x="1176" y="1337" class="node" >ResourceLoader</text>
+<text x="1138" y="1367" class="small" >技能 / 模板 / 扩展</text>
+<rect x="1120" y="1420" width="230" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="1134" cy="1439" r="4" fill="#8651b7"/>
+<text x="1146" y="1445" class="mono" >SettingsManager</text>
+<rect x="1370" y="1420" width="230" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="1384" cy="1439" r="4" fill="#8651b7"/>
+<text x="1396" y="1445" class="mono" >SessionManager</text>
+<path d="M240 1030V1110" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M1385 1030V1110" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<rect x="40" y="1580" width="1000" height="230" rx="16" fill="#eff9f5" stroke="#d4deea"/>
+<rect x="40" y="1598" width="4" height="30" rx="2" fill="#13836e"/>
+<text x="60" y="1620" class="heading" >事件出口</text>
+<text x="60" y="1646" class="small" >执行过程持续返回，不等待最终 HTTP 答案</text>
+<rect x="60" y="1670" width="280" height="95" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(76 1688)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="116" y="1707" class="node" >SDK subscribe</text>
+<text x="78" y="1737" class="small" >wrapper.emit</text>
+<rect x="390" y="1670" width="280" height="95" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(406 1688)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M9 5L2 13l7 8 M19 5l7 8-7 8 M16 2l-4 23"/></g>
+<text x="446" y="1707" class="node" >toClientAgentEvent</text>
+<text x="408" y="1737" class="small" >去 partial / 提取身份</text>
+<rect x="720" y="1670" width="300" height="95" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(736 1688)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="776" y="1707" class="node" >SSE 字节流</text>
+<text x="738" y="1737" class="small" >data JSON + 空行</text>
+<path d="M340 1718H390" stroke="#13836e" stroke-width="2" fill="none"  marker-end="url(#green)"/>
+<path d="M670 1718H720" stroke="#13836e" stroke-width="2" fill="none"  marker-end="url(#green)"/>
+<path d="M535 1500V1580" stroke="#13836e" stroke-width="2" fill="none"  marker-end="url(#green)"/>
+<rect x="1100" y="1580" width="520" height="230" rx="16" fill="#f6f1fb" stroke="#d4deea"/>
+<rect x="1100" y="1598" width="4" height="30" rx="2" fill="#8651b7"/>
+<text x="1120" y="1620" class="heading" >持久记录</text>
+<text x="1120" y="1646" class="small" >由 SessionManager 管理</text>
+<path d="M1120 1688 C1120 1664 1350 1664 1350 1688 V1767 C1350 1791 1120 1791 1120 1767 Z" fill="#fff" stroke="#bcacd0"/><ellipse cx="1235" cy="1688" rx="115" ry="18" fill="#f6f1fb" stroke="#bcacd0"/>
+<text x="1138" y="1732" class="node" >JSONL</text>
+<text x="1138" y="1761" class="small" >消息 / 压缩 / 名称</text>
+<rect x="1380" y="1670" width="220" height="110" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(1396 1688)" fill="none" stroke="#8651b7" stroke-width="1.7" stroke-linejoin="round"><path d="M2 6c0-6 24-6 24 0v16c0 6-24 6-24 0z M2 6c0 6 24 6 24 0 M2 14c0 6 24 6 24 0"/></g>
+<text x="1436" y="1707" class="node" >历史读取</text>
+<text x="1398" y="1737" class="small" >当前链 + 统计</text>
+<path d="M1350 1725H1380" stroke="#8651b7" stroke-width="2" fill="none"  marker-end="url(#purple)"/>
+<path d="M1485 1458V1580" stroke="#8651b7" stroke-width="2" fill="none"  marker-end="url(#purple)"/>
+<rect x="40" y="1880" width="750" height="235" rx="16" fill="#eff5ff" stroke="#d4deea"/>
+<rect x="40" y="1898" width="4" height="30" rx="2" fill="#2563eb"/>
+<text x="60" y="1920" class="heading" >连接与实例清理</text>
+<text x="60" y="1946" class="small" >四种动作不能混为一谈</text>
+<rect x="60" y="1970" width="340" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="74" cy="1989" r="4" fill="#2563eb"/>
+<text x="86" y="1995" class="mono" >关闭页面 → 解除订阅</text>
+<rect x="425" y="1970" width="345" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="439" cy="1989" r="4" fill="#2563eb"/>
+<text x="451" y="1995" class="mono" >abort → 请求停止执行</text>
+<rect x="60" y="2030" width="340" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="74" cy="2049" r="4" fill="#2563eb"/>
+<text x="86" y="2055" class="mono" >dispose → 清理运行对象</text>
+<rect x="425" y="2030" width="345" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="439" cy="2049" r="4" fill="#2563eb"/>
+<text x="451" y="2055" class="mono" >重新打开 → 历史 + 快照</text>
+<rect x="850" y="1880" width="770" height="235" rx="16" fill="#f6f1fb" stroke="#d4deea"/>
+<rect x="850" y="1898" width="4" height="30" rx="2" fill="#8651b7"/>
+<text x="870" y="1920" class="heading" >独立文件与配置路径</text>
+<text x="870" y="1946" class="small" >不必进入模型工具循环</text>
+<rect x="870" y="1970" width="350" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="884" cy="1989" r="4" fill="#8651b7"/>
+<text x="896" y="1995" class="mono" >允许根 + realpath → 文件</text>
+<rect x="1240" y="1970" width="360" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="1254" cy="1989" r="4" fill="#8651b7"/>
+<text x="1266" y="1995" class="mono" >临时文件 → rename 保存</text>
+<rect x="870" y="2030" width="350" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="884" cy="2049" r="4" fill="#8651b7"/>
+<text x="896" y="2055" class="mono" >inFlight 身份 → 缓存回写</text>
+<rect x="1240" y="2030" width="360" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="1254" cy="2049" r="4" fill="#8651b7"/>
+<text x="1266" y="2055" class="mono" >发现 / 信任 / 包操作</text>
+<rect x="40" y="2180" width="1580" height="90" rx="10" fill="#fff" stroke="#d4deea"/>
+<text x="60" y="2218" class="heading" >保证范围</text>
+<text x="250" y="2218" class="body" >连接就绪 ≠ 任务完成；消息定稿 ≠ 整轮落定；历史可恢复 ≠ 工具检查点续跑。</text>
+<text x="60" y="2251" class="small" >资源保存不会自动重建全部实例；当前架构面向本机使用，不表示多租户鉴权或执行沙箱。</text>
+</svg>

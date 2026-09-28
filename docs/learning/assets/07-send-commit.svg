@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="1190" viewBox="0 0 1040 1190" role="img" aria-labelledby="title desc"><title id="title">发送流程：快照与提交资格</title><desc id="desc">每次 await 之后先核对会话身份与代次，再决定是否可以修改当前页面</desc><defs><marker id="blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#2563eb"/></marker><marker id="green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#15806b"/></marker></defs><style>text{font-family:'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#243248} .title{font-size:28px;font-weight:700}.sub{font-size:16px;fill:#52627a}.label{font-size:18px;font-weight:700}.body{font-size:16px}.small{font-size:15px;fill:#52627a}</style><rect width="1040" height="1190" fill="#f7f9fc"/>
+<text x="40" y="49" class="title">发送流程：快照与提交资格</text>
+<text x="40" y="80" class="sub">每次 await 之后先核对会话身份与代次，再决定是否可以修改当前页面</text>
+<rect x="40" y="120" width="960" height="115" rx="10" fill="#eef4ff" stroke="#cbd5e1"/>
+<text x="58" y="150" class="label">开始：固定本次提交的数据</text>
+<text x="58" y="179" class="body">捕获 session ID + sessionGeneration + text + imageSnapshot</text>
+<text x="58" y="204" class="body">追加乐观用户消息，记住原对象 optimistic；进入运行状态</text>
+<path d="M520 235 L520 275" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<rect x="40" y="275" width="960" height="140" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="58" y="305" class="label">异步执行有两个检查点</text>
+<text x="58" y="334" class="body">检查点 A：ensureConnected 完成或失败后</text>
+<text x="58" y="359" class="body">A 仍有效且握手成功 → 发出 POST；握手失败 → 进入失败处理</text>
+<text x="58" y="384" class="body">检查点 B：POST 成功或失败后，再检查同一份 ID 与 generation</text>
+<path d="M520 415 L520 460" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M520 460 L800 530 L520 600 L240 530Z" fill="#eef4ff" stroke="#8ca9da"/>
+<text x="365" y="524" class="label">ID 与 generation 仍匹配？</text>
+<text x="390" y="551" class="small">close 会增加 sessionGeneration</text>
+<path d="M240 530 L170 530 L170 665" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M520 600 L520 625 L510 625 L510 665" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<text x="65" y="567" class="small">否：过期</text>
+<text x="655" y="612" class="small">是：处理当前结果</text>
+<rect x="40" y="665" width="280" height="160" rx="10" fill="#fff6e8" stroke="#cbd5e1"/>
+<text x="58" y="695" class="label">返回 null</text>
+<text x="58" y="724" class="body">不再发送旧命令</text>
+<text x="58" y="749" class="body">不回滚新会话状态</text>
+<text x="58" y="774" class="body">Composer 不恢复旧草稿</text>
+<text x="58" y="799" class="body">同 ID 重入也检查代次</text>
+<rect x="360" y="665" width="300" height="160" rx="10" fill="#fff6e8" stroke="#cbd5e1"/>
+<text x="378" y="695" class="label">当前提交失败 → false</text>
+<text x="378" y="724" class="body">握手或 POST 失败</text>
+<text x="378" y="749" class="body">toRaw 识别本次乐观消息</text>
+<text x="378" y="774" class="body">仅仍在末尾才撤回</text>
+<text x="378" y="799" class="body">附件保留，按条件恢复文字</text>
+<rect x="700" y="665" width="300" height="160" rx="10" fill="#edf8f4" stroke="#cbd5e1"/>
+<text x="718" y="695" class="label">当前提交成功 → true</text>
+<text x="718" y="724" class="body">只移除本批附件对象</text>
+<text x="718" y="749" class="body">保留发送期间新增附件</text>
+<text x="718" y="774" class="body">Composer 记录输入历史</text>
+<text x="718" y="799" class="body">执行结果继续由 SSE 展示</text>
+<rect x="40" y="885" width="960" height="120" rx="10" fill="#eef4ff" stroke="#cbd5e1"/>
+<text x="58" y="915" class="label">Composer 必须先判断 null，再判断 false</text>
+<text x="58" y="944" class="body">null 表示失效，不是一次应当恢复输入的普通失败</text>
+<text x="58" y="969" class="body">文字回填还要检查会话与当前 draft；不能覆盖用户后来输入的内容</text>
+<rect x="40" y="1045" width="960" height="100" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="58" y="1075" class="label">这张图的保证范围</text>
+<text x="58" y="1104" class="body">前端状态归属不等于服务端幂等；HTTP 响应丢失时，任务可能已经被接受</text>
+<text x="58" y="1129" class="body">reload 仍有自己的身份检查，不能套用 sendPrompt 的代次保证</text>
+<path d="M520 625 L850 625 L850 665" stroke="#2563eb" stroke-width="2" fill="none" marker-end="url(#blue)"/>
+</svg>

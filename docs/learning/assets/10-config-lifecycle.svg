@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="1070" viewBox="0 0 1040 1070" role="img" aria-labelledby="title desc"><title id="title">模型配置：编辑、测试、保存与运行生效</title><desc id="desc">保存文件、刷新列表和切换运行实例拥有不同的确认边界</desc><defs><marker id="blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#2563eb"/></marker><marker id="green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#15806b"/></marker></defs><style>text{font-family:'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#243248} .title{font-size:28px;font-weight:700}.sub{font-size:16px;fill:#52627a}.label{font-size:18px;font-weight:700}.body{font-size:16px}.small{font-size:15px;fill:#52627a}</style><rect width="1040" height="1070" fill="#f7f9fc"/>
+<text x="40" y="49" class="title">模型配置：编辑、测试、保存与运行生效</text>
+<text x="40" y="80" class="sub">保存文件、刷新列表和切换运行实例拥有不同的确认边界</text>
+<rect x="170" y="120" width="700" height="110" rx="10" fill="#eef4ff" stroke="#cbd5e1"/>
+<text x="188" y="150" class="label">前端表单草稿 providers</text>
+<text x="188" y="179" class="body">GET 正式配置 → 编辑 → dirty=true</text>
+<text x="188" y="204" class="body">读取错误与保存错误分别保留；保存失败不丢草稿</text>
+<path d="M520 230 L520 270 L265 270 L265 320" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<path d="M520 270 L775 270 L775 320" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<text x="145" y="300" class="label">测试草稿</text>
+<text x="805" y="300" class="label">正式保存</text>
+<rect x="40" y="320" width="450" height="160" rx="10" fill="#edf8f4" stroke="#cbd5e1"/>
+<text x="58" y="350" class="label">临时测试配置</text>
+<text x="58" y="379" class="body">写入独立临时 models.json</text>
+<text x="58" y="404" class="body">创建 ModelRuntime 并解析认证</text>
+<text x="58" y="429" class="body">短模型请求 → 测试结果 → 清理目录</text>
+<text x="58" y="454" class="body">不要求先覆盖正式文件</text>
+<rect x="550" y="320" width="450" height="160" rx="10" fill="#eef4ff" stroke="#cbd5e1"/>
+<text x="568" y="350" class="label">PUT /api/models-config</text>
+<text x="568" y="379" class="body">服务端校验与规范化</text>
+<text x="568" y="404" class="body">临时文件完整写入 → rename 替换</text>
+<text x="568" y="429" class="body">成功后更新基线并判断 dirty</text>
+<text x="568" y="454" class="body">失败时保留草稿与错误</text>
+<path d="M775 480 L775 535" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<rect x="550" y="535" width="450" height="135" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="568" y="565" class="label">模型列表缓存</text>
+<text x="568" y="594" class="body">按 cwd 保存结果与 inFlight</text>
+<text x="568" y="619" class="body">失效后旧 Promise 不能回写缓存</text>
+<text x="568" y="644" class="body">原调用方仍可能收到旧请求结果</text>
+<rect x="40" y="535" width="450" height="135" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="58" y="565" class="label">测试结果的边界</text>
+<text x="58" y="594" class="body">只证明一次短请求可用</text>
+<text x="58" y="619" class="body">不保证长上下文或工具能力</text>
+<text x="58" y="644" class="body">20 秒超时从模型请求阶段开始</text>
+<path stroke-dasharray="6 5" d="M775 670 L775 710 L520 710 L520 755" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<rect x="170" y="755" width="700" height="130" rx="10" fill="#edf8f4" stroke="#cbd5e1"/>
+<text x="188" y="785" class="label">运行实例：显式切换当前模型</text>
+<text x="188" y="814" class="body">set_model → runtime 查找 → 必要时刷新 → SDK 切换</text>
+<text x="188" y="839" class="body">成功后前端更新显示，失败保留原选择</text>
+<text x="188" y="864" class="body">保存配置与清空列表缓存，不代表所有旧实例已热更新</text>
+<rect x="40" y="935" width="960" height="75" rx="10" fill="#fff6e8" stroke="#cbd5e1"/>
+<text x="58" y="965" class="label">原子替换保证文件完整性，不替代多窗口版本校验</text>
+<text x="58" y="994" class="body">两个窗口仍可能后写覆盖；资源发现、信任与运行加载也需要分别确认</text>
+<text x="540" y="740" class="small">后续显式选择模型，不是自动切换</text>
+</svg>

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="1050" viewBox="0 0 1040 1050" role="img" aria-labelledby="title desc"><title id="title">缓存失效：旧请求还能返回，但不能回写</title><desc id="desc">时间从上到下 · 共享缓存的写入资格由 inFlight 中的 Promise 身份决定</desc><defs><marker id="blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#2563eb"/></marker><marker id="green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#15806b"/></marker></defs><style>text{font-family:'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#243248} .title{font-size:28px;font-weight:700}.sub{font-size:16px;fill:#52627a}.label{font-size:18px;font-weight:700}.body{font-size:16px}.small{font-size:15px;fill:#52627a}</style><rect width="1040" height="1050" fill="#f7f9fc"/>
+<text x="40" y="49" class="title">缓存失效：旧请求还能返回，但不能回写</text>
+<text x="40" y="80" class="sub">时间从上到下 · 共享缓存的写入资格由 inFlight 中的 Promise 身份决定</text>
+<rect x="40" y="120" width="280" height="80" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="58" y="150" class="label">旧请求 P1</text>
+<text x="58" y="179" class="body">原调用方仍等待它</text>
+<rect x="370" y="120" width="300" height="80" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="388" y="150" class="label">共享状态</text>
+<text x="388" y="179" class="body">inFlight[cwd] / cache</text>
+<rect x="720" y="120" width="280" height="80" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="738" y="150" class="label">新请求 P2</text>
+<text x="738" y="179" class="body">失效之后重新加载</text>
+<path d="M180 215 V845 M520 215 V845 M860 215 V845" stroke="#bac7d9" stroke-dasharray="5 6"/>
+<path d="M180 270 L520 270" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<text x="195" y="251" class="small">① 注册 P1，开始 loader</text>
+<rect x="370" y="310" width="300" height="80" rx="10" fill="#fff6e8" stroke="#cbd5e1"/>
+<text x="388" y="340" class="label">② invalidate</text>
+<text x="388" y="369" class="body">清空 cache 和 inFlight</text>
+<path d="M860 435 L520 435" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<text x="543" y="416" class="small">③ P2 注册为当前有效请求</text>
+<path d="M860 520 L520 520" stroke="#15806b" stroke-width="2" fill="none"  marker-end="url(#green)"/>
+<text x="541" y="501" class="small">④ P2 完成，身份匹配</text>
+<rect x="370" y="565" width="300" height="100" rx="10" fill="#edf8f4" stroke="#cbd5e1"/>
+<text x="388" y="595" class="label">写 cache = fresh</text>
+<text x="388" y="624" class="body">删除 P2 的 inFlight 项</text>
+<text x="388" y="649" class="body">新调用可复用 fresh</text>
+<path d="M180 715 L520 715" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<text x="194" y="696" class="small">⑤ P1 最后完成，尝试提交</text>
+<rect x="370" y="755" width="630" height="100" rx="10" fill="#fff6e8" stroke="#cbd5e1"/>
+<text x="388" y="785" class="label">inFlight[cwd] !== P1 → 不写 cache</text>
+<text x="388" y="814" class="body">P1 向原等待者返回 old，但不能覆盖 fresh</text>
+<text x="388" y="839" class="body">若 P2 尚未完成，也不能删除或覆盖 P2 的等待项</text>
+<rect x="40" y="910" width="960" height="95" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="58" y="940" class="label">同一判断还覆盖两个反例</text>
+<text x="58" y="969" class="body">失效后没有 P2：undefined 也不等于 P1，旧缓存不能复活</text>
+<text x="58" y="994" class="body">旧请求失败：catch 也先检查身份，避免清掉新的 inFlight</text>
+</svg>

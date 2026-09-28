@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="970" viewBox="0 0 1040 970" role="img" aria-labelledby="title desc"><title id="title">一次提交，两个完成时点</title><desc id="desc">preflight 表示接受确认 · SDK prompt 表示完整调用 · 错误通道取决于接受发生之前还是之后</desc><defs><marker id="blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#2563eb"/></marker><marker id="green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#15806b"/></marker></defs><style>text{font-family:'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#243248} .title{font-size:28px;font-weight:700}.sub{font-size:16px;fill:#52627a}.label{font-size:18px;font-weight:700}.body{font-size:16px}.small{font-size:15px;fill:#52627a}</style><rect width="1040" height="970" fill="#f7f9fc"/>
+<text x="40" y="49" class="title">一次提交，两个完成时点</text>
+<text x="40" y="80" class="sub">preflight 表示接受确认 · SDK prompt 表示完整调用 · 错误通道取决于接受发生之前还是之后</text>
+<rect x="40" y="120" width="960" height="95" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="58" y="150" class="label">开始：wrapper.send(prompt)</text>
+<text x="58" y="179" class="body">pendingPromptCount 增加 → 创建 preflight → 调用 SDK prompt</text>
+<path d="M520 215 L520 250 L265 250 L265 290" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<path d="M520 250 L775 250 L775 290" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<rect x="40" y="290" width="450" height="135" rx="10" fill="#eef4ff" stroke="#cbd5e1"/>
+<text x="58" y="320" class="label">应用的 preflight Promise</text>
+<text x="58" y="349" class="body">等待成功预检回调 accept()</text>
+<text x="58" y="374" class="body">await preflight 结束后命令可以返回</text>
+<text x="58" y="399" class="body">完整执行成功也调用 accept 作为兜底</text>
+<rect x="550" y="290" width="450" height="135" rx="10" fill="#edf8f4" stroke="#cbd5e1"/>
+<text x="568" y="320" class="label">SDK 的 prompt Promise</text>
+<text x="568" y="349" class="body">完整任务仍在执行</text>
+<text x="568" y="374" class="body">持续产生文字、工具和生命周期事件</text>
+<text x="568" y="399" class="body">wrapper 保留 then 观察成功或失败</text>
+<path d="M265 425 L265 475" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<path d="M775 425 L775 475" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<rect x="40" y="475" width="450" height="110" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="58" y="505" class="label">HTTP 接受确认</text>
+<text x="58" y="534" class="body">success: true / data: null</text>
+<text x="58" y="559" class="body">此时前端不应关闭整体运行状态</text>
+<rect x="550" y="475" width="450" height="110" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="568" y="505" class="label">完成与计数清理</text>
+<text x="568" y="534" class="body">执行结束 → finishPrompt</text>
+<text x="568" y="559" class="body">发送 prompt_done 等相应通知</text>
+<rect x="40" y="645" width="450" height="155" rx="10" fill="#fff6e8" stroke="#cbd5e1"/>
+<text x="58" y="675" class="label">失败发生在接受前</text>
+<text x="58" y="704" class="body">reject preflight</text>
+<text x="58" y="729" class="body">HTTP 请求报告失败</text>
+<text x="58" y="754" class="body">前端按当前提交归属回滚</text>
+<rect x="550" y="645" width="450" height="155" rx="10" fill="#fff6e8" stroke="#cbd5e1"/>
+<text x="568" y="675" class="label">失败发生在接受后</text>
+<text x="568" y="704" class="body">HTTP 可能已经返回</text>
+<text x="568" y="729" class="body">通过 prompt_error 报告异步错误</text>
+<text x="568" y="754" class="body">继续执行完成计数与通知</text>
+<rect x="40" y="850" width="960" height="75" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="58" y="880" class="label">核心区别：已完成的 Promise 不能改回失败，已发出的 HTTP 也不能重新返回</text>
+<text x="58" y="909" class="body">void 不会取消任务或创建后台进程；事件通道继续承接接受之后的状态变化</text>
+</svg>

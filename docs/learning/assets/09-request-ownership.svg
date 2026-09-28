@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="750" viewBox="0 0 1040 750" role="img" aria-labelledby="title desc"><title id="title">快速切换文件：谁还有权提交结果</title><desc id="desc">版本在每次 load 时递增 · 正文、错误和 loading 都遵循同一提交条件</desc><defs><marker id="blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#2563eb"/></marker><marker id="green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#15806b"/></marker></defs><style>text{font-family:'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#243248} .title{font-size:28px;font-weight:700}.sub{font-size:16px;fill:#52627a}.label{font-size:18px;font-weight:700}.body{font-size:16px}.small{font-size:15px;fill:#52627a}</style><rect width="1040" height="750" fill="#f7f9fc"/><text x="40" y="49" class="title">快速切换文件：谁还有权提交结果</text><text x="40" y="80" class="sub">版本在每次 load 时递增 · 正文、错误和 loading 都遵循同一提交条件</text>
+<rect x="40" y="120" width="960" height="90" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+<text x="58" y="150" class="label">场景：第一次 A → B → 第二次 A</text>
+<text x="58" y="178" class="body">路径再次相同，不代表请求属于同一次打开</text>
+<path d="M90 235 L90 650" fill="none" stroke="#b8c4d6" stroke-dasharray="5 6"/>
+<text x="125" y="275" class="label">打开 A</text>
+<text x="355" y="275" class="body">请求 A1 保存 version = 1</text>
+<text x="125" y="350" class="label">打开 B</text>
+<text x="355" y="350" class="body">请求 B 保存 version = 2</text>
+<text x="125" y="425" class="label">再次打开 A</text>
+<text x="355" y="425" class="body">请求 A2 保存 version = 3</text>
+<text x="125" y="510" class="label">A2 先返回</text>
+<text x="355" y="510" class="body">3 === loadVersion → 提交 A2 内容</text>
+<text x="125" y="595" class="label">A1 后返回</text>
+<text x="355" y="595" class="body">1 !== loadVersion → 忽略旧结果</text>
+<path d="M300 268 L337 268" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<path d="M300 343 L337 343" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<path d="M300 418 L337 418" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<rect x="40" y="665" width="960" height="60" rx="10" fill="#edf8f4" stroke="#cbd5e1"/>
+<text x="58" y="695" class="label">同样保护 catch 与 finally：旧错误不能污染新文件，旧完成不能关闭新 loading</text>
+</svg>

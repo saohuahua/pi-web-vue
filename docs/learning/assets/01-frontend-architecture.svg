@@ -1,0 +1,190 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1660" height="2050" viewBox="0 0 1660 2050" role="img" aria-labelledby="title desc"><title id="title">前端展开 · 从页面操作到状态提交</title><desc id="desc">页面、领域 store、异步资格、消息规则和组件各自成组；图中的小节点对应可以独立理解的职责。</desc><defs><marker id="blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#2563eb"/></marker><marker id="green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#13836e"/></marker><marker id="purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#8651b7"/></marker><marker id="orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#b87018"/></marker><marker id="gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#64748b"/></marker></defs><style>text{font-family:'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#223047}.title{font-size:36px;font-weight:700}.heading{font-size:24px;font-weight:700}.node{font-size:21px;font-weight:650}.body{font-size:18px}.small{font-size:16px;fill:#607086}.mono{font-family:Consolas,'Microsoft YaHei',monospace;font-size:17px}.eyebrow{font-size:16px;fill:#607086;letter-spacing:2px}</style><rect width="1660" height="2050" fill="#f8fafc"/><text x="40" y="47" class="eyebrow" >PI WEB VUE  /  ARCHITECTURE</text>
+<text x="40" y="94" class="title" >前端展开 · 从页面操作到状态提交</text>
+<text x="40" y="132" class="body" >页面、领域 store、异步资格、消息规则和组件各自成组；图中的小节点对应可以独立理解的职责。</text>
+<rect x="40" y="190" width="1580" height="230" rx="16" fill="#eff5ff" stroke="#d4deea"/>
+<rect x="40" y="208" width="4" height="30" rx="2" fill="#2563eb"/>
+<text x="60" y="230" class="heading" >页面外壳 app.vue</text>
+<text x="60" y="256" class="small" >路由决定当前会话；FileViewer 与能力中心首次打开时异步挂载</text>
+<rect x="60" y="285" width="290" height="100" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(76 303)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M1 2h26v22H1z M1 8h26 M5 5h1 M10 5h1"/></g>
+<text x="116" y="322" class="node" >SessionSidebar</text>
+<text x="78" y="352" class="small" >项目 / 会话</text>
+<rect x="370" y="285" width="290" height="100" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(386 303)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M1 2h26v22H1z M1 8h26 M5 5h1 M10 5h1"/></g>
+<text x="426" y="322" class="node" >ChatComposer</text>
+<text x="388" y="352" class="small" >文字 / 附件</text>
+<rect x="680" y="285" width="290" height="100" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(696 303)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M1 2h26v22H1z M1 8h26 M5 5h1 M10 5h1"/></g>
+<text x="736" y="322" class="node" >ChatPanel</text>
+<text x="698" y="352" class="small" >消息 / 运行反馈</text>
+<rect x="990" y="285" width="290" height="100" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(1006 303)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M1 2h26v22H1z M1 8h26 M5 5h1 M10 5h1"/></g>
+<text x="1046" y="322" class="node" >FileViewer</text>
+<text x="1008" y="352" class="small" >多标签预览</text>
+<rect x="1300" y="285" width="290" height="100" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(1316 303)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M1 2h26v22H1z M1 8h26 M5 5h1 M10 5h1"/></g>
+<text x="1356" y="322" class="node" >能力中心</text>
+<text x="1318" y="352" class="small" >模型 / 资源</text>
+<rect x="40" y="490" width="970" height="345" rx="16" fill="#eff5ff" stroke="#d4deea"/>
+<rect x="40" y="508" width="4" height="30" rx="2" fill="#2563eb"/>
+<text x="60" y="530" class="heading" >chat store：共享的当前会话</text>
+<text x="60" y="556" class="small" >打开、发送、停止、查询与事件协调</text>
+<rect x="60" y="585" width="290" height="95" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(76 603)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="116" y="622" class="node" >sessionId</text>
+<text x="78" y="652" class="small" >任务身份</text>
+<rect x="370" y="585" width="290" height="95" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(386 603)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="426" y="622" class="node" >generation</text>
+<text x="388" y="652" class="small" >旧提交失效</text>
+<rect x="680" y="585" width="290" height="95" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(696 603)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="736" y="622" class="node" >draft / images</text>
+<text x="698" y="652" class="small" >用户未提交输入</text>
+<rect x="60" y="700" width="290" height="95" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(76 718)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="116" y="737" class="node" >messages</text>
+<text x="78" y="767" class="small" >完整消息</text>
+<rect x="370" y="700" width="290" height="95" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(386 718)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="426" y="737" class="node" >stream</text>
+<text x="388" y="767" class="small" >助手生成中消息</text>
+<rect x="680" y="700" width="290" height="95" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(696 718)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="736" y="737" class="node" >activeTools</text>
+<text x="698" y="767" class="small" >工具执行进度</text>
+<rect x="1070" y="490" width="550" height="345" rx="16" fill="#f6f1fb" stroke="#d4deea"/>
+<rect x="1070" y="508" width="4" height="30" rx="2" fill="#8651b7"/>
+<text x="1090" y="530" class="heading" >其他领域状态</text>
+<text x="1090" y="556" class="small" >不随消息刷新一起重置</text>
+<rect x="1090" y="585" width="240" height="95" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(1106 603)" fill="none" stroke="#8651b7" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="1146" y="622" class="node" >目录与会话</text>
+<text x="1108" y="652" class="small" >workspace / sessions</text>
+<rect x="1350" y="585" width="240" height="95" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(1366 603)" fill="none" stroke="#8651b7" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="1406" y="622" class="node" >file-viewer</text>
+<text x="1368" y="652" class="small" >标签与活动路径</text>
+<rect x="1090" y="700" width="240" height="95" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(1106 718)" fill="none" stroke="#8651b7" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="1146" y="737" class="node" >models-config</text>
+<text x="1108" y="767" class="small" >表单草稿与基线</text>
+<rect x="1350" y="700" width="240" height="95" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(1366 718)" fill="none" stroke="#8651b7" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="1406" y="737" class="node" >资源 stores</text>
+<text x="1368" y="767" class="small" >技能 / 扩展 / 插件</text>
+<path d="M510 385V490" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M1385 385V490" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<rect x="40" y="905" width="480" height="250" rx="16" fill="#eff5ff" stroke="#d4deea"/>
+<rect x="40" y="923" width="4" height="30" rx="2" fill="#2563eb"/>
+<text x="60" y="945" class="heading" >网络与提交资格</text>
+<text x="60" y="971" class="small" >异步结果先确认归属</text>
+<rect x="60" y="990" width="210" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="74" cy="1009" r="4" fill="#2563eb"/>
+<text x="86" y="1015" class="mono" >agent-client</text>
+<rect x="290" y="990" width="210" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="304" cy="1009" r="4" fill="#2563eb"/>
+<text x="316" y="1015" class="mono" >EventSource</text>
+<rect x="60" y="1050" width="210" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="74" cy="1069" r="4" fill="#2563eb"/>
+<text x="86" y="1075" class="mono" >connected 等待</text>
+<rect x="290" y="1050" width="210" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="304" cy="1069" r="4" fill="#2563eb"/>
+<text x="316" y="1075" class="mono" >current / 代次</text>
+<text x="60" y="1130" class="small" >失效返回 null，不能回填新页面</text>
+<rect x="570" y="905" width="510" height="250" rx="16" fill="#eff9f5" stroke="#d4deea"/>
+<rect x="570" y="923" width="4" height="30" rx="2" fill="#13836e"/>
+<text x="590" y="945" class="heading" >消息数据规则</text>
+<text x="590" y="971" class="small" >协议事件 → 可展示的结构</text>
+<rect x="590" y="990" width="220" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="604" cy="1009" r="4" fill="#13836e"/>
+<text x="616" y="1015" class="mono" >streamReducer</text>
+<rect x="830" y="990" width="230" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="844" cy="1009" r="4" fill="#13836e"/>
+<text x="856" y="1015" class="mono" >normalize</text>
+<rect x="590" y="1050" width="220" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="604" cy="1069" r="4" fill="#13836e"/>
+<text x="616" y="1075" class="mono" >contentIndex</text>
+<rect x="830" y="1050" width="230" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="844" cy="1069" r="4" fill="#13836e"/>
+<text x="856" y="1075" class="mono" >toolCallId 索引</text>
+<text x="590" y="1130" class="small" >Object.assign → 保留 reactive 容器</text>
+<rect x="1130" y="905" width="490" height="250" rx="16" fill="#f6f1fb" stroke="#d4deea"/>
+<rect x="1130" y="923" width="4" height="30" rx="2" fill="#8651b7"/>
+<text x="1150" y="945" class="heading" >独立异步规则</text>
+<text x="1150" y="971" class="small" >每份状态都有自己的更新资格</text>
+<rect x="1150" y="990" width="210" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="1164" cy="1009" r="4" fill="#8651b7"/>
+<text x="1176" y="1015" class="mono" >loadVersion</text>
+<rect x="1380" y="990" width="220" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="1394" cy="1009" r="4" fill="#8651b7"/>
+<text x="1406" y="1015" class="mono" >submitted 快照</text>
+<rect x="1150" y="1050" width="210" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="1164" cy="1069" r="4" fill="#8651b7"/>
+<text x="1176" y="1075" class="mono" >saved 基线</text>
+<rect x="1380" y="1050" width="220" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="1394" cy="1069" r="4" fill="#8651b7"/>
+<text x="1406" y="1075" class="mono" >dirty 比较</text>
+<text x="1150" y="1130" class="small" >正文 / error / loading 一起保护</text>
+<path d="M270 835V905" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M825 835V905" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M1380 835V905" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<rect x="40" y="1230" width="1580" height="300" rx="16" fill="#eff9f5" stroke="#d4deea"/>
+<rect x="40" y="1248" width="4" height="30" rx="2" fill="#13836e"/>
+<text x="60" y="1270" class="heading" >展示层：把数据转换为用户可读的过程</text>
+<text x="60" y="1296" class="small" >输入事件与工具执行都不由组件模板重新实现</text>
+<rect x="60" y="1320" width="280" height="105" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(76 1338)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M1 2h26v22H1z M1 8h26 M5 5h1 M10 5h1"/></g>
+<text x="116" y="1357" class="node" >MessageItem</text>
+<text x="78" y="1387" class="small" >根据 role / block 分发</text>
+<rect x="390" y="1320" width="270" height="105" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(406 1338)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M5 2h12l7 7v17H5z M17 2v8h7 M9 15h11 M9 20h8"/></g>
+<text x="446" y="1357" class="node" >Markdown</text>
+<text x="408" y="1387" class="small" >正文 / 代码高亮</text>
+<rect x="710" y="1320" width="270" height="105" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(726 1338)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M1 2h26v22H1z M1 8h26 M5 5h1 M10 5h1"/></g>
+<text x="766" y="1357" class="node" >ThinkingBlock</text>
+<text x="728" y="1387" class="small" >思考文本 / 折叠</text>
+<rect x="1030" y="1320" width="270" height="105" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(1046 1338)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="1086" y="1357" class="node" >ToolCallCard</text>
+<text x="1048" y="1387" class="small" >参数 + 执行态 + 结果</text>
+<rect x="1350" y="1320" width="250" height="105" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(1366 1338)" fill="none" stroke="#8651b7" stroke-width="1.7" stroke-linejoin="round"><path d="M5 2h12l7 7v17H5z M17 2v8h7 M9 15h11 M9 20h8"/></g>
+<text x="1406" y="1357" class="node" >FileViewer</text>
+<text x="1368" y="1387" class="small" >文件类型与预览模式</text>
+<path d="M340 1372H390" stroke="#13836e" stroke-width="2" fill="none"  marker-end="url(#green)"/>
+<path d="M200 1425V1460H845V1425" stroke="#13836e" stroke-width="2" fill="none"  marker-end="url(#green)"/>
+<path d="M845 1460H1165V1425" stroke="#13836e" stroke-width="2" fill="none"  marker-end="url(#green)"/>
+<text x="60" y="1490" class="body" >ChatPanel 组织完整列表与当前草稿；activeTools 同时供状态条和工具卡片判断执行阶段。</text>
+<path d="M270 1155V1190H825V1230" stroke="#13836e" stroke-width="2" fill="none"  marker-end="url(#green)"/>
+<path d="M825 1155V1230" stroke="#13836e" stroke-width="2" fill="none"  marker-end="url(#green)"/>
+<path d="M1380 1155V1230" stroke="#13836e" stroke-width="2" fill="none"  marker-end="url(#green)"/>
+<rect x="40" y="1600" width="730" height="230" rx="16" fill="#eff5ff" stroke="#d4deea"/>
+<rect x="40" y="1618" width="4" height="30" rx="2" fill="#2563eb"/>
+<text x="60" y="1640" class="heading" >DOM 与交互行为</text>
+<text x="60" y="1666" class="small" >依赖 Vue 生命周期与实际页面</text>
+<rect x="60" y="1685" width="320" height="100" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(76 1703)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="116" y="1722" class="node" >useAutoScroll</text>
+<text x="78" y="1752" class="small" >帧内合并 / 阅读位置</text>
+<rect x="410" y="1685" width="340" height="100" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(426 1703)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="466" y="1722" class="node" >Markdown 点击委托</text>
+<text x="428" y="1752" class="small" >复制 / 本地文件链接</text>
+<rect x="830" y="1600" width="790" height="230" rx="16" fill="#f6f1fb" stroke="#d4deea"/>
+<rect x="830" y="1618" width="4" height="30" rx="2" fill="#8651b7"/>
+<text x="850" y="1640" class="heading" >持久化与恢复</text>
+<text x="850" y="1666" class="small" >浏览器偏好与业务历史分别保存</text>
+<path d="M850 1698 C850 1674 1190 1674 1190 1698 V1782 C1190 1806 850 1806 850 1782 Z" fill="#fff" stroke="#bcacd0"/><ellipse cx="1020" cy="1698" rx="170" ry="18" fill="#f6f1fb" stroke="#bcacd0"/>
+<text x="868" y="1742" class="node" >localStorage</text>
+<text x="868" y="1771" class="small" >主题 / 布局 / 上次选择</text>
+<rect x="1240" y="1685" width="360" height="100" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(1256 1703)" fill="none" stroke="#8651b7" stroke-width="1.7" stroke-linejoin="round"><path d="M2 6c0-6 24-6 24 0v16c0 6-24 6-24 0z M2 6c0 6 24 6 24 0 M2 14c0 6 24 6 24 0"/></g>
+<text x="1296" y="1722" class="node" >服务端历史 + 快照</text>
+<text x="1258" y="1752" class="small" >重建会话，不等于重放所有事件</text>
+<rect x="40" y="1900" width="1580" height="100" rx="10" fill="#fff" stroke="#d4deea"/>
+<text x="60" y="1940" class="heading" >职责边界</text>
+<text x="250" y="1940" class="body" >网络层管理连接，store 协调过程，纯函数计算消息，组件负责展示，composable 管 DOM。</text>
+<text x="60" y="1976" class="small" >发送代次不自动覆盖 reload 的所有竞态；局部状态是否跨定稿、关闭或刷新保留，需要分别约定。</text>
+</svg>

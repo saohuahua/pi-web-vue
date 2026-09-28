@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="1280" viewBox="0 0 1040 1280" role="img" aria-labelledby="title desc"><title id="title">一句话的完整路径</title><desc id="desc">从上到下阅读 · 模型负责决策，本地工具负责执行 · HTTP 与 SSE 到达顺序可能交错</desc><defs><marker id="blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#2563eb"/></marker><marker id="green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#15806b"/></marker></defs><style>text{font-family:'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#243248} .title{font-size:28px;font-weight:700}.sub{font-size:16px;fill:#52627a}.label{font-size:18px;font-weight:700}.body{font-size:16px}.small{font-size:15px;fill:#52627a}</style><rect width="1040" height="1280" fill="#f7f9fc"/>
+<text x="40" y="49" class="title">一句话的完整路径</text>
+<text x="40" y="80" class="sub">从上到下阅读 · 模型负责决策，本地工具负责执行 · HTTP 与 SSE 到达顺序可能交错</text>
+<rect x="40" y="115" width="180" height="60" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="58" y="145" class="label">浏览器</text>
+<path d="M130 180 L130 1130" stroke="#bac7d9" stroke-dasharray="5 6"/>
+<rect x="240" y="115" width="180" height="60" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="258" y="145" class="label">Node / wrapper</text>
+<path d="M330 180 L330 1130" stroke="#bac7d9" stroke-dasharray="5 6"/>
+<rect x="440" y="115" width="180" height="60" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="458" y="145" class="label">pi SDK</text>
+<path d="M530 180 L530 1130" stroke="#bac7d9" stroke-dasharray="5 6"/>
+<rect x="640" y="115" width="180" height="60" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="658" y="145" class="label">模型提供商</text>
+<path d="M730 180 L730 910" stroke="#bac7d9" stroke-dasharray="5 6"/>
+<rect x="840" y="115" width="180" height="60" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="858" y="145" class="label">本地工具</text>
+<path d="M930 180 L930 910" stroke="#bac7d9" stroke-dasharray="5 6"/>
+<path d="M130 225 L330 225" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<text x="139" y="212" class="small">1 订阅 SSE</text>
+<path d="M330 285 L130 285" fill="none" stroke="#15806b" stroke-width="2" marker-end="url(#green)"/>
+<text x="139" y="272" class="small">2 connected</text>
+<path d="M130 345 L330 345" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<text x="139" y="332" class="small">3 POST prompt</text>
+<path d="M330 405 L530 405" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<text x="339" y="392" class="small">4 调用 prompt</text>
+<path d="M530 465 L330 465" fill="none" stroke="#15806b" stroke-width="2" marker-end="url(#green)"/>
+<text x="339" y="452" class="small">5 预检通过</text>
+<path d="M330 525 L130 525" fill="none" stroke="#15806b" stroke-width="2" marker-end="url(#green)"/>
+<text x="139" y="512" class="small">6 接受确认</text>
+<path d="M530 575 L730 575" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<text x="539" y="562" class="small">7 上下文与工具定义</text>
+<path d="M730 625 L530 625" fill="none" stroke="#15806b" stroke-width="2" marker-end="url(#green)"/>
+<text x="539" y="612" class="small">8 提出 read 调用</text>
+<path d="M530 685 L930 685" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<text x="539" y="672" class="small">9 SDK 执行 read 工具</text>
+<path d="M930 745 L530 745" fill="none" stroke="#15806b" stroke-width="2" marker-end="url(#green)"/>
+<text x="539" y="732" class="small">10 文件内容作为工具结果进入上下文</text>
+<path d="M530 805 L730 805" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<text x="539" y="792" class="small">11 带结果再次请求</text>
+<path d="M730 865 L530 865" fill="none" stroke="#15806b" stroke-width="2" marker-end="url(#green)"/>
+<text x="539" y="852" class="small">12 最终回答</text>
+<rect x="40" y="1170" width="960" height="75" rx="10" fill="#edf8f4" stroke="#cbd5e1"/>
+<text x="58" y="1200" class="label">执行期间：SDK 事件 → wrapper → SSE → store → 消息块与工具展示</text>
+<text x="58" y="1229" class="body">接受确认不包含答案 · 单条消息与整体任务分别结束 · 任务落定后查询历史</text>
+<path d="M530 925 L330 925" stroke="#15806b" stroke-width="2" fill="none" marker-end="url(#green)"/><text x="339" y="912" class="small">13 消息与结束事件</text>
+<path d="M330 985 L130 985" stroke="#15806b" stroke-width="2" fill="none" marker-end="url(#green)"/><text x="139" y="972" class="small">14 SSE 更新界面</text>
+<path d="M130 1045 L330 1045" stroke="#2563eb" stroke-width="2" fill="none" marker-end="url(#blue)"/><text x="139" y="1032" class="small">15 历史与状态查询</text>
+<path d="M330 1105 L130 1105" stroke="#15806b" stroke-width="2" fill="none" marker-end="url(#green)"/><text x="139" y="1092" class="small">16 补齐记录与统计</text>
+</svg>

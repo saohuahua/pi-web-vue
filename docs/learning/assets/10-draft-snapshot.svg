@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="1010" viewBox="0 0 1040 1010" role="img" aria-labelledby="title desc"><title id="title">保存期间继续编辑：哪一份才算已保存</title><desc id="desc">providers 是当前草稿 · submittedProviders 固定本次提交 · savedProviders 是成功确认的基线</desc><defs><marker id="blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#2563eb"/></marker><marker id="green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#15806b"/></marker></defs><style>text{font-family:'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#243248} .title{font-size:28px;font-weight:700}.sub{font-size:16px;fill:#52627a}.label{font-size:18px;font-weight:700}.body{font-size:16px}.small{font-size:15px;fill:#52627a}</style><rect width="1040" height="1010" fill="#f7f9fc"/>
+<text x="40" y="49" class="title">保存期间继续编辑：哪一份才算已保存</text>
+<text x="40" y="80" class="sub">providers 是当前草稿 · submittedProviders 固定本次提交 · savedProviders 是成功确认的基线</text>
+<rect x="40" y="120" width="960" height="110" rx="10" fill="#eef4ff" stroke="#cbd5e1"/>
+<text x="58" y="150" class="label">起点：草稿 A → 点击保存</text>
+<text x="58" y="179" class="body">深复制得到 submittedProviders = A，再发出 PUT</text>
+<text x="58" y="204" class="body">用户可以在请求返回前继续编辑，当前 providers 变成 B</text>
+<path d="M520 230 L520 270" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<rect x="170" y="270" width="700" height="110" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="188" y="300" class="label">服务端返回成功与规范化配置 A′</text>
+<text x="188" y="329" class="body">savedProviders 更新为 A′</text>
+<text x="188" y="354" class="body">比较当前 providers 与提交快照 A 是否相同</text>
+<path d="M520 380 L520 415 L265 415 L265 465" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M520 415 L775 415 L775 465" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<text x="75" y="445" class="small">没有继续编辑：当前仍为 A</text>
+<text x="800" y="445" class="small">已继续编辑为 B</text>
+<rect x="40" y="465" width="450" height="140" rx="10" fill="#edf8f4" stroke="#cbd5e1"/>
+<text x="58" y="495" class="label">可以采用服务端规范化结果</text>
+<text x="58" y="524" class="body">将 providers 替换为 A′</text>
+<text x="58" y="549" class="body">草稿与保存基线一致</text>
+<text x="58" y="574" class="body">dirty = false</text>
+<rect x="550" y="465" width="450" height="140" rx="10" fill="#fff6e8" stroke="#cbd5e1"/>
+<text x="568" y="495" class="label">保留用户的新草稿 B</text>
+<text x="568" y="524" class="body">不让旧保存结果覆盖新输入</text>
+<text x="568" y="549" class="body">基线仍更新为 A′</text>
+<text x="568" y="574" class="body">比较 B 与 A′，决定 dirty</text>
+<path d="M265 605 L265 650 L520 650 L520 695" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M775 605 L775 650 L520 650" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<rect x="170" y="695" width="700" height="120" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="188" y="725" class="label">放弃修改：从 savedProviders 深复制恢复</text>
+<text x="188" y="754" class="body">恢复最近一次成功读取或保存的配置基线</text>
+<text x="188" y="779" class="body">清理 dirty 与保存错误；此操作不是重新从服务端取最新配置</text>
+<rect x="40" y="865" width="960" height="95" rx="10" fill="#eef4ff" stroke="#cbd5e1"/>
+<text x="58" y="895" class="label">保护范围与代价</text>
+<text x="58" y="924" class="body">JSON 深复制适合当前配置的 JSON 数据结构，不能泛化为任意对象复制</text>
+<text x="58" y="949" class="body">当前快照保护不等于跨窗口冲突合并，也不等于完整并发保存版本协议</text>
+</svg>

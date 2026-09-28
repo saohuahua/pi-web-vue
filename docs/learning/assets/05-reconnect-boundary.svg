@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="1090" viewBox="0 0 1040 1090" role="img" aria-labelledby="title desc"><title id="title">自动重连：通信恢复与状态恢复是两件事</title><desc id="desc">依据当前实现绘制 · 不将存活消息快照等同于完整事件回放</desc><defs><marker id="blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#2563eb"/></marker><marker id="green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#15806b"/></marker></defs><style>text{font-family:'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#243248} .title{font-size:28px;font-weight:700}.sub{font-size:16px;fill:#52627a}.label{font-size:18px;font-weight:700}.body{font-size:16px}.small{font-size:15px;fill:#52627a}</style><rect width="1040" height="1090" fill="#f7f9fc"/>
+<text x="40" y="49" class="title">自动重连：通信恢复与状态恢复是两件事</text>
+<text x="40" y="80" class="sub">依据当前实现绘制 · 不将存活消息快照等同于完整事件回放</text>
+<rect x="170" y="120" width="700" height="110" rx="10" fill="#eef4ff" stroke="#cbd5e1"/>
+<text x="188" y="150" class="label">断线 → 创建新的 EventSource</text>
+<text x="188" y="179" class="body">普通错误按固定延迟重试；startup_error 停止自动重试</text>
+<text x="188" y="204" class="body">服务端取得实例并安装监听后发送 connected</text>
+<path d="M520 230 L520 275" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<rect x="170" y="275" width="700" height="90" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="188" y="305" class="label">判断：服务端是否还保留当前消息快照</text>
+<text x="188" y="334" class="body">历史记录与当前流式消息是不同数据源</text>
+<path d="M520 365 L520 400 L265 400 L265 450" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<path d="M520 400 L775 400 L775 450" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<text x="150" y="428" class="label">仍在生成</text>
+<text x="800" y="428" class="label">断线期间已结束</text>
+<rect x="40" y="450" width="450" height="140" rx="10" fill="#edf8f4" stroke="#cbd5e1"/>
+<text x="58" y="480" class="label">可以取得当前消息</text>
+<text x="58" y="509" class="body">message_start 携带快照</text>
+<text x="58" y="534" class="body">前端重建 streamingMessage</text>
+<text x="58" y="559" class="body">后续 delta 基于快照继续更新</text>
+<rect x="550" y="450" width="450" height="140" rx="10" fill="#fff6e8" stroke="#cbd5e1"/>
+<text x="568" y="480" class="label">可能没有当前消息快照</text>
+<text x="568" y="509" class="body">也可能没有新的结束事件</text>
+<text x="568" y="534" class="body">仅 connected 不能补齐最终消息</text>
+<text x="568" y="559" class="body">旧运行标记也可能继续残留</text>
+<path d="M265 590 L265 635" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<path d="M775 590 L775 635" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#blue)"/>
+<rect x="40" y="635" width="450" height="140" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="58" y="665" class="label">快照衔接仍要避免重复</text>
+<text x="58" y="694" class="body">建立阶段缓冲事件</text>
+<text x="58" y="719" class="body">过滤部分已包含事件</text>
+<text x="58" y="744" class="body">当前依赖对象引用，不是持久序号</text>
+<rect x="550" y="635" width="450" height="140" rx="10" fill="#fff" stroke="#cbd5e1"/>
+<text x="568" y="665" class="label">当前自动重连的边界</text>
+<text x="568" y="694" class="body">没有立即补查全部历史</text>
+<text x="568" y="719" class="body">isStreaming=false 不清全部旧状态</text>
+<text x="568" y="744" class="body">完整终态对账仍需完善</text>
+<rect x="40" y="835" width="960" height="185" rx="10" fill="#eef4ff" stroke="#cbd5e1"/>
+<text x="58" y="865" class="label">对照：重新打开页面会执行更完整的加载流程</text>
+<text x="58" y="894" class="body">openSession → 读取历史 → 维护 SSE → 查询运行信息</text>
+<text x="58" y="919" class="body">补查也有异步交错：较旧历史响应不能无条件覆盖刚收到的新事件</text>
+<text x="58" y="944" class="body">因此恢复设计需要分别明确：历史、快照、运行状态的新旧关系</text>
+<text x="58" y="969" class="body">服务进程退出还会丢失内存状态；当前没有工具执行检查点续跑系统</text>
+</svg>

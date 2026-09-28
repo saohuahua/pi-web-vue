@@ -1,0 +1,327 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1840" height="2790" viewBox="0 0 1840 2790" role="img" aria-labelledby="title desc"><title id="title">系统总图 · 让执行、状态与数据各自有位置</title><desc id="desc">A 执行主线按运行环境分区；B—G 独立功能按页面、状态、API 与存储展开。</desc><defs><marker id="blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#2563eb"/></marker><marker id="green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#13836e"/></marker><marker id="purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#8651b7"/></marker><marker id="orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#b87018"/></marker><marker id="gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#64748b"/></marker></defs><style>text{font-family:'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#223047}.title{font-size:36px;font-weight:700}.heading{font-size:24px;font-weight:700}.node{font-size:21px;font-weight:650}.body{font-size:18px}.small{font-size:16px;fill:#607086}.mono{font-family:Consolas,'Microsoft YaHei',monospace;font-size:17px}.eyebrow{font-size:16px;fill:#607086;letter-spacing:2px}</style><rect width="1840" height="2790" fill="#f8fafc"/><text x="40" y="47" class="eyebrow" >PI WEB VUE  /  ARCHITECTURE</text>
+<text x="40" y="94" class="title" >系统总图 · 让执行、状态与数据各自有位置</text>
+<text x="40" y="132" class="body" >A 执行主线按运行环境分区；B—G 独立功能按页面、状态、API 与存储展开。</text>
+<rect x="40" y="185" width="520" height="1130" rx="16" fill="#eff5ff" stroke="#d4deea"/>
+<rect x="40" y="203" width="4" height="30" rx="2" fill="#2563eb"/>
+<text x="60" y="225" class="heading" >01  浏览器</text>
+<text x="60" y="251" class="small" >Vue 页面 · Pinia 状态 · DOM 行为</text>
+<rect x="620" y="185" width="780" height="1130" rx="16" fill="#eff9f5" stroke="#d4deea"/>
+<rect x="620" y="203" width="4" height="30" rx="2" fill="#13836e"/>
+<text x="640" y="225" class="heading" >02  Node 服务</text>
+<text x="640" y="251" class="small" >Nitro API · 实例管理 · pi SDK</text>
+<rect x="1460" y="185" width="340" height="1130" rx="16" fill="#f6f1fb" stroke="#d4deea"/>
+<rect x="1460" y="203" width="4" height="30" rx="2" fill="#8651b7"/>
+<text x="1480" y="225" class="heading" >03  依赖与材料</text>
+<text x="1480" y="251" class="small" >模型可远程；工具在 Node 中执行</text>
+<rect x="60" y="285" width="480" height="95" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(76 303)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M1 2h26v22H1z M1 8h26 M5 5h1 M10 5h1"/></g>
+<text x="116" y="322" class="node" >app.vue / 会话路由</text>
+<text x="78" y="352" class="small" >页面外壳与当前 session ID</text>
+<rect x="60" y="420" width="145" height="90" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(76 438)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M1 2h26v22H1z M1 8h26 M5 5h1 M10 5h1"/></g>
+<text x="116" y="457" class="node" >输入</text>
+<text x="78" y="487" class="small" >Composer</text>
+<rect x="225" y="420" width="145" height="90" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(241 438)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M1 2h26v22H1z M1 8h26 M5 5h1 M10 5h1"/></g>
+<text x="281" y="457" class="node" >会话</text>
+<text x="243" y="487" class="small" >Sidebar</text>
+<rect x="390" y="420" width="150" height="90" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(406 438)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M1 2h26v22H1z M1 8h26 M5 5h1 M10 5h1"/></g>
+<text x="446" y="457" class="node" >面板</text>
+<text x="408" y="487" class="small" >文件 / 能力</text>
+<path d="M300 380V400H132V420" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M300 400V420" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M300 400H465V420" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<rect x="60" y="565" width="480" height="245" rx="16" fill="#eff5ff" stroke="#d4deea"/>
+<rect x="60" y="583" width="4" height="30" rx="2" fill="#2563eb"/>
+<text x="80" y="605" class="heading" >chat store</text>
+<text x="80" y="631" class="small" >协调当前会话与异步过程</text>
+<rect x="80" y="648" width="210" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="94" cy="667" r="4" fill="#2563eb"/>
+<text x="106" y="673" class="mono" >sessionId / 代次</text>
+<rect x="310" y="648" width="210" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="324" cy="667" r="4" fill="#2563eb"/>
+<text x="336" y="673" class="mono" >draft / 附件快照</text>
+<rect x="80" y="700" width="210" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="94" cy="719" r="4" fill="#2563eb"/>
+<text x="106" y="725" class="mono" >messages / entryIds</text>
+<rect x="310" y="700" width="210" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="324" cy="719" r="4" fill="#2563eb"/>
+<text x="336" y="725" class="mono" >streamingMessage</text>
+<rect x="80" y="752" width="210" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="94" cy="771" r="4" fill="#2563eb"/>
+<text x="106" y="777" class="mono" >isRunning</text>
+<rect x="310" y="752" width="210" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="324" cy="771" r="4" fill="#2563eb"/>
+<text x="336" y="777" class="mono" >activeTools</text>
+<path d="M132 510V540H190V565" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M300 510V565" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<rect x="60" y="865" width="220" height="100" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(76 883)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="116" y="902" class="node" >命令客户端</text>
+<text x="78" y="932" class="small" >JSON 请求 / 接受确认</text>
+<rect x="320" y="865" width="220" height="100" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(336 883)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="376" y="902" class="node" >事件连接</text>
+<text x="338" y="932" class="small" >握手 / current / 重试</text>
+<path d="M190 810V865" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M540 915H550V690H540" stroke="#13836e" stroke-width="2" fill="none"  marker-end="url(#green)"/>
+<rect x="60" y="1020" width="480" height="250" rx="16" fill="#eff9f5" stroke="#d4deea"/>
+<rect x="60" y="1038" width="4" height="30" rx="2" fill="#13836e"/>
+<text x="80" y="1060" class="heading" >消息组装与展示</text>
+<text x="80" y="1086" class="small" >计算数据 → 写回响应式状态 → 组件读取</text>
+<rect x="80" y="1100" width="210" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="94" cy="1119" r="4" fill="#13836e"/>
+<text x="106" y="1125" class="mono" >streamReducer</text>
+<rect x="310" y="1100" width="210" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="324" cy="1119" r="4" fill="#13836e"/>
+<text x="336" y="1125" class="mono" >normalize</text>
+<rect x="80" y="1152" width="210" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="94" cy="1171" r="4" fill="#13836e"/>
+<text x="106" y="1177" class="mono" >MessageItem</text>
+<rect x="310" y="1152" width="210" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="324" cy="1171" r="4" fill="#13836e"/>
+<text x="336" y="1177" class="mono" >ToolCallCard</text>
+<rect x="80" y="1204" width="210" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="94" cy="1223" r="4" fill="#13836e"/>
+<text x="106" y="1229" class="mono" >Markdown / 高亮</text>
+<rect x="310" y="1204" width="210" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="324" cy="1223" r="4" fill="#13836e"/>
+<text x="336" y="1229" class="mono" >useAutoScroll</text>
+<path d="M60 705H48V1140H60" stroke="#13836e" stroke-width="2" fill="none"  marker-end="url(#green)"/>
+<rect x="640" y="285" width="740" height="165" rx="16" fill="#eff9f5" stroke="#d4deea"/>
+<rect x="640" y="303" width="4" height="30" rx="2" fill="#13836e"/>
+<text x="660" y="325" class="heading" >Nitro 路由入口</text>
+<text x="660" y="351" class="small" >接口名称省略 /api 前缀</text>
+<rect x="660" y="374" width="220" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="674" cy="393" r="4" fill="#2563eb"/>
+<text x="686" y="399" class="mono" >POST /agent/:id</text>
+<rect x="900" y="374" width="250" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="914" cy="393" r="4" fill="#13836e"/>
+<text x="926" y="399" class="mono" >GET /agent/:id/events</text>
+<rect x="1170" y="374" width="190" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="1184" cy="393" r="4" fill="#2563eb"/>
+<text x="1196" y="399" class="mono" >GET 运行信息</text>
+<rect x="640" y="510" width="740" height="230" rx="16" fill="#eff9f5" stroke="#d4deea"/>
+<rect x="640" y="528" width="4" height="30" rx="2" fill="#13836e"/>
+<text x="660" y="550" class="heading" >rpc-manager / wrapper</text>
+<text x="660" y="576" class="small" >同一会话 ID，让命令与订阅复用同一个实例</text>
+<rect x="660" y="592" width="220" height="95" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(676 610)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="716" y="629" class="node" >registry</text>
+<text x="678" y="659" class="small" >存活实例映射</text>
+<rect x="900" y="592" width="220" height="95" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(916 610)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="956" y="629" class="node" >locks</text>
+<text x="918" y="659" class="small" >初始化 Promise</text>
+<rect x="1140" y="592" width="220" height="95" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(1156 610)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="1196" y="629" class="node" >send</text>
+<text x="1158" y="659" class="small" >命令分发 / preflight</text>
+<path d="M1250 412V510" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M770 412V510" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M1010 412V510" stroke="#13836e" stroke-width="2" fill="none"  marker-end="url(#green)"/>
+<rect x="640" y="800" width="740" height="280" rx="16" fill="#eff9f5" stroke="#d4deea"/>
+<rect x="640" y="818" width="4" height="30" rx="2" fill="#13836e"/>
+<text x="660" y="840" class="heading" >pi AgentSession</text>
+<text x="660" y="866" class="small" >模型决定动作 → 工具执行 → 结果回填 → 模型继续</text>
+<rect x="660" y="884" width="220" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="674" cy="903" r="4" fill="#13836e"/>
+<text x="686" y="909" class="mono" >模型调用与上下文</text>
+<rect x="900" y="884" width="220" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="914" cy="903" r="4" fill="#13836e"/>
+<text x="926" y="909" class="mono" >工具定义 / execute</text>
+<rect x="1140" y="884" width="220" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="1154" cy="903" r="4" fill="#13836e"/>
+<text x="1166" y="909" class="mono" >消息 / 工具事件</text>
+<rect x="660" y="943" width="220" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="674" cy="962" r="4" fill="#8651b7"/>
+<text x="686" y="968" class="mono" >ModelRuntime</text>
+<rect x="900" y="943" width="220" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="914" cy="962" r="4" fill="#8651b7"/>
+<text x="926" y="968" class="mono" >SessionManager</text>
+<rect x="1140" y="943" width="220" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="1154" cy="962" r="4" fill="#8651b7"/>
+<text x="1166" y="968" class="mono" >ResourceLoader</text>
+<text x="660" y="1035" class="small" >cwd / SettingsManager → services → SDK 会话工厂</text>
+<path d="M1250 687V800" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<rect x="640" y="1140" width="230" height="105" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(656 1158)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="696" y="1177" class="node" >wrapper 事件</text>
+<text x="658" y="1207" class="small" >SDK subscribe</text>
+<rect x="900" y="1140" width="220" height="105" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(916 1158)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M9 5L2 13l7 8 M19 5l7 8-7 8 M16 2l-4 23"/></g>
+<text x="956" y="1177" class="node" >事件适配</text>
+<text x="918" y="1207" class="small" >去 partial / 保留 ID</text>
+<rect x="1150" y="1140" width="230" height="105" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(1166 1158)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="1206" y="1177" class="node" >SSE 流</text>
+<text x="1168" y="1207" class="small" >快照 / 心跳 / 关闭</text>
+<path d="M1250 1080V1110H755V1140" stroke="#13836e" stroke-width="2" fill="none"  marker-end="url(#green)"/>
+<path d="M870 1192H900" stroke="#13836e" stroke-width="2" fill="none"  marker-end="url(#green)"/>
+<path d="M1120 1192H1150" stroke="#13836e" stroke-width="2" fill="none"  marker-end="url(#green)"/>
+<path d="M280 915H300V830H585V393H660" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<circle cx="585" cy="675" r="16" fill="#2563eb"/>
+<text x="585" y="681" class="body" text-anchor="middle" style="fill:white;font-weight:700">1</text>
+<text x="570" y="647" class="small" >命令</text>
+<path d="M1380 1192H1417V1290H585V935H540" stroke="#13836e" stroke-width="2" fill="none"  marker-end="url(#green)"/>
+<circle cx="585" cy="1170" r="16" fill="#13836e"/>
+<text x="585" y="1176" class="body" text-anchor="middle" style="fill:white;font-weight:700">2</text>
+<rect x="1480" y="300" width="300" height="105" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(1496 318)" fill="none" stroke="#8651b7" stroke-width="1.7" stroke-linejoin="round"><path d="M7 22C-2 22-2 10 6 10C7 0 22 0 23 10C31 11 30 22 23 22Z"/></g>
+<text x="1536" y="337" class="node" >模型提供商</text>
+<text x="1498" y="367" class="small" >远程 API / 本地端点</text>
+<rect x="1495" y="450" width="270" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="1509" cy="469" r="4" fill="#13836e"/>
+<text x="1521" y="475" class="mono" >正文 / toolCall</text>
+<path d="M1480 588 C1480 564 1780 564 1780 588 V672 C1780 696 1480 696 1480 672 Z" fill="#fff" stroke="#bcacd0"/><ellipse cx="1630" cy="588" rx="150" ry="18" fill="#f6f1fb" stroke="#bcacd0"/>
+<text x="1498" y="632" class="node" >项目文件</text>
+<text x="1498" y="661" class="small" >cwd / README / 源码</text>
+<rect x="1495" y="735" width="270" height="38" rx="7" fill="#fff" stroke="#d4deea"/>
+<circle cx="1509" cy="754" r="4" fill="#b87018"/>
+<text x="1521" y="760" class="mono" >本地 shell 进程</text>
+<path d="M1480 873 C1480 849 1780 849 1780 873 V962 C1780 986 1480 986 1480 962 Z" fill="#fff" stroke="#bcacd0"/><ellipse cx="1630" cy="873" rx="150" ry="18" fill="#f6f1fb" stroke="#bcacd0"/>
+<text x="1498" y="917" class="node" >Pi 会话与配置</text>
+<text x="1498" y="946" class="small" >JSONL / models / settings</text>
+<rect x="1480" y="1085" width="300" height="155" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(1496 1103)" fill="none" stroke="#8651b7" stroke-width="1.7" stroke-linejoin="round"><path d="M5 2h12l7 7v17H5z M17 2v8h7 M9 15h11 M9 20h8"/></g>
+<text x="1536" y="1122" class="node" >全局与项目资源</text>
+<text x="1498" y="1152" class="small" >Skills / 模板 / 扩展 / 包</text>
+<text x="1498" y="1200" class="small" >agentDir / 项目 .pi</text>
+<path d="M1380 902H1430V355H1480" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M1480 385H1444V925H1380" stroke="#13836e" stroke-width="2" fill="none"  marker-end="url(#green)"/>
+<path d="M1380 962H1410V644H1480" stroke="#8651b7" stroke-width="2" fill="none"  marker-end="url(#purple)"/>
+<path d="M1380 990H1430V930H1480" stroke="#8651b7" stroke-width="2" fill="none"  marker-end="url(#purple)"/>
+<path d="M1360 962H1370V1040H1448V1160H1480" stroke="#8651b7" stroke-width="2" fill="none"  marker-end="url(#purple)"/>
+<text x="40" y="1375" class="heading" >独立功能路径</text>
+<text x="280" y="1375" class="body" >页面操作 → 领域状态 → 服务端 API / 规则 → 数据来源</text>
+<text x="40" y="1420" class="small" >用户界面</text>
+<text x="420" y="1420" class="small" >状态归属</text>
+<text x="800" y="1420" class="small" >服务端入口与机制</text>
+<text x="1450" y="1420" class="small" >存储 / 材料</text>
+<circle cx="56" cy="1500" r="16" fill="#2563eb"/>
+<text x="56" y="1506" class="body" text-anchor="middle" style="fill:white;font-weight:700">B</text>
+<rect x="85" y="1450" width="300" height="130" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(101 1468)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M1 2h26v22H1z M1 8h26 M5 5h1 M10 5h1"/></g>
+<text x="141" y="1487" class="node" >工作区与新建</text>
+<text x="103" y="1517" class="small" >目录 / worktree</text>
+<rect x="425" y="1450" width="315" height="130" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(441 1468)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="481" y="1487" class="node" >workspace / sessions</text>
+<text x="443" y="1517" class="small" >cwd / projectKey</text>
+<rect x="800" y="1450" width="580" height="130" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(816 1468)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="856" y="1487" class="node" >/cwd/* · /worktrees · POST /sessions</text>
+<text x="818" y="1517" class="small" >目录校验 → 唯一临时 key → SDK 初始化</text>
+<path d="M1450 1472 C1450 1448 1780 1448 1780 1472 V1556 C1780 1580 1450 1580 1450 1556 Z" fill="#fff" stroke="#bcacd0"/><ellipse cx="1615" cy="1472" rx="165" ry="18" fill="#f6f1fb" stroke="#bcacd0"/>
+<text x="1468" y="1516" class="node" >项目与 Git</text>
+<text x="1468" y="1545" class="small" >cwd / worktree</text>
+<path d="M385 1514H425" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M740 1514H800" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M1380 1514H1450" stroke="#8651b7" stroke-width="2" fill="none"  marker-end="url(#purple)"/>
+<circle cx="56" cy="1677" r="16" fill="#2563eb"/>
+<text x="56" y="1683" class="body" text-anchor="middle" style="fill:white;font-weight:700">C</text>
+<rect x="85" y="1627" width="300" height="130" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(101 1645)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M1 2h26v22H1z M1 8h26 M5 5h1 M10 5h1"/></g>
+<text x="141" y="1664" class="node" >历史与命名</text>
+<text x="103" y="1694" class="small" >列表 / 详情 / 标题</text>
+<rect x="425" y="1627" width="315" height="130" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(441 1645)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="481" y="1664" class="node" >sessions / chat</text>
+<text x="443" y="1694" class="small" >messages / entryIds</text>
+<rect x="800" y="1627" width="580" height="130" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(816 1645)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="856" y="1664" class="node" >/sessions/* · /agent/running</text>
+<text x="818" y="1694" class="small" >实例优先 → 当前历史链 → 消息与统计</text>
+<path d="M1450 1649 C1450 1625 1780 1625 1780 1649 V1733 C1780 1757 1450 1757 1450 1733 Z" fill="#fff" stroke="#bcacd0"/><ellipse cx="1615" cy="1649" rx="165" ry="18" fill="#f6f1fb" stroke="#bcacd0"/>
+<text x="1468" y="1693" class="node" >Pi 会话记录</text>
+<text x="1468" y="1722" class="small" >JSONL / parentId</text>
+<path d="M385 1691H425" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M740 1691H800" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M1380 1691H1450" stroke="#8651b7" stroke-width="2" fill="none"  marker-end="url(#purple)"/>
+<circle cx="56" cy="1854" r="16" fill="#2563eb"/>
+<text x="56" y="1860" class="body" text-anchor="middle" style="fill:white;font-weight:700">D</text>
+<rect x="85" y="1804" width="300" height="130" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(101 1822)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M1 2h26v22H1z M1 8h26 M5 5h1 M10 5h1"/></g>
+<text x="141" y="1841" class="node" >文件 Inspector</text>
+<text x="103" y="1871" class="small" >树 / 搜索 / 预览</text>
+<rect x="425" y="1804" width="315" height="130" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(441 1822)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="481" y="1841" class="node" >file-viewer</text>
+<text x="443" y="1871" class="small" >tabs / activePath</text>
+<rect x="800" y="1804" width="580" height="130" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(816 1822)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="856" y="1841" class="node" >/files/* · /file-index</text>
+<text x="818" y="1871" class="small" >允许根 + realpath → 文本 / 图片响应</text>
+<path d="M1450 1826 C1450 1802 1780 1802 1780 1826 V1910 C1780 1934 1450 1934 1450 1910 Z" fill="#fff" stroke="#bcacd0"/><ellipse cx="1615" cy="1826" rx="165" ry="18" fill="#f6f1fb" stroke="#bcacd0"/>
+<text x="1468" y="1870" class="node" >项目文件</text>
+<text x="1468" y="1899" class="small" >同一份真实材料</text>
+<path d="M385 1868H425" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M740 1868H800" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M1380 1868H1450" stroke="#8651b7" stroke-width="2" fill="none"  marker-end="url(#purple)"/>
+<circle cx="56" cy="2031" r="16" fill="#2563eb"/>
+<text x="56" y="2037" class="body" text-anchor="middle" style="fill:white;font-weight:700">E</text>
+<rect x="85" y="1981" width="300" height="130" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(101 1999)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M1 2h26v22H1z M1 8h26 M5 5h1 M10 5h1"/></g>
+<text x="141" y="2018" class="node" >模型管理</text>
+<text x="103" y="2048" class="small" >选择 / 编辑 / 测试</text>
+<rect x="425" y="1981" width="315" height="130" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(441 1999)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="481" y="2018" class="node" >models / models-config</text>
+<text x="443" y="2048" class="small" >草稿 / 提交 / 基线</text>
+<rect x="800" y="1981" width="580" height="130" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(816 1999)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="856" y="2018" class="node" >/models · /models-config/* · 默认模型</text>
+<text x="818" y="2048" class="small" >校验 → 临时文件替换；当前模型另行切换</text>
+<path d="M1450 2003 C1450 1979 1780 1979 1780 2003 V2087 C1780 2111 1450 2111 1450 2087 Z" fill="#fff" stroke="#bcacd0"/><ellipse cx="1615" cy="2003" rx="165" ry="18" fill="#f6f1fb" stroke="#bcacd0"/>
+<text x="1468" y="2047" class="node" >模型与认证</text>
+<text x="1468" y="2076" class="small" >models / auth / settings</text>
+<path d="M385 2045H425" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M740 2045H800" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M1380 2045H1450" stroke="#8651b7" stroke-width="2" fill="none"  marker-end="url(#purple)"/>
+<circle cx="56" cy="2208" r="16" fill="#2563eb"/>
+<text x="56" y="2214" class="body" text-anchor="middle" style="fill:white;font-weight:700">F</text>
+<rect x="85" y="2158" width="300" height="130" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(101 2176)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M1 2h26v22H1z M1 8h26 M5 5h1 M10 5h1"/></g>
+<text x="141" y="2195" class="node" >能力中心</text>
+<text x="103" y="2225" class="small" >Skills / 扩展 / 插件</text>
+<rect x="425" y="2158" width="315" height="130" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(441 2176)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="481" y="2195" class="node" >资源 stores</text>
+<text x="443" y="2225" class="small" >发现 / 信任 / 操作</text>
+<rect x="800" y="2158" width="580" height="130" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(816 2176)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="856" y="2195" class="node" >/skills · /capabilities/*</text>
+<text x="818" y="2225" class="small" >静态发现 / 信任检查 / SDK 包管理</text>
+<path d="M1450 2180 C1450 2156 1780 2156 1780 2180 V2264 C1780 2288 1450 2288 1450 2264 Z" fill="#fff" stroke="#bcacd0"/><ellipse cx="1615" cy="2180" rx="165" ry="18" fill="#f6f1fb" stroke="#bcacd0"/>
+<text x="1468" y="2224" class="node" >资源文件与配置</text>
+<text x="1468" y="2253" class="small" >agentDir / 项目 .pi</text>
+<path d="M385 2222H425" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M740 2222H800" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M1380 2222H1450" stroke="#8651b7" stroke-width="2" fill="none"  marker-end="url(#purple)"/>
+<circle cx="56" cy="2385" r="16" fill="#8651b7"/>
+<text x="56" y="2391" class="body" text-anchor="middle" style="fill:white;font-weight:700">G</text>
+<rect x="85" y="2335" width="300" height="130" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(101 2353)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M1 2h26v22H1z M1 8h26 M5 5h1 M10 5h1"/></g>
+<text x="141" y="2372" class="node" >偏好与布局</text>
+<text x="103" y="2402" class="small" >主题 / 栏宽 / 提示词</text>
+<rect x="425" y="2335" width="315" height="130" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(441 2353)" fill="none" stroke="#2563eb" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h24v6H2z M2 17h24v6H2z M6 8h2 M6 20h2"/></g>
+<text x="481" y="2372" class="node" >settings / ui</text>
+<text x="443" y="2402" class="small" >工作区选择也会保存</text>
+<rect x="800" y="2335" width="580" height="130" rx="10" fill="#fff" stroke="#d4deea"/>
+<g transform="translate(816 2353)" fill="none" stroke="#13836e" stroke-width="1.7" stroke-linejoin="round"><path d="M2 5h8v7H2z M18 16h8v7h-8z M10 8h12v8"/></g>
+<text x="856" y="2372" class="node" >浏览器显式持久化，不经过 SDK</text>
+<text x="818" y="2402" class="small" >shared/lib 是代码归属，不是独立服务</text>
+<path d="M1450 2357 C1450 2333 1780 2333 1780 2357 V2441 C1780 2465 1450 2465 1450 2441 Z" fill="#fff" stroke="#bcacd0"/><ellipse cx="1615" cy="2357" rx="165" ry="18" fill="#f6f1fb" stroke="#bcacd0"/>
+<text x="1468" y="2401" class="node" >localStorage</text>
+<text x="1468" y="2430" class="small" >偏好 / 布局 / 选择</text>
+<path d="M385 2399H425" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M740 2399H800" stroke="#2563eb" stroke-width="2" fill="none"  marker-end="url(#blue)"/>
+<path d="M1380 2399H1450" stroke="#8651b7" stroke-width="2" fill="none"  marker-end="url(#purple)"/>
+<rect x="40" y="2540" width="1760" height="190" rx="10" fill="#fff" stroke="#d4deea"/>
+<text x="60" y="2580" class="heading" >边界与图例</text>
+<text x="60" y="2620" class="body" >蓝色：操作 / 请求     绿色：事件 / 结果     紫色：数据与配置依赖；独立功能的响应沿请求路径返回。</text>
+<text x="60" y="2660" class="body" >Node 框均为应用内模块；浏览器关闭不自动停止 Agent；历史恢复不等于工具执行检查点续跑。</text>
+<text x="60" y="2700" class="body" >资源保存、缓存刷新、实例生效分别确认；MCP 与完整 fork 尚未接通。详情与生命周期见前端、服务端展开图。</text>
+</svg>
