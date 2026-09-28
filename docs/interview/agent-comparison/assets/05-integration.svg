@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1200" viewBox="0 0 1440 1200" role="img" aria-labelledby="title desc"><title id="title">同样是接 Agent · 应用拥有的边界不同</title><desc id="desc">比较当前最相关的接入路线；所有方案仍需要产品状态、错误处理与验证。</desc><defs><marker id="blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#285caa"/></marker><marker id="green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#167668"/></marker><marker id="purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#7753a2"/></marker><marker id="gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#65758a"/></marker><marker id="amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#9c6526"/></marker></defs><style>text{font-family:'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#223249}.title{font-size:32px;font-weight:700}.group{font-size:23px;font-weight:700}.node{font-size:21px;font-weight:600}.body{font-size:17px}.small{font-size:15px;fill:#53647b}.eyebrow{font-size:15px;letter-spacing:2px;fill:#65758a}</style><rect width="1440" height="1200" fill="#fafbfd"/><text x="40" y="34" class="eyebrow" >PI WEB VUE  /  AGENT COMPARISON</text>
+<text x="40" y="82" class="title" >同样是接 Agent · 应用拥有的边界不同</text>
+<text x="40" y="118" class="body" >比较当前最相关的接入路线；所有方案仍需要产品状态、错误处理与验证。</text>
+<text x="40" y="151" class="small" >实线：调用或数据返回    虚线：装配或机制挂载    各图是逻辑结构，不代表性能排名</text>
+<rect x="40" y="190" width="1360" height="205" rx="12" fill="#edf4fe" stroke="#d6dfe9"/>
+<rect x="40" y="210" width="4" height="26" fill="#285caa"/>
+<text x="58" y="230" class="group" >01  Pi · 进程内 SDK</text>
+<text x="58" y="258" class="small" >调用者自己的 Node 进程持有会话</text>
+<rect x="60" y="283" width="290" height="86" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M0 0h22v19H0z M0 6h22 M4 3h2 M9 3h2" transform="translate(75 303)" fill="none" stroke="#285caa" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="110" y="320" class="node" >Web 工作台</text>
+<text x="76" y="348" class="small" >输入 / 消息 / 文件界面</text>
+<rect x="470" y="283" width="370" height="86" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M0 0h8v8H0z M14 13h8v8h-8z M8 4h10v9" transform="translate(485 303)" fill="none" stroke="#285caa" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="520" y="320" class="node" >自建 Node 适配</text>
+<text x="486" y="348" class="small" >HTTP / SSE / 实例注册</text>
+<rect x="950" y="283" width="430" height="86" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M7 1L0 10l7 9 M15 1l7 9-7 9" transform="translate(965 303)" fill="none" stroke="#285caa" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="1000" y="320" class="node" >Pi AgentSession</text>
+<text x="966" y="348" class="small" >循环 / 工具 / 会话记录</text>
+<path d="M350 316H470" fill="none" stroke="#285caa" stroke-width="2"  marker-end="url(#blue)"/>
+<path d="M840 316H950" fill="none" stroke="#285caa" stroke-width="2"  marker-end="url(#blue)"/>
+<path d="M950 349H840" fill="none" stroke="#167668" stroke-width="2"  marker-end="url(#green)"/>
+<path d="M470 349H350" fill="none" stroke="#167668" stroke-width="2"  marker-end="url(#green)"/>
+<rect x="941" y="210" width="435" height="32" rx="5" fill="#edf4fe" stroke="#d6dfe9"/>
+<text x="953" y="232" class="small" >右侧两节点属于同一个 Node 进程</text>
+<text x="60" y="386" class="small" >需要补：网络契约、生命周期与展示一致性</text>
+<rect x="40" y="420" width="1360" height="205" rx="12" fill="#edf8f4" stroke="#d6dfe9"/>
+<rect x="40" y="440" width="4" height="26" fill="#167668"/>
+<text x="58" y="460" class="group" >02  OpenCode · HTTP 服务客户端</text>
+<text x="58" y="488" class="small" >OpenCode 服务持有会话，客户端观察并操控</text>
+<rect x="60" y="513" width="290" height="86" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M0 0h22v19H0z M0 6h22 M4 3h2 M9 3h2" transform="translate(75 533)" fill="none" stroke="#167668" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="110" y="550" class="node" >自建 Web / SDK</text>
+<text x="76" y="578" class="small" >调用服务并订阅事件</text>
+<rect x="470" y="513" width="370" height="86" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M0 0h8v8H0z M14 13h8v8h-8z M8 4h10v9" transform="translate(485 533)" fill="none" stroke="#167668" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="520" y="550" class="node" >HTTP + SSE</text>
+<text x="486" y="578" class="small" >OpenAPI / 请求与通知</text>
+<rect x="950" y="513" width="430" height="86" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M7 1L0 10l7 9 M15 1l7 9-7 9" transform="translate(965 533)" fill="none" stroke="#167668" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="1000" y="550" class="node" >OpenCode 服务</text>
+<text x="966" y="578" class="small" >产品工作流 / 工具 / 状态</text>
+<path d="M350 546H470" fill="none" stroke="#167668" stroke-width="2"  marker-end="url(#green)"/>
+<path d="M840 546H950" fill="none" stroke="#167668" stroke-width="2"  marker-end="url(#green)"/>
+<path d="M950 579H840" fill="none" stroke="#167668" stroke-width="2"  marker-end="url(#green)"/>
+<path d="M470 579H350" fill="none" stroke="#167668" stroke-width="2"  marker-end="url(#green)"/>
+<rect x="941" y="440" width="435" height="32" rx="5" fill="#edf8f4" stroke="#d6dfe9"/>
+<text x="953" y="462" class="small" >右侧是服务边界，可连接已启动服务</text>
+<text x="60" y="616" class="small" >需要补：服务部署、业务映射与状态对账</text>
+<rect x="40" y="650" width="1360" height="205" rx="12" fill="#f5f0fa" stroke="#d6dfe9"/>
+<rect x="40" y="670" width="4" height="26" fill="#7753a2"/>
+<text x="58" y="690" class="group" >03  DeepSeek · SDK 子进程客户端</text>
+<text x="58" y="718" class="small" >调用者拥有子进程，profile 决定子进程能力</text>
+<rect x="60" y="743" width="290" height="86" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M0 0h22v19H0z M0 6h22 M4 3h2 M9 3h2" transform="translate(75 763)" fill="none" stroke="#7753a2" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="110" y="780" class="node" >Web + 自建后端</text>
+<text x="76" y="808" class="small" >后端持有 SDK client</text>
+<rect x="470" y="743" width="370" height="86" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M0 0h8v8H0z M14 13h8v8h-8z M8 4h10v9" transform="translate(485 763)" fill="none" stroke="#7753a2" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="520" y="780" class="node" >stdio JSON-RPC</text>
+<text x="486" y="808" class="small" >握手 / 入队回执 / 通知</text>
+<rect x="950" y="743" width="430" height="86" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M7 1L0 10l7 9 M15 1l7 9-7 9" transform="translate(965 763)" fill="none" stroke="#7753a2" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="1000" y="780" class="node" >dsh 运行时子进程</text>
+<text x="966" y="808" class="small" >插件树 / 日志 / 执行能力</text>
+<path d="M350 776H470" fill="none" stroke="#7753a2" stroke-width="2"  marker-end="url(#purple)"/>
+<path d="M840 776H950" fill="none" stroke="#7753a2" stroke-width="2"  marker-end="url(#purple)"/>
+<path d="M950 809H840" fill="none" stroke="#167668" stroke-width="2"  marker-end="url(#green)"/>
+<path d="M470 809H350" fill="none" stroke="#167668" stroke-width="2"  marker-end="url(#green)"/>
+<rect x="941" y="670" width="435" height="32" rx="5" fill="#f5f0fa" stroke="#d6dfe9"/>
+<text x="953" y="692" class="small" >右侧是独立子进程，非调用者内对象</text>
+<text x="60" y="846" class="small" >需要补：子进程与会话寿命、取消语义适配</text>
+<rect x="40" y="880" width="1360" height="205" rx="12" fill="#fff7eb" stroke="#d6dfe9"/>
+<rect x="40" y="900" width="4" height="26" fill="#9c6526"/>
+<text x="58" y="920" class="group" >04  教学 Harness · 自定义产品边界</text>
+<text x="58" y="948" class="small" >先理解机制，运行与产品协议需要自己确定</text>
+<rect x="60" y="973" width="290" height="86" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M0 0h22v19H0z M0 6h22 M4 3h2 M9 3h2" transform="translate(75 993)" fill="none" stroke="#9c6526" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="110" y="1010" class="node" >计划中的产品界面</text>
+<text x="76" y="1038" class="small" >示意，并非现成集成</text>
+<rect x="470" y="973" width="370" height="86" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M0 0h8v8H0z M14 13h8v8h-8z M8 4h10v9" transform="translate(485 993)" fill="none" stroke="#9c6526" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="520" y="1010" class="node" >需要自建的接口</text>
+<text x="486" y="1038" class="small" >会话 / 事件 / 错误 / 恢复</text>
+<rect x="950" y="973" width="430" height="86" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M7 1L0 10l7 9 M15 1l7 9-7 9" transform="translate(965 993)" fill="none" stroke="#9c6526" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="1000" y="1010" class="node" >教学循环与机制</text>
+<text x="966" y="1038" class="small" >示例代码 / 任务与上下文</text>
+<path d="M350 1006H470" fill="none" stroke="#9c6526" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#amber)"/>
+<path d="M840 1006H950" fill="none" stroke="#9c6526" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#amber)"/>
+<path d="M950 1039H840" fill="none" stroke="#167668" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#green)"/>
+<path d="M470 1039H350" fill="none" stroke="#167668" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#green)"/>
+<rect x="941" y="900" width="435" height="32" rx="5" fill="#fff7eb" stroke="#d6dfe9"/>
+<text x="953" y="922" class="small" >虚线为待定义接入，不是已有产品接口</text>
+<text x="60" y="1076" class="small" >需要补：稳定协议、隔离、持久化与生产验证</text>
+<text x="40" y="1135" class="body" >选型先回答：要复用执行库、完整服务、可组合运行时，还是学习机制？再比较对应责任。</text>
+<text x="40" y="1176" class="small" >资料核验 2026-09-28  ·  版本与来源见同名文档  ·  插图由本文重新绘制</text>
+</svg>

@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1210" viewBox="0 0 1440 1210" role="img" aria-labelledby="title desc"><title id="title">教学 Harness · 围绕同一个工具循环增加机制</title><desc id="desc">基于 learn-claude-code s01–s17；这是第三方机制教学，不是官方 Claude Code 源码。</desc><defs><marker id="blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#285caa"/></marker><marker id="green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#167668"/></marker><marker id="purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#7753a2"/></marker><marker id="gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#65758a"/></marker><marker id="amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#9c6526"/></marker></defs><style>text{font-family:'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#223249}.title{font-size:32px;font-weight:700}.group{font-size:23px;font-weight:700}.node{font-size:21px;font-weight:600}.body{font-size:17px}.small{font-size:15px;fill:#53647b}.eyebrow{font-size:15px;letter-spacing:2px;fill:#65758a}</style><rect width="1440" height="1210" fill="#fafbfd"/><text x="40" y="34" class="eyebrow" >PI WEB VUE  /  AGENT COMPARISON</text>
+<text x="40" y="82" class="title" >教学 Harness · 围绕同一个工具循环增加机制</text>
+<text x="40" y="118" class="body" >基于 learn-claude-code s01–s17；这是第三方机制教学，不是官方 Claude Code 源码。</text>
+<text x="40" y="151" class="small" >实线：调用或数据返回    虚线：装配或机制挂载    各图是逻辑结构，不代表性能排名</text>
+<rect x="40" y="190" width="1360" height="210" rx="12" fill="#f5f0fa" stroke="#d6dfe9"/>
+<rect x="40" y="210" width="4" height="26" fill="#7753a2"/>
+<text x="58" y="230" class="group" >调用模型之前：控制材料与任务输入</text>
+<text x="58" y="258" class="small" >机制按问题挂载，并非所有章节都累积上一章的全部代码</text>
+<rect x="60" y="285" width="300" height="90" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M3 0h11l7 7v16H3z M14 0v7h7 M7 12h10 M7 17h8" transform="translate(75 305)" fill="none" stroke="#7753a2" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="110" y="322" class="node" >s07 技能 + s09 记忆</text>
+<text x="76" y="350" class="small" >按需知识 / 跨会话材料</text>
+<rect x="400" y="285" width="300" height="90" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M3 0h11l7 7v16H3z M14 0v7h7 M7 12h10 M7 17h8" transform="translate(415 305)" fill="none" stroke="#7753a2" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="450" y="322" class="node" >s08 上下文压缩</text>
+<text x="416" y="350" class="small" >先处理工具结果 再摘要</text>
+<rect x="740" y="285" width="300" height="90" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M1 4c0-6 22-6 22 0v14c0 6-22 6-22 0z M1 4c0 6 22 6 22 0" transform="translate(755 305)" fill="none" stroke="#7753a2" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="790" y="322" class="node" >s10 任务与依赖</text>
+<text x="756" y="350" class="small" >可持久任务图</text>
+<rect x="1080" y="285" width="300" height="90" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M0 0h8v8H0z M14 13h8v8h-8z M8 4h10v9" transform="translate(1095 305)" fill="none" stroke="#7753a2" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="1130" y="322" class="node" >s11 后台 + s12 定时</text>
+<text x="1096" y="350" class="small" >完成通知 / 时间触发</text>
+<rect x="40" y="450" width="1360" height="310" rx="12" fill="#edf8f4" stroke="#d6dfe9"/>
+<rect x="40" y="470" width="4" height="26" fill="#167668"/>
+<text x="58" y="490" class="group" >s01–s02 核心循环 · s15 将机制接回此处</text>
+<text x="58" y="518" class="small" >模型提出动作，程序执行动作，结果回到 messages</text>
+<rect x="60" y="560" width="250" height="90" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M3 0h11l7 7v16H3z M14 0v7h7 M7 12h10 M7 17h8" transform="translate(75 580)" fill="none" stroke="#285caa" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="110" y="597" class="node" >messages</text>
+<text x="76" y="625" class="small" >用户输入与工具结果</text>
+<rect x="400" y="560" width="250" height="90" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M7 1L0 10l7 9 M15 1l7 9-7 9" transform="translate(415 580)" fill="none" stroke="#167668" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="450" y="597" class="node" >模型调用</text>
+<text x="416" y="625" class="small" >上下文 + 工具定义</text>
+<rect x="740" y="560" width="290" height="90" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M2 2l10-3 10 3v10c0 6-10 10-10 10S2 18 2 12z M7 10l4 4 7-7" transform="translate(755 580)" fill="none" stroke="#9c6526" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="790" y="597" class="node" >权限 + hooks</text>
+<text x="756" y="625" class="small" >s03 检查 / s04 扩展点</text>
+<rect x="1120" y="560" width="260" height="90" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M7 1L0 10l7 9 M15 1l7 9-7 9" transform="translate(1135 580)" fill="none" stroke="#167668" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="1170" y="597" class="node" >工具分发</text>
+<text x="1136" y="625" class="small" >文件 / shell / s14 MCP</text>
+<path d="M310 605H400" fill="none" stroke="#285caa" stroke-width="2"  marker-end="url(#blue)"/>
+<path d="M650 605H740" fill="none" stroke="#285caa" stroke-width="2"  marker-end="url(#blue)"/>
+<text x="657" y="588" class="small" >tool_use</text>
+<path d="M1030 605H1120" fill="none" stroke="#285caa" stroke-width="2"  marker-end="url(#blue)"/>
+<path d="M1250 650V713H185V650" fill="none" stroke="#167668" stroke-width="2"  marker-end="url(#green)"/>
+<text x="572" y="702" class="small" >tool_result 按调用 ID 回填</text>
+<path d="M210 375V428H490V560" fill="none" stroke="#7753a2" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#purple)"/>
+<path d="M550 375V560" fill="none" stroke="#7753a2" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#purple)"/>
+<path d="M890 375V420H620V560" fill="none" stroke="#7753a2" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#purple)"/>
+<path d="M1230 375V408H30V605H60" fill="none" stroke="#7753a2" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#purple)"/>
+<rect x="40" y="805" width="425" height="285" rx="12" fill="#edf4fe" stroke="#d6dfe9"/>
+<rect x="40" y="825" width="4" height="26" fill="#285caa"/>
+<text x="58" y="845" class="group" >分工与文件隔离</text>
+<text x="58" y="873" class="small" >s06 子任务 → s13 持续团队</text>
+<rect x="60" y="892" width="385" height="90" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M0 0h8v8H0z M14 13h8v8h-8z M8 4h10v9" transform="translate(75 912)" fill="none" stroke="#285caa" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="110" y="929" class="node" >独立 messages / mailbox</text>
+<text x="76" y="957" class="small" >子任务结果返回父任务</text>
+<rect x="60" y="1005" width="385" height="32" rx="5" fill="#edf4fe" stroke="#d6dfe9"/>
+<text x="72" y="1027" class="small" >可选 worktree：隔离工作目录，不替代合并</text>
+<rect x="495" y="805" width="435" height="285" rx="12" fill="#f5f0fa" stroke="#d6dfe9"/>
+<rect x="495" y="825" width="4" height="26" fill="#7753a2"/>
+<text x="513" y="845" class="group" >s16 · Workflow</text>
+<text x="513" y="873" class="small" >固定编排顺序与恢复记录</text>
+<rect x="515" y="892" width="395" height="90" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M1 4c0-6 22-6 22 0v14c0 6-22 6-22 0z M1 4c0 6 22 6 22 0" transform="translate(530 912)" fill="none" stroke="#7753a2" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="565" y="929" class="node" >可信脚本 + journal</text>
+<text x="531" y="957" class="small" >并行 / 依赖 / 复用已完成调用</text>
+<rect x="515" y="1005" width="395" height="32" rx="5" fill="#f5f0fa" stroke="#d6dfe9"/>
+<text x="527" y="1027" class="small" >由已注册 Workflow 工具进入主循环</text>
+<rect x="960" y="805" width="440" height="285" rx="12" fill="#fff7eb" stroke="#d6dfe9"/>
+<rect x="960" y="825" width="4" height="26" fill="#9c6526"/>
+<text x="978" y="845" class="group" >s17 · Goal</text>
+<text x="978" y="873" class="small" >独立示例，控制拟议停止</text>
+<rect x="980" y="892" width="400" height="90" rx="9" fill="#fff" stroke="#cbd5e1"/>
+<path d="M2 2l10-3 10 3v10c0 6-10 10-10 10S2 18 2 12z M7 10l4 4 7-7" transform="translate(995 912)" fill="none" stroke="#9c6526" stroke-width="1.7" stroke-linejoin="round"/>
+<text x="1030" y="929" class="node" >独立评估器检查证据</text>
+<text x="996" y="957" class="small" >继续 / 满足目标 / 交还用户</text>
+<rect x="980" y="1005" width="400" height="32" rx="5" fill="#fff7eb" stroke="#d6dfe9"/>
+<text x="992" y="1027" class="small" >评估器无工具：只能判断已有会话证据</text>
+<path d="M1250 650V782H260V805" fill="none" stroke="#285caa" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#blue)"/>
+<path d="M1270 650V770H715V805" fill="none" stroke="#7753a2" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#purple)"/>
+<path d="M525 650V679H1390V850H1380" fill="none" stroke="#9c6526" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#amber)"/>
+<text x="1100" y="668" class="small" >无工具调用时拟议停止</text>
+<text x="40" y="1140" class="body" >学习重点：权限放在副作用之前，结果放在下一次推理之前，停止判断需要任务证据。</text>
+<text x="40" y="1186" class="small" >资料核验 2026-09-28  ·  版本与来源见同名文档  ·  插图由本文重新绘制</text>
+</svg>
