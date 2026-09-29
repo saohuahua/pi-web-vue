@@ -94,6 +94,7 @@ export class AgentSessionWrapper {
   private disposeListeners = new Set<() => void>();
   private idleTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingPromptCount = 0;
+  private navigating = false;
   private promptAdmissionTail: Promise<void> = Promise.resolve();
   private _alive = true;
   private unsubscribe: (() => void) | null = null;
@@ -308,7 +309,7 @@ export class AgentSessionWrapper {
 
       case "navigate_tree": {
         const targetId = command.targetId;
-        if (this.isRunning() || this.inner.isCompacting) {
+        if (this.isRunning() || this.inner.isCompacting || this.navigating) {
           throw new AgentSessionCommandError("session_busy", "Session is running", 409);
         }
         if (
@@ -317,11 +318,21 @@ export class AgentSessionWrapper {
         ) {
           throw new AgentSessionCommandError("invalid_leaf", "Invalid session entry", 400);
         }
-        const result = await this.inner.navigateTree(targetId, {});
-        if (result.cancelled || result.aborted) {
-          throw new AgentSessionCommandError("navigation_failed", "Navigation was cancelled", 409);
+        // 扩展钩子可能异步等待 导航期间禁止另一请求改变消息链
+        this.navigating = true;
+        try {
+          const result = await this.inner.navigateTree(targetId, {});
+          if (result.cancelled || result.aborted) {
+            throw new AgentSessionCommandError(
+              "navigation_failed",
+              "Navigation was cancelled",
+              409,
+            );
+          }
+          return result;
+        } finally {
+          this.navigating = false;
         }
-        return result;
       }
 
       case "clear_queue":
@@ -360,6 +371,13 @@ export class AgentSessionWrapper {
   private async sendPrompt(command: Record<string, unknown>): Promise<unknown> {
     const releaseAdmission = await this.acquirePromptAdmission();
     try {
+      if (this.navigating || this.inner.isCompacting) {
+        throw new AgentSessionCommandError(
+          "session_busy",
+          "Session is navigating or compacting",
+          409,
+        );
+      }
       this.pendingPromptCount += 1;
       const streamingBehavior = command.streamingBehavior as "steer" | "followUp" | undefined;
       let accepted = false;

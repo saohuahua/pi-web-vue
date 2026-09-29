@@ -19,7 +19,6 @@ import {
 import type {
   AgentMessage,
   AttachedImage,
-  SessionContext,
   SessionInfo,
   SessionStatsInfo,
   SessionTreeNode,
@@ -64,6 +63,7 @@ export const useChatStore = defineStore("chat", () => {
   // AgentEventConnection 不能进 reactive EventSource 被代理会出诡异问题 所以放闭包
   const stream = reactive<StreamingState>({ ...INITIAL_STREAMING_STATE });
   const isRunning = ref(false); // run 进行中的 UI 总开关
+  const isStopping = ref(false);
   const sessionLoading = ref(false);
   const isCompacting = ref(false);
   const model = ref<{ provider: string; id: string } | null>(null);
@@ -144,6 +144,7 @@ export const useChatStore = defineStore("chat", () => {
   const queue = usePromptQueue({
     sessionId,
     isRunning,
+    isStopping,
     positionUnknown,
     draft,
     attachedImages,
@@ -236,7 +237,13 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   function beginEditMessage(index: number): boolean {
-    if (isRunning.value || isCompacting.value || isNavigating.value || positionUnknown.value)
+    if (
+      pendingDraft ||
+      isRunning.value ||
+      isCompacting.value ||
+      isNavigating.value ||
+      positionUnknown.value
+    )
       return false;
     if (!messages.value.slice(0, index).some((message) => message.role === "user")) return false;
     const message = messages.value[index];
@@ -244,7 +251,7 @@ export const useChatStore = defineStore("chat", () => {
     if (message?.role !== "user" || !messageId) return false;
     const parentId = findEntryParentId(tree.value, messageId);
     if (!parentId) return false;
-    draftBeforeEdit = draft.value;
+    if (!editingMessageId.value) draftBeforeEdit = draft.value;
     editingMessageId.value = messageId;
     editingTargetId.value = parentId;
     draft.value = extractTextBlocks(message.content).join("\n");
@@ -252,7 +259,7 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   function cancelEdit() {
-    if (!editingMessageId.value) return;
+    if (!editingMessageId.value || pendingDraft || isNavigating.value) return;
     draft.value = draftBeforeEdit;
     editingMessageId.value = null;
     editingTargetId.value = null;
@@ -264,14 +271,27 @@ export const useChatStore = defineStore("chat", () => {
     images = [...attachedImages.value],
   ): Promise<boolean | null> {
     const id = sessionId.value;
-    if (!id || pendingDraft) return false;
+    const generation = sessionGeneration;
+    if (
+      !id ||
+      pendingDraft ||
+      isStopping.value ||
+      isRunning.value ||
+      isCompacting.value ||
+      isNavigating.value ||
+      positionUnknown.value ||
+      queueActionPending.value
+    )
+      return false;
     const target = editingTargetId.value;
     pendingDraft = { sessionId: id, text, editingMessageId: editingMessageId.value };
     draft.value = "";
     persistDraft();
     const navigated = !target || (await navigateToLeaf(target));
+    // 导航等待期间重入同名会话也不能继续提交旧输入
+    if (sessionId.value !== id || generation !== sessionGeneration) return null;
     const result = navigated ? await sendPrompt(text, images) : false;
-    if (sessionId.value !== id) return null;
+    if (sessionId.value !== id || generation !== sessionGeneration) return null;
     pendingDraft = null;
     if (result === false) draft.value = mergeDraftText(text, draft.value);
     if (result === true && target) {
@@ -293,6 +313,11 @@ export const useChatStore = defineStore("chat", () => {
           isRunning.value = true;
           sdkAgentActive = true;
           void refreshRuntimeState();
+        } else if (event.isStreaming === false && sdkAgentActive) {
+          // 断线期间结束的任务不会再补发结束事件
+          optimisticKey = null;
+          applyStream({ type: "end" });
+          applyEvent({ type: "agent_settled" });
         }
         break;
 
@@ -477,6 +502,7 @@ export const useChatStore = defineStore("chat", () => {
     Object.assign(stream, INITIAL_STREAMING_STATE);
     isRunning.value = false;
     sessionLoading.value = false;
+    isStopping.value = false;
     isCompacting.value = false;
     contextUsage.value = null;
     slashCommands.value = [];
@@ -522,6 +548,7 @@ export const useChatStore = defineStore("chat", () => {
         const messageId = saved?.editingMessageId;
         const target = messageId ? findEntryParentId(tree.value, messageId) : null;
         if (messageId && target) {
+          draftBeforeEdit = draft.value;
           editingMessageId.value = messageId;
           editingTargetId.value = target;
         }
@@ -566,7 +593,15 @@ export const useChatStore = defineStore("chat", () => {
       addNotice("error", "会话未就绪 请刷新页面重试");
       return false;
     }
-    if (isRunning.value || isNavigating.value || positionUnknown.value) return false;
+    if (
+      isStopping.value ||
+      isRunning.value ||
+      isCompacting.value ||
+      isNavigating.value ||
+      positionUnknown.value ||
+      queueActionPending.value
+    )
+      return false;
     const trimmed = text.trim();
     const images = imageSnapshot.map(({ data, mimeType }) => ({
       type: "image" as const,
@@ -639,30 +674,38 @@ export const useChatStore = defineStore("chat", () => {
   async function stop() {
     const id = sessionId.value;
     const generation = sessionGeneration;
-    if (!id) return;
-    // Pi 在 abort 后可能继续尚存的队列 因此必须先撤回再停止
-    if (!(await recallQueue())) {
-      addNotice("error", "队列未确认 当前任务仍在运行");
-      return;
-    }
-    if (sessionId.value !== id || generation !== sessionGeneration) return;
+    if (!id || isStopping.value) return;
+    isStopping.value = true;
     try {
-      await sendAgentCommand(id, { type: "abort" });
-    } catch (error) {
-      addNotice("error", error instanceof Error ? error.message : String(error));
-      return;
-    }
-    // abort 的 POST resolve 与 agent_settled 可能乱序或丢失
-    // 3 秒兜底强制落定并 reload 一次对账 settled 先到则取消
-    if (stopFallbackTimer !== null) clearTimeout(stopFallbackTimer);
-    stopFallbackTimer = setTimeout(() => {
-      stopFallbackTimer = null;
-      if (sessionId.value === id && generation === sessionGeneration && isRunning.value) {
-        isRunning.value = false;
-        activeTools.clear();
-        void reload();
+      // Pi 在 abort 后可能继续尚存的队列 因此必须先撤回再停止
+      const recalled = await recallQueue();
+      if (sessionId.value !== id || generation !== sessionGeneration) return;
+      if (!recalled) {
+        addNotice("error", "队列未确认 当前任务仍在运行");
+        return;
       }
-    }, 3000);
+      try {
+        await sendAgentCommand(id, { type: "abort" });
+      } catch (error) {
+        if (sessionId.value !== id || generation !== sessionGeneration) return;
+        addNotice("error", error instanceof Error ? error.message : String(error));
+        return;
+      }
+      if (sessionId.value !== id || generation !== sessionGeneration) return;
+      // abort 的 POST resolve 与 agent_settled 可能乱序或丢失
+      // 3 秒兜底强制落定并 reload 一次对账 settled 先到则取消
+      if (stopFallbackTimer !== null) clearTimeout(stopFallbackTimer);
+      stopFallbackTimer = setTimeout(() => {
+        stopFallbackTimer = null;
+        if (sessionId.value === id && generation === sessionGeneration && isRunning.value) {
+          isRunning.value = false;
+          activeTools.clear();
+          void reload();
+        }
+      }, 3000);
+    } finally {
+      if (sessionId.value === id && generation === sessionGeneration) isStopping.value = false;
+    }
   }
 
   return {
@@ -673,6 +716,7 @@ export const useChatStore = defineStore("chat", () => {
     attachedImages,
     stream,
     isRunning,
+    isStopping,
     sessionLoading,
     isCompacting,
     model,

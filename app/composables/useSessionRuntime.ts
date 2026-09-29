@@ -57,11 +57,12 @@ export const useSessionRuntime = (dependencies: RuntimeDependencies) => {
   const fetchRuntimeInfo = async () => {
     const id = dependencies.sessionId.value;
     if (!id || runtimeInfoLoadedFor === id) return;
+    const generation = dependencies.generation();
     try {
       const commands = await sendAgentCommand<{
         commands: Array<{ name: string; description: string; source: string }>;
       }>(id, { type: "get_commands" });
-      if (dependencies.sessionId.value !== id) return;
+      if (dependencies.sessionId.value !== id || generation !== dependencies.generation()) return;
       dependencies.slashCommands.value = commands.commands ?? [];
       runtimeInfoLoadedFor = id;
     } catch {
@@ -72,12 +73,17 @@ export const useSessionRuntime = (dependencies: RuntimeDependencies) => {
   const setModel = async (provider: string, modelId: string): Promise<boolean> => {
     const id = dependencies.sessionId.value;
     if (!id) return false;
+    const generation = dependencies.generation();
     try {
       await sendAgentCommand(id, { type: "set_model", provider, modelId });
+      if (dependencies.sessionId.value !== id || generation !== dependencies.generation())
+        return false;
       dependencies.model.value = { provider, id: modelId };
       void refreshRuntimeState();
       return true;
     } catch (error) {
+      if (dependencies.sessionId.value !== id || generation !== dependencies.generation())
+        return false;
       dependencies.notice(error instanceof Error ? error.message : String(error));
       return false;
     }
@@ -86,11 +92,16 @@ export const useSessionRuntime = (dependencies: RuntimeDependencies) => {
   const setThinkingLevel = async (level: string): Promise<boolean> => {
     const id = dependencies.sessionId.value;
     if (!id) return false;
+    const generation = dependencies.generation();
     try {
       await sendAgentCommand(id, { type: "set_thinking_level", level });
+      if (dependencies.sessionId.value !== id || generation !== dependencies.generation())
+        return false;
       dependencies.thinkingLevel.value = level;
       return true;
     } catch (error) {
+      if (dependencies.sessionId.value !== id || generation !== dependencies.generation())
+        return false;
       dependencies.notice(error instanceof Error ? error.message : String(error));
       return false;
     }
@@ -100,10 +111,12 @@ export const useSessionRuntime = (dependencies: RuntimeDependencies) => {
   const compact = async () => {
     const id = dependencies.sessionId.value;
     if (!id || dependencies.isCompacting.value) return;
+    const generation = dependencies.generation();
     dependencies.isCompacting.value = true;
     try {
       await sendAgentCommand(id, { type: "compact" });
     } catch (error) {
+      if (dependencies.sessionId.value !== id || generation !== dependencies.generation()) return;
       dependencies.isCompacting.value = false;
       dependencies.notice(error instanceof Error ? error.message : String(error));
     }
@@ -112,9 +125,11 @@ export const useSessionRuntime = (dependencies: RuntimeDependencies) => {
   const abortCompaction = async () => {
     const id = dependencies.sessionId.value;
     if (!id) return;
+    const generation = dependencies.generation();
     try {
       await sendAgentCommand(id, { type: "abort_compaction" });
     } catch (error) {
+      if (dependencies.sessionId.value !== id || generation !== dependencies.generation()) return;
       dependencies.notice(error instanceof Error ? error.message : String(error));
     }
   };

@@ -54,6 +54,8 @@ export const useSessionNavigation = (dependencies: NavigationDependencies) => {
       if (generation !== dependencies.generation() || dependencies.sessionId.value !== id)
         return false;
       await dependencies.reload();
+      if (generation !== dependencies.generation() || dependencies.sessionId.value !== id)
+        return false;
       if (dependencies.activeLeafId.value !== targetId) throw new Error("目标分支尚未确认");
       return true;
     } catch {
@@ -62,14 +64,22 @@ export const useSessionNavigation = (dependencies: NavigationDependencies) => {
       // 请求失败可能发生在服务端导航之后 先重新读取再决定是否回退
       if (commandSent) {
         const info = await dependencies.reload();
+        if (generation !== dependencies.generation() || dependencies.sessionId.value !== id)
+          return false;
         if (!info || dependencies.activeLeafId.value !== previous) {
           if (previous) {
             try {
               await sendAgentCommand(id, { type: "navigate_tree", targetId: previous });
+              if (generation !== dependencies.generation() || dependencies.sessionId.value !== id)
+                return false;
               const restored = await dependencies.reload();
+              if (generation !== dependencies.generation() || dependencies.sessionId.value !== id)
+                return false;
               if (!restored || dependencies.activeLeafId.value !== previous)
                 positionUnknown.value = true;
             } catch {
+              if (generation !== dependencies.generation() || dependencies.sessionId.value !== id)
+                return false;
               positionUnknown.value = true;
             }
           } else {

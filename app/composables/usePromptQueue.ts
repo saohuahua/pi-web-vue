@@ -11,6 +11,7 @@ export interface QueueMessages {
 interface QueueDependencies {
   sessionId: Ref<string | null>;
   isRunning: Ref<boolean>;
+  isStopping: Ref<boolean>;
   positionUnknown: Ref<boolean>;
   draft: Ref<string>;
   attachedImages: Ref<AttachedImage[]>;
@@ -58,7 +59,9 @@ export const usePromptQueue = (dependencies: QueueDependencies) => {
     if (
       !id ||
       !dependencies.isRunning.value ||
+      dependencies.isStopping.value ||
       queueSubmitting.value ||
+      queueActionPending.value ||
       dependencies.positionUnknown.value
     )
       return false;
@@ -103,22 +106,26 @@ export const usePromptQueue = (dependencies: QueueDependencies) => {
   // Pi 只支持清空全部队列 仅恢复 SDK 实际返回且尚未消费的文字
   const recallQueue = async (): Promise<boolean> => {
     const id = dependencies.sessionId.value;
+    const generation = dependencies.generation();
     if (!id || queueActionPending.value) return false;
+    const requestedAtVersion = version;
     queueActionPending.value = true;
     try {
       const removed = await sendAgentCommand<QueueMessages>(id, { type: "clear_queue" });
-      if (dependencies.sessionId.value !== id) return false;
+      if (dependencies.sessionId.value !== id || generation !== dependencies.generation())
+        return false;
       const text = [...removed.steering, ...removed.followUp].join("\n\n");
       dependencies.draft.value = mergeDraftText(text, dependencies.draft.value);
-      applyUpdate({ steering: [], followUp: [] });
+      applySnapshot({ steering: [], followUp: [] }, requestedAtVersion);
       dependencies.persistDraft();
       return true;
     } catch (error) {
-      if (dependencies.sessionId.value === id)
+      if (dependencies.sessionId.value === id && generation === dependencies.generation())
         dependencies.notice(error instanceof Error ? error.message : String(error));
       return false;
     } finally {
-      if (dependencies.sessionId.value === id) queueActionPending.value = false;
+      if (dependencies.sessionId.value === id && generation === dependencies.generation())
+        queueActionPending.value = false;
     }
   };
 

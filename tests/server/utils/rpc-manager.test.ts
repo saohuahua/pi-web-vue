@@ -33,6 +33,44 @@ function createWrapper(
 }
 
 describe("AgentSessionWrapper prompt", () => {
+  it("分支导航等待扩展期间拒绝 prompt 与第二次导航 完成后释放互斥", async () => {
+    const navigation = Promise.withResolvers<{ cancelled: boolean }>();
+    const prompt = vi.fn(async () => {});
+    const wrapper = createWrapper(prompt, {
+      sessionManager: { getEntries: () => [{ id: "target" }] },
+      navigateTree: () => navigation.promise,
+    });
+    const navigating = wrapper.send({ type: "navigate_tree", targetId: "target" });
+    await expect(wrapper.send({ type: "prompt", message: "不能提交" })).rejects.toMatchObject({
+      code: "session_busy",
+      status: 409,
+    });
+    await expect(wrapper.send({ type: "navigate_tree", targetId: "target" })).rejects.toMatchObject(
+      { code: "session_busy", status: 409 },
+    );
+    expect(prompt).not.toHaveBeenCalled();
+    navigation.resolve({ cancelled: false });
+    await navigating;
+    await expect(wrapper.send({ type: "prompt", message: "现在提交" })).resolves.toBeNull();
+    expect(prompt).toHaveBeenCalledTimes(1);
+    wrapper.destroy();
+  });
+
+  it("导航失败后释放互斥不阻止下一条消息", async () => {
+    const prompt = vi.fn(async () => {});
+    const wrapper = createWrapper(prompt, {
+      sessionManager: { getEntries: () => [{ id: "target" }] },
+      navigateTree: async () => {
+        throw new Error("扩展失败");
+      },
+    });
+    await expect(wrapper.send({ type: "navigate_tree", targetId: "target" })).rejects.toThrow(
+      "扩展失败",
+    );
+    await expect(wrapper.send({ type: "prompt", message: "恢复提交" })).resolves.toBeNull();
+    expect(prompt).toHaveBeenCalledTimes(1);
+    wrapper.destroy();
+  });
   it("preflight 接受后先确认 HTTP 并在运行结束时发送 prompt_done", async () => {
     let finishPrompt: () => void = () => {};
     const completion = new Promise<void>((resolve) => {
@@ -156,11 +194,18 @@ describe("AgentSessionWrapper prompt", () => {
   it("撤回队列等待正在接纳的 prompt", async () => {
     let accept!: () => void;
     const clearQueue = vi.fn(() => ({ steering: ["待撤回"], followUp: [] }));
-    const wrapper = createWrapper((_text, options) => {
-      accept = () => options?.preflightResult?.(true);
-      return new Promise<void>(() => {});
-    }, { clearQueue });
-    const submission = wrapper.send({ type: "prompt", message: "待撤回", streamingBehavior: "steer" });
+    const wrapper = createWrapper(
+      (_text, options) => {
+        accept = () => options?.preflightResult?.(true);
+        return new Promise<void>(() => {});
+      },
+      { clearQueue },
+    );
+    const submission = wrapper.send({
+      type: "prompt",
+      message: "待撤回",
+      streamingBehavior: "steer",
+    });
     await vi.waitFor(() => expect(accept).toBeTypeOf("function"));
     const recall = wrapper.send({ type: "clear_queue" });
     await Promise.resolve();
