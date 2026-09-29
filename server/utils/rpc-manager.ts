@@ -36,8 +36,11 @@ interface ToolInfoLike {
 // 只声明本项目实际用到的成员
 interface AgentSessionInner {
   readonly sessionId: string;
+  // 会话落盘文件路径 未落盘的新会话可能为空
   readonly sessionFile: string | undefined;
+  // SDK 是否正在流式生成 区别于 wrapper 的综合运行口径
   readonly isStreaming: boolean;
+  // SDK 是否正在压缩上下文
   readonly isCompacting: boolean;
   readonly model: ModelLike | undefined;
   readonly modelRuntime: {
@@ -56,17 +59,17 @@ interface AgentSessionInner {
       streamingMessage?: unknown;
     };
   };
-  subscribe(listener: (event: AgentEventLike) => void): () => void;
+  subscribe(listener: (event: AgentEventLike) => void): () => void; // 订阅 SDK 事件 返回取消函数
   prompt(
     text: string,
     options?: {
       images?: Array<{ type: "image"; data: string; mimeType: string }>;
       source?: "interactive" | "rpc";
-      streamingBehavior?: "steer" | "followUp";
+      streamingBehavior?: "steer" | "followUp"; // steer 运行中插入 followUp 追加
       preflightResult?: (success: boolean) => void;
     },
   ): Promise<void>;
-  abort(): Promise<void>;
+  abort(): Promise<void>; // 请求停止当前执行
   dispose(): void;
   navigateTree(
     targetId: string,
@@ -80,9 +83,9 @@ interface AgentSessionInner {
   getAllTools(): ToolInfoLike[];
   getActiveToolNames(): string[];
   getContextUsage(): ContextUsage | undefined;
-  getSteeringMessages(): readonly string[];
-  getFollowUpMessages(): readonly string[];
-  clearQueue(): { steering: string[]; followUp: string[] };
+  getSteeringMessages(): readonly string[]; // 运行中队列的主指令
+  getFollowUpMessages(): readonly string[]; // 运行中队列的追加消息
+  clearQueue(): { steering: string[]; followUp: string[] }; // 撤回尚未消费的队列
 }
 
 type EventListener = (event: AgentEventLike) => void;
@@ -90,13 +93,21 @@ type EventListener = (event: AgentEventLike) => void;
 const IDLE_RECYCLE_MS = 10 * 60_000;
 
 export class AgentSessionWrapper {
+  // 事件监听者集合 SSE 流通过 onEvent 注册 收到 SDK 事件后逐个分发
   private listeners = new Set<EventListener>();
+  // 销毁时要通知的清理回调 通常挂 SSE 流 销毁后流关闭 前端 onerror 重连
   private disposeListeners = new Set<() => void>();
+  // 空闲回收定时器 无监听者且超时后销毁 wrapper
   private idleTimer: ReturnType<typeof setTimeout> | null = null;
+  // 未完成 prompt 计数 HTTP 返回不代表执行结束 计数归零才算空闲
   private pendingPromptCount = 0;
+  // 导航互斥标志 导航期间拒绝另一请求改变消息链
   private navigating = false;
+  // 接纳串行链 撤回队列要等当前 prompt 完成接纳判断 避免抢跑
   private promptAdmissionTail: Promise<void> = Promise.resolve();
+  // 存活标志 销毁后置 false
   private _alive = true;
+  // SDK 订阅的取消函数 销毁时调用
   private unsubscribe: (() => void) | null = null;
 
   constructor(public readonly inner: AgentSessionInner) {}
@@ -117,9 +128,11 @@ export class AgentSessionWrapper {
     return this._alive;
   }
   isRunning() {
+    // 综合口径 有未完成 prompt 或 SDK 正在流式 任一为真即运行中
     return this._alive && (this.pendingPromptCount > 0 || this.inner.isStreaming);
   }
 
+  // 注册事件监听 返回取消函数 供 SSE 流挂接
   onEvent(listener: EventListener) {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
@@ -131,6 +144,7 @@ export class AgentSessionWrapper {
     return () => this.disposeListeners.delete(listener);
   }
 
+  // 向所有监听者广播 SDK 事件
   private emit(event: AgentEventLike) {
     for (const l of this.listeners) l(event);
   }
@@ -161,6 +175,7 @@ export class AgentSessionWrapper {
     }, IDLE_RECYCLE_MS);
   }
 
+  // 结束一条 prompt 减少计数防实例永久显示运行中 并刷新空闲定时与列表缓存
   private finishPrompt() {
     this.pendingPromptCount = Math.max(0, this.pendingPromptCount - 1);
     this.resetIdleTimer();
@@ -358,6 +373,8 @@ export class AgentSessionWrapper {
   // prompt 的 RPC 契约 prompt 的 Promise 在整轮 run 结束才 resolve
   // 而 preflightResult true 在同步校验与扩展预检通过时回调
   // HTTP 响应在 preflight 通过后就返回 先 ack 剩余进度全部走 SSE
+  // 把每次 prompt 排进串行链 返回释放函数 保证接纳判断串行执行
+  // clear_queue 会等这条链 确保拿到的是 SDK 尚未消费的队列
   private async acquirePromptAdmission(): Promise<() => void> {
     const previous = this.promptAdmissionTail;
     let release!: () => void;
@@ -445,7 +462,9 @@ export class AgentSessionCommandError extends Error {
   }
 }
 
+// 会话 id → 已完成的存活 wrapper 跨请求复用同一执行对象
 const registry = new Map<string, AgentSessionWrapper>();
+// 会话 id → 正在创建的 Promise 初始化期间合并并发 防止建出两个实例
 const locks = new Map<string, Promise<{ session: AgentSessionWrapper; realSessionId: string }>>();
 
 export async function startRpcSession(
@@ -453,6 +472,8 @@ export async function startRpcSession(
   sessionFile: string,
   cwd?: string,
 ): Promise<{ session: AgentSessionWrapper; realSessionId: string }> {
+  // 两级复用 先查已完成的实例 再查正在创建的 Promise
+  // 只保存完成后实例填不上初始化空档 两个请求会建出两个执行对象
   const existing = registry.get(sessionId);
   if (existing?.isAlive()) return { session: existing, realSessionId: sessionId };
 

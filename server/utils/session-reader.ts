@@ -1,6 +1,7 @@
 // Ported from pi-web lib/session-reader.ts — https://github.com/agegr/pi-web (MIT)
 // 会话文件读取 列表扫描 路径解析 消息上下文构建
 // 与 pi-web 的差异 全量扫描替代增量扫描器 去掉延迟加载与分页
+// 列表扫描只读文件头尾各几 KB 同步 IO 简单可靠 服务端阻塞不拖慢浏览器页面
 
 import { getAgentDir } from "@earendil-works/pi-coding-agent";
 import { closeSync, fstatSync, openSync, readSync, readdirSync, statSync } from "node:fs";

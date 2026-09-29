@@ -5,6 +5,8 @@ import { promisify } from "node:util";
 import type { FileIndexResponse } from "#shared/lib/types";
 import { getAllowedFileRoots, isExistingFilePathAllowed, isFilePathAllowed } from "../utils/file-access";
 
+// execFile 直接执行可执行文件 参数以数组传递不经 shell 拼接 避免注入与转义
+// promisify 把回调式 execFile 转成 Promise 以便 await
 const execFileAsync = promisify(execFile);
 
 // git 仓库用 ls-files 尊重 gitignore 与 TUI 的 fd 行为一致

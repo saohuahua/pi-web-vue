@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
     return { error: cwd ? `Directory does not exist: ${cwd}` : "cwd is required" };
   }
   try {
-    // 一次性 key 防并发合并 两个新建请求共享 key 会变成一个会话
+    // 一次性 key 防并发合并 真实 id 要等 SDK 创建后才产生 新建只能先占临时 key
     const tempKey = newSessionTempKey();
     const { session, realSessionId } = await startRpcSession(tempKey, "", cwd);
     invalidateSessionListCache();

@@ -1,5 +1,6 @@
 // Ported from pi-web lib/agent-event-stream.ts — https://github.com/agegr/pi-web (MIT)
-// SSE 通道生命周期 三个必须保留的语义
+// SSE 是一条保持打开的 HTTP 响应 服务端持续写入 浏览器持续接收 与一次性请求响应不同
+// 本文件负责 SSE 通道生命周期 三个必须保留的语义
 // 1 先开通道后握手 HTTP 响应头立即写出 等 agent 就绪监听器装好才发 connected
 //   期间 SDK 已产出的事件先缓冲 握手后按序补发
 // 2 流式快照重放 连接建立时若 isStreaming 为 true 立即补发 message_start 携带快照
@@ -13,7 +14,9 @@ import {
 } from "#shared/lib/agent-event-wire";
 
 export interface AgentEventStreamSession {
+  // 连接建立时 SDK 是否正在流式 决定是否补发快照
   readonly isStreaming: boolean;
+  // SDK 当前正在生成的流式消息 作为快照发给刚连上的浏览器
   readonly streamingMessage: unknown;
   onEvent(listener: (event: AgentEventLike) => void): () => void;
   // wrapper 销毁时回调 流必须随之关闭 让前端 onerror 重连到重建的 wrapper
@@ -36,12 +39,18 @@ export function createAgentEventStream(
   return new ReadableStream<Uint8Array>({
     start(controller) {
       const encoder = new TextEncoder();
+      // 流是否已关闭 幂等保护 后续 enqueue 与清理都先查它
       let closed = false;
+      // 心跳定时器 每 30 秒发注释行防中间层断开
       let heartbeat: ReturnType<typeof setInterval> | null = null;
+      // SDK 事件监听的取消函数
       let unsubscribe: (() => void) | null = null;
+      // wrapper 销毁监听的取消函数
       let unsubscribeDispose: (() => void) | null = null;
+      // 请求中止信号的处理函数 客户端断开时触发
       let abortHandler: (() => void) | null = null;
 
+      // 清理监听器与定时器 幂等 closeController 决定是否主动关流
       const cleanup = (closeController: boolean) => {
         if (closed) return;
         closed = true;
@@ -72,6 +81,7 @@ export function createAgentEventStream(
       const encode = (data: unknown) => {
         enqueueText(`data: ${JSON.stringify(data)}\n\n`);
       };
+      // 事件先经线上裁剪 再去掉快照已包含的内容 避免重复发送
       const forwardEvent = (event: AgentEventLike, snapshot: unknown) => {
         if (isEventIncludedInSnapshot(event, snapshot)) return;
         const clientEvent = toClientAgentEvent(event);
@@ -85,6 +95,7 @@ export function createAgentEventStream(
 
           // 握手前到达的事件先缓冲 避免 listener 装好前的间隙丢事件
           const bufferedEvents: AgentEventLike[] = [];
+          // 是否已发完握手与快照 未发完前事件只进缓冲
           let snapshotPublished = false;
           const handleEvent = (event: AgentEventLike) => {
             if (!snapshotPublished) {

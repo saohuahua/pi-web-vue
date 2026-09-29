@@ -12,6 +12,7 @@ export const writePrivateFileAtomicSync = (path: string, contents: string): void
   let operationFailed = false;
 
   try {
+    // wx 排他创建防并发覆盖同名临时文件 0o600 仅所有者可读写防泄露密钥 flush 强制落盘再 rename
     writeFileSync(tempPath, contents, {
       encoding: "utf8",
       flag: "wx",
