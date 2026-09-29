@@ -49,6 +49,11 @@ function userMessageKey(m: AgentMessage): string {
  * 当前会话 store 是前端核心
  * 持有已定稿消息与流式状态两个数据源 + SSE 连接 + 乐观更新
  * 结构对照 pi-web hooks/useAgentSession.ts 精简 移植的纯函数承担流式组装与连接管理
+ *
+ * 状态模型与事件驱动全貌见 docs/learning/07-异步协作与恢复.md
+ * 分支 草稿 队列的状态门控见 vue-agent-plan/14-feature-improvement-spec.md 第 4 节
+ * 对抗跨会话竞态的统一手段是 generation 代次 每次 close 递增
+ * 异步回调返回时先比对代次 不一致即丢弃 防止旧会话数据写进新会话视图
  */
 export const useChatStore = defineStore("chat", () => {
   const sessionsStore = useSessionsStore();
