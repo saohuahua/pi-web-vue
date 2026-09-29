@@ -11,100 +11,85 @@
       :max="640"
       @update:value="ui.setFileExplorerHeight"
     />
-    <!-- 面板头 标题 折叠 刷新 -->
-    <div class="flex items-center gap-2 px-3 py-2">
-      <button
-        type="button"
-        class="flex min-w-0 flex-1 items-center gap-1.5 text-[12px] font-medium text-muted"
-        :aria-expanded="!collapsed"
-        @click="collapsed = !collapsed"
-      >
-        <ChevronRight :size="13" :class="{ 'rotate-90': !collapsed }" aria-hidden="true" />
-        <span class="truncate">文件</span>
-      </button>
-      <PiIconButton v-if="!collapsed" label="刷新文件树" :loading="loading" @click="loadRoot(true)">
+    <!-- 文件搜索 服务端索引覆盖未展开目录 -->
+    <div class="sidebar-search-row file-search-row">
+      <SidebarSearchInput
+        v-model="search"
+        placeholder="搜索文件"
+        label="搜索文件"
+        @keydown.esc="search = ''"
+      />
+      <PiIconButton label="刷新文件树" :loading="loading" @click="loadRoot(true)">
         <RefreshCw :size="15" aria-hidden="true" />
       </PiIconButton>
     </div>
 
-    <template v-if="!collapsed">
-      <!-- 文件搜索 服务端索引覆盖未展开目录 -->
-      <div class="sidebar-search-row file-search-row">
-        <SidebarSearchInput
-          v-model="search"
-          placeholder="搜索文件"
-          label="搜索文件"
-          @keydown.esc="search = ''"
-        />
-      </div>
+    <!-- 无项目选择时的引导 -->
+    <div v-if="!workspace.selectedCwd" class="px-4 pb-3 text-center text-[12px] text-muted">
+      先在上方选择项目
+    </div>
 
-      <!-- 无项目选择时的引导 -->
-      <div v-if="!workspace.selectedCwd" class="px-4 pb-3 text-center text-[12px] text-muted">
-        先在上方选择项目
-      </div>
+    <!-- 树或搜索结果 -->
+    <div v-else class="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
+      <p v-if="loading && !rootNodes.length" class="px-2 py-2 text-[12px] text-muted">加载中…</p>
+      <p v-else-if="error" class="px-2 py-2 text-[12px] text-danger">{{ error }}</p>
 
-      <!-- 树或搜索结果 -->
-      <div v-else class="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
-        <p v-if="loading && !rootNodes.length" class="px-2 py-2 text-[12px] text-muted">加载中…</p>
-        <p v-else-if="error" class="px-2 py-2 text-[12px] text-danger">{{ error }}</p>
-
-        <!-- 搜索结果 平铺相对路径 -->
-        <template v-else-if="searchResults">
-          <p v-if="!searchResults.files.length" class="px-2 py-2 text-[12px] text-muted">
-            没有匹配的文件
-          </p>
-          <div
-            v-for="file in searchResults.files"
-            :key="file"
-            class="group flex cursor-pointer items-center gap-1.5 rounded px-1 py-[3px] text-[12px] text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+      <!-- 搜索结果 平铺相对路径 -->
+      <template v-else-if="searchResults">
+        <p v-if="!searchResults.files.length" class="px-2 py-2 text-[12px] text-muted">
+          没有匹配的文件
+        </p>
+        <div
+          v-for="file in searchResults.files"
+          :key="file"
+          class="group flex cursor-pointer items-center gap-1.5 rounded px-1 py-[3px] text-[12px] text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+        >
+          <button
+            class="file-row-main"
+            type="button"
+            :title="file"
+            @click="openFile(joinPath(workspace.selectedCwd!, file))"
           >
-            <button
-              class="file-row-main"
-              type="button"
-              :title="file"
-              @click="openFile(joinPath(workspace.selectedCwd!, file))"
+            <FileKindIcon :name="file" :size="15" /><span
+              class="min-w-0 flex-1 truncate font-mono text-[12px]"
+              >{{ file }}</span
             >
-              <FileKindIcon :name="file" :size="15" /><span
-                class="min-w-0 flex-1 truncate font-mono text-[12px]"
-                >{{ file }}</span
-              >
-            </button>
-            <button
-              class="file-row-action shrink-0 rounded bg-accent-soft px-1.5 font-mono text-[12px] leading-4 text-accent-deep"
-              type="button"
-              title="引用到输入框"
-              aria-label="引用到输入框"
-              @click.stop="insertMention(file)"
-            >
-              <AtSign :size="12" aria-hidden="true" />
-            </button>
-          </div>
-          <p v-if="searchResults.truncated" class="px-2 pt-1.5 text-[12px] text-muted">
-            结果过多 只显示前 {{ searchResults.files.length }} 条
-          </p>
-        </template>
+          </button>
+          <button
+            class="file-row-action shrink-0 rounded bg-accent-soft px-1.5 font-mono text-[12px] leading-4 text-accent-deep"
+            type="button"
+            title="引用到输入框"
+            aria-label="引用到输入框"
+            @click.stop="insertMention(file)"
+          >
+            <AtSign :size="12" aria-hidden="true" />
+          </button>
+        </div>
+        <p v-if="searchResults.truncated" class="px-2 pt-1.5 text-[12px] text-muted">
+          结果过多 只显示前 {{ searchResults.files.length }} 条
+        </p>
+      </template>
 
-        <!-- 目录树 -->
-        <template v-else>
-          <p v-if="!rootNodes.length" class="px-2 py-2 text-[12px] text-muted">空目录</p>
-          <FileTreeNode
-            v-for="node in rootNodes"
-            :key="node.path"
-            :node="node"
-            :depth="0"
-            :expanded-paths="expandedPaths"
-            @toggle="toggleNode"
-            @open="openFile"
-            @mention="insertMention"
-          />
-        </template>
-      </div>
-    </template>
+      <!-- 目录树 -->
+      <template v-else>
+        <p v-if="!rootNodes.length" class="px-2 py-2 text-[12px] text-muted">空目录</p>
+        <FileTreeNode
+          v-for="node in rootNodes"
+          :key="node.path"
+          :node="node"
+          :depth="0"
+          :expanded-paths="expandedPaths"
+          @toggle="toggleNode"
+          @open="openFile"
+          @mention="insertMention"
+        />
+      </template>
+    </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { AtSign, ChevronRight, RefreshCw } from "lucide-vue-next";
+import { AtSign, RefreshCw } from "lucide-vue-next";
 import FileKindIcon from "~/components/FileKindIcon.vue";
 import PaneResizeHandle from "~/components/PaneResizeHandle.vue";
 import PiIconButton from "~/components/pi/PiIconButton/index.vue";
@@ -124,7 +109,6 @@ const viewer = useFileViewerStore();
 const chat = useChatStore();
 const ui = useUiStore();
 
-const collapsed = ref(false);
 const rootNodes = ref<FileNode[]>([]);
 const expandedPaths = ref<Set<string>>(new Set());
 const loading = ref(false);
