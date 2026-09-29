@@ -232,9 +232,6 @@
       </template>
     </div>
 
-    <!-- 排队消息提示 -->
-    <QueueStrip v-if="queuedCount > 0" />
-
     <ChatComposer />
   </div>
 </template>
@@ -252,7 +249,6 @@ import { formatCost, formatTokenCount } from "~/utils/usage-format";
 import { handleMarkdownClick } from "~/utils/markdown-interaction";
 import ChatComposer from "~/components/ChatComposer.vue";
 import BranchNavigator from "~/components/BranchNavigator.vue";
-import QueueStrip from "~/components/QueueStrip.vue";
 import MessageItem from "~/components/MessageItem.vue";
 import PiIndicator from "~/components/PiIndicator.vue";
 import { useSettingsStore } from "~/stores/settings";
@@ -303,11 +299,6 @@ watch(
     scrollRingEl.value ? apply() : nextTick(apply);
   },
   { immediate: true },
-);
-
-// 排队消息总数 composer 上方提示
-const queuedCount = computed(
-  () => chat.queuedMessages.steering.length + chat.queuedMessages.followUp.length,
 );
 
 // 思考占位 run 已起飞但流式气泡还没出现的空窗期

@@ -624,8 +624,7 @@
     }
   }
 
-  .run-strip,
-  .queued-strip {
+  .run-strip {
     display: flex;
     min-height: var(--ds-control-height);
     align-items: center;

@@ -1,5 +1,6 @@
 <template>
   <footer class="composer">
+    <QueueStrip />
     <div v-if="chat.editingMessageId" class="composer-editing" role="status">
       <span>编辑历史消息 发送后创建新分支</span>
       <button type="button" @click="chat.cancelEdit()">取消编辑</button>
@@ -44,7 +45,7 @@
       >
     </div>
 
-    <!-- 输入区 拖拽进图 发送与停止按运行状态互斥 -->
+    <!-- 运行中指令与停止共用提交互斥状态 -->
     <div
       class="composer-box"
       :class="{ 'is-dragover': dragover }"
@@ -64,12 +65,18 @@
         @paste="onPaste"
       ></textarea>
 
-      <!-- 运行中发送变停止 输入保持可用但不提交 -->
+      <!-- 运行中显式选择模式后才允许提交 -->
       <button
         v-if="chat.isRunning"
         class="composer-btn send"
         type="button"
-        :disabled="!queueMode || !canSend || chat.queueSubmitting"
+        :disabled="
+          !queueMode ||
+          !canSend ||
+          chat.queueSubmitting ||
+          chat.queueActionPending ||
+          chat.isStopping
+        "
         :title="queueMode ? '发送运行中指令' : '先选择运行中指令模式'"
         aria-label="发送运行中指令"
         @click="submit"
@@ -80,7 +87,7 @@
         v-if="chat.isRunning"
         class="composer-btn stop"
         type="button"
-        :disabled="chat.queueSubmitting || chat.queueActionPending"
+        :disabled="chat.queueSubmitting || chat.queueActionPending || chat.isStopping"
         aria-label="停止"
         title="停止并撤回队列"
         @click="chat.stop()"
@@ -291,6 +298,7 @@
 import { ChevronDown, CircleArrowUp, Paperclip, Settings2, Square, X, Zap } from "lucide-vue-next";
 import { useComposerImages } from "~/composables/useComposerImages";
 import PiPopover from "~/components/pi/PiPopover/index.vue";
+import QueueStrip from "~/components/QueueStrip.vue";
 import { useCapabilityCenterStore } from "~/stores/capability-center";
 import { useChatStore } from "~/stores/chat";
 import { useModelsStore } from "~/stores/models";
@@ -354,7 +362,16 @@ interface PopupEntry {
   source?: string;
 }
 
-const canSend = computed(() => Boolean(chat.draft.trim()) || chat.attachedImages.length > 0);
+const canSend = computed(
+  () =>
+    !chat.sessionLoading &&
+    !chat.isCompacting &&
+    !chat.isNavigating &&
+    !chat.positionUnknown &&
+    !chat.isStopping &&
+    !chat.queueActionPending &&
+    (Boolean(chat.draft.trim()) || chat.attachedImages.length > 0),
+);
 
 // 模型不在列表里时用常见档位兜底 具体可用性由服务端 set 命令裁决
 const thinkingLevels = computed(() => {

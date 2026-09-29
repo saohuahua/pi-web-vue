@@ -1,14 +1,15 @@
 <template>
-  <div class="queue-strip" role="status">
+  <div v-if="count > 0" class="queue-strip" role="status">
     <div class="queue-strip__heading">
       <span>已排队 {{ count }} 条指令</span>
-      <button
-        type="button"
-        :disabled="chat.queueActionPending || chat.queueSubmitting"
+      <PiButton
+        variant="ghost"
+        size="compact"
+        :disabled="chat.queueActionPending || chat.queueSubmitting || chat.isStopping"
         @click="chat.recallQueue()"
       >
         全部撤回
-      </button>
+      </PiButton>
     </div>
     <div class="queue-strip__items">
       <span
@@ -33,6 +34,7 @@
 
 <script setup lang="ts">
 import { useChatStore } from "~/stores/chat";
+import PiButton from "~/components/pi/PiButton/index.vue";
 
 const chat = useChatStore();
 const count = computed(
@@ -43,8 +45,11 @@ const count = computed(
 <style scoped>
 @layer features {
   .queue-strip {
+    min-width: 0;
+    margin-bottom: var(--ds-space-2);
     padding: var(--ds-space-2) var(--ds-space-4);
-    border-top: 1px solid var(--ds-line);
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-radius-md);
     color: var(--ds-ink-muted);
     background: var(--ds-surface);
     font-size: var(--ds-font-size-caption);
@@ -57,10 +62,6 @@ const count = computed(
   }
   .queue-strip__heading {
     justify-content: space-between;
-  }
-  .queue-strip__heading button {
-    min-height: var(--ds-control-height-touch);
-    color: var(--ds-primary);
   }
   .queue-strip__items {
     overflow-x: auto;

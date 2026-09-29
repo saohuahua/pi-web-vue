@@ -69,7 +69,8 @@ watch(
       document.addEventListener("pointerdown", onDocumentPointerdown);
       document.addEventListener("keydown", onDocumentKeydown);
       await nextTick();
-      content.value?.focus();
+      // 领域列表已聚焦选项时保留其键盘起点
+      if (!content.value?.contains(document.activeElement)) content.value?.focus();
       return;
     }
 
