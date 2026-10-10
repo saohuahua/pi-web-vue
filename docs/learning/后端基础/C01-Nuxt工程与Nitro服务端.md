@@ -1,6 +1,6 @@
 # C01 Nuxt 工程与 Nitro 服务端
 
-这个仓库的 `package.json` 里只有一个 `nuxt dev` 脚本，却能同时跑起浏览器页面和 Node 接口；目录里既有 `app/` 又有 `server/`，还有个含义不明的 `shared/`。
+这个仓库的 `package.json` 里有一个 `dev` 脚本（`nuxt dev`），它同时把浏览器页面和 Node 接口跑起来（另有 `build`、`generate`、`preview`、`postinstall`、`test`、`typecheck`、`format`、`format:check`）；目录里既有 `app/` 又有 `server/`，还有个含义不明的 `shared/`。
 
 本篇讲清：Nuxt 是什么，`app/` `server/` `shared/` 怎么分工，`server/api` 里的文件名为什么就是 URL，以及本项目为什么关闭 SSR。
 
@@ -18,7 +18,7 @@ Vue 本身只负责浏览器端。要跑一个接口，传统做法是另起一�
 
 ## 一 Nuxt 把什么装进了同一个工程
 
-先看启动命令。`package.json` 里没有 `dev:client` 和 `dev:server` 两个脚本，只有一个：
+先看启动命令。`package.json` 里没有 `dev:client` 和 `dev:server` 两个脚本，这里只摘开发与构建两条：
 
 ```json
 {
@@ -28,6 +28,8 @@ Vue 本身只负责浏览器端。要跑一个接口，传统做法是另起一�
   }
 }
 ```
+
+> 上面只摘了开发与构建两条。完整 `scripts` 还有 `generate`、`preview`、`postinstall`、`test`、`typecheck`、`format`、`format:check`——它们分别负责产出构建结果、本地测试、类型检查和格式化，不参与开发时的双端启动。
 
 执行 `nuxt dev` 后发生两件事，对应两个引擎：
 

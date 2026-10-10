@@ -207,7 +207,7 @@ SDK 的能力范围大于项目当前接入范围：
 
 建议顺序：
 
-1. [本地 SDK 文档](../../node_modules/@earendil-works/pi-coding-agent/docs/sdk.md)：查当前安装版本的调用方式。
+1. 本地 SDK 文档（安装依赖后见 `node_modules/@earendil-works/pi-coding-agent/docs/sdk.md`）：查当前安装版本的调用方式。
 2. [services 初始化](../../server/utils/agent-services.ts)：看项目增加的初始化处理。
 3. [会话管理](../../server/utils/rpc-manager.ts)：看 SDK 对象如何被应用持有。
 4. [历史读取](../../server/utils/session-reader.ts)：看记录怎样转为页面数据。

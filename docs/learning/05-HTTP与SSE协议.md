@@ -96,7 +96,7 @@ data: {"type":"message_update","assistantMessageEvent":{"type":"text_delta","con
 
 `delta` 可能是几个字或更长的片段，不保证对应一个 token，也不保证是完整 Markdown 结构。
 
-服务端每 30 秒发送注释心跳。心跳帮助维持连接，不证明模型有进展。当前没有持久事件序号，也没有通过 `Last-Event-ID` 回放事件日志。
+服务端每 30 秒发送注释心跳，间隔由 `HEARTBEAT_INTERVAL_MS`（[`server/utils/event-stream.ts`](../../server/utils/event-stream.ts) 第 26 行）决定。心跳帮助维持连接，不证明模型有进展。当前没有持久事件序号，也没有通过 `Last-Event-ID` 回放事件日志。
 
 ## 四 先完成业务握手 再发 prompt
 
@@ -251,6 +251,8 @@ return {
 - `startup_error`：停止自动重试，交给界面报告启动问题。
 - 页面关闭：取消重试并清理当前连接。
 - 服务端请求关闭、流取消或 wrapper 销毁：清理监听与心跳。
+
+> **上面这两个值不在连接管理器里内置。** [`shared/lib/agent-event-connection.ts`](../../shared/lib/agent-event-connection.ts) 只声明选项字段 `readinessTimeoutMs` 与 `reconnectDelayMs`（第 45 到 46 行），具体数字由调用点注入。当前调用点是 [`app/stores/chat.ts`](../../app/stores/chat.ts) 里的 `new AgentEventConnection({ readinessTimeoutMs: 30_000, reconnectDelayMs: 3_000 })`（第 492 到 493 行）。因此直接搜 `agent-event-connection.ts` 找不到这两个数字，要搜 `chat.ts` 的构造参数。
 
 源码注释曾提到指数重连，但当前使用固定延迟。services 初始化的指数重试是另一套机制。
 
